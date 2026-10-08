@@ -55,10 +55,10 @@ export function App(): React.JSX.Element {
     section: 'home',
     collection: null,
     detailRef: null,
-    providerSeries: null,
+    providerSeries: null, providerScope: null,
     filters: DEFAULT_FILTERS
   })
-  const { section, collection, detailRef, providerSeries, filters } = stack.view
+  const { section, collection, detailRef, providerSeries, providerScope, filters } = stack.view
   /* Titles the provider does not carry are hidden by default. */
   const [providerOnly, setProviderOnly] = useState(true)
   const [paletteOpen, setPaletteOpen] = useState(false)
@@ -107,7 +107,7 @@ export function App(): React.JSX.Element {
     toTop()
   }
 
-  const openDetail = (item: TmdbItem): void => go({ detailRef: { kind: item.kind, id: item.id }, providerSeries: null })
+  const openDetail = (item: TmdbItem): void => go({ detailRef: { kind: item.kind, id: item.id }, providerSeries: null, providerScope: null })
 
   /** A provider series opens its episode list; a movie plays straight away. */
   const openVod = (item: VodItem): void => {
@@ -121,11 +121,11 @@ export function App(): React.JSX.Element {
       back()
       return
     }
-    go({ section: next, collection: null, detailRef: null, providerSeries: null })
+    go({ section: next, collection: null, detailRef: null, providerSeries: null, providerScope: null })
   }
 
   const openCollection = (id: string): void =>
-    go({ collection: id as CollectionId, detailRef: null, providerSeries: null })
+    go({ collection: id as CollectionId, detailRef: null, providerSeries: null, providerScope: null })
 
   /** Genre tiles and keyword chips both land on the search page with filters applied. */
   const openGenre = (genre: Genre): void =>
@@ -133,7 +133,7 @@ export function App(): React.JSX.Element {
       section: 'search',
       collection: null,
       detailRef: null,
-      providerSeries: null,
+      providerSeries: null, providerScope: null,
       filters: { ...DEFAULT_FILTERS, kind: genre.kind, genreIds: [genre.id] }
     })
 
@@ -142,7 +142,7 @@ export function App(): React.JSX.Element {
       section: 'search',
       collection: null,
       detailRef: null,
-      providerSeries: null,
+      providerSeries: null, providerScope: null,
       filters: { ...DEFAULT_FILTERS, kind: detailRef?.kind ?? 'movie', keywordIds: [keyword.id] }
     })
 
@@ -153,14 +153,14 @@ export function App(): React.JSX.Element {
         section: 'search',
         collection: null,
         detailRef: null,
-        providerSeries: null,
+        providerSeries: null, providerScope: null,
         filters: { ...DEFAULT_FILTERS, kind: target === 'popular-series' ? 'tv' : 'movie' }
       })
       return
     }
     const section: Section =
       target === 'sports' ? 'sports' : target === 'live' ? 'live' : target === 'provider-series' ? 'series' : 'movies'
-    go({ section, collection: null, detailRef: null, providerSeries: null })
+    go({ section, collection: null, detailRef: null, providerSeries: null, providerScope: null })
   }
 
   const playMatch = (match: Match): void => {
@@ -254,13 +254,14 @@ export function App(): React.JSX.Element {
           />
         ) : browser ? (
           <ProviderBrowser
-            title={browser.title}
+            title={providerScope?.name ?? browser.title}
             dataset={browser.dataset}
             loading={browser.state.loading}
             error={browser.state.error}
             guide={data.guide}
             onPlayChannel={playback.playChannel}
             onPlayVod={openVod}
+            categories={providerScope?.categories}
           />
         ) : section === 'search' && !collection ? (
           <SearchPage
@@ -299,6 +300,15 @@ export function App(): React.JSX.Element {
             onOpenGenre={openGenre}
             onOpenCollection={openCollection}
             onSeeAll={seeAll}
+            onOpenPlatform={(name, categories) =>
+              go({
+                section: 'series',
+                collection: null,
+                detailRef: null,
+                providerSeries: null,
+                                providerScope: { name, categories }
+              })
+            }
           />
         )}
       </div>
@@ -357,7 +367,7 @@ export function App(): React.JSX.Element {
         onPlayVod={openVod}
         onOpenTmdb={openDetail}
         onSeeAll={(query) =>
-          go({ section: 'search', collection: null, detailRef: null, providerSeries: null, filters: { ...DEFAULT_FILTERS, query } })
+          go({ section: 'search', collection: null, detailRef: null, providerSeries: null, providerScope: null, filters: { ...DEFAULT_FILTERS, query } })
         }
       />
 

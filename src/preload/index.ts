@@ -16,12 +16,13 @@ import type {
   ProviderStatus,
   SearchResult,
   SeasonDetail,
-  SubtitleCandidate,
   SubtitleFile,
   SubtitleSync,
+  SubtitleTrackInfo,
   TmdbDetail,
   TmdbItem,
-  VodItem
+  VodItem,
+  WatchProvider
 } from '../shared/types'
 
 type Res<T> = { ok: true; data: T } | { ok: false; error: string }
@@ -42,6 +43,7 @@ const api = {
     airingToday: () => call<TmdbItem[]>('tmdb:airingToday'),
     byGenre: (kind: MediaKind, id: number) => call<TmdbItem[]>('tmdb:byGenre', kind, id),
     genres: () => call<Genre[]>('tmdb:genres'),
+    watchProviders: () => call<WatchProvider[]>('tmdb:watchProviders'),
     search: (q: string) => call<TmdbItem[]>('tmdb:search', q),
     detail: (kind: MediaKind, id: number) => call<TmdbItem>('tmdb:detail', kind, id),
     full: (kind: MediaKind, id: number) => call<TmdbDetail>('tmdb:full', kind, id),
@@ -66,21 +68,19 @@ const api = {
   media: {
     available: () => call<boolean>('media:available'),
     probe: (url: string) => call<MediaProbe>('media:probe', url),
-    startHls: (src: string, audioOrder: number, start: number) => call<string>('media:startHls', src, audioOrder, start),
+    startHls: (src: string, audioOrder: number, start: number, subtitle: SubtitleTrackInfo | null = null) =>
+      call<string>('media:startHls', src, audioOrder, start, subtitle),
     stop: () => call<boolean>('media:stop')
   },
   art: {
+    logoColors: (urls: string[]) => call<Record<string, string | null>>('art:logoColors', urls),
     posters: (requests: ArtworkRequest[]) => call<Record<string, string | null>>('art:posters', requests)
   },
   teams: {
     badges: (names: string[]) => call<Record<string, string | null>>('teams:badges', names)
   },
   subs: {
-    available: () => call<boolean>('subs:available'),
     openLocal: () => call<SubtitleFile | null>('subs:openLocal'),
-    search: (params: { imdbId?: string | null; query?: string; season?: number | null; episode?: number | null; languages?: string; fps?: number | null }) =>
-      call<SubtitleCandidate[]>('subs:search', params),
-    download: (fileId: number) => call<SubtitleFile>('subs:download', fileId),
     sync: (key: string) => call<SubtitleSync>('subs:sync', key),
     saveSync: (key: string, sync: SubtitleSync) => call<boolean>('subs:saveSync', { key, sync })
   },

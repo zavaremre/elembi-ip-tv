@@ -1,3 +1,5 @@
+import { useMemo } from 'react'
+import { useLogoColors } from '@/hooks/useLogoColors'
 import { ChannelCard } from '@/components/ChannelCard'
 import { ChannelLogoLoop } from '@/components/ChannelLogoLoop'
 import { ContinueCard } from '@/components/ContinueCard'
@@ -5,12 +7,14 @@ import { GenreTile } from '@/components/GenreTile'
 import { Hero } from '@/components/Hero'
 import { MatchCard } from '@/components/MatchCard'
 import { MiniEpg } from '@/components/MiniEpg'
+import { PlatformCard } from '@/components/PlatformCard'
 import { PosterCard } from '@/components/PosterCard'
 import { Row } from '@/components/Row'
 import { ShowcaseCard } from '@/components/ShowcaseCard'
 import { useAudioVariants } from '@/hooks/useAudioVariants'
 import { useProviderPosters } from '@/hooks/useProviderPosters'
 import { dur } from '@/lib/fmt'
+import { buildPlatforms } from '@/lib/platforms'
 import { poster } from '@/lib/img'
 import type { HomeData } from '@/hooks/useHomeData'
 import type { Reminders } from '@/hooks/useReminders'
@@ -37,6 +41,7 @@ interface HomeProps {
   onPlayMatch: (match: Match) => void
   onOpenGenre: (genre: Genre) => void
   onOpenCollection: (id: string) => void
+  onOpenPlatform: (name: string, categories: string[]) => void
   onSeeAll: (target: SeeAllTarget) => void
 }
 
@@ -54,8 +59,26 @@ export function Home({
   onPlayMatch,
   onOpenGenre,
   onOpenCollection,
+  onOpenPlatform,
   onSeeAll
 }: HomeProps): React.JSX.Element {
+  /*
+   * Read from the catalogue rather than from a list of platform names: these are
+   * the provider's own series categories, so one it adds — or renames — appears
+   * without a code change. Largest first, since that is roughly how interesting
+   * they are, and singletons are left out as noise.
+   */
+  const platforms = useMemo(
+    () => buildPlatforms(data.providerSeries.data ?? [], data.watchProviders.data ?? [], data.channels.data ?? []),
+    [data.providerSeries.data, data.watchProviders.data, data.channels.data]
+  )
+  /* One call for everything on the page: the hook asks only for logos it has
+     not seen, and the main process keeps the answers on disk. */
+  const logoColors = useLogoColors([
+    ...platforms.map((entry) => entry.logo),
+    ...data.featured.map((channel) => channel.logo)
+  ])
+
   const railVod = (data.vod.data ?? []).slice(0, PROVIDER_RAIL_COUNT)
   const railSeries = (data.providerSeries.data ?? []).slice(0, PROVIDER_RAIL_COUNT)
   const audioVariants = useAudioVariants(railVod)
@@ -117,6 +140,21 @@ export function Home({
           ))}
         </Row>
 
+        {platforms.length > 0 ? (
+          <Row title="Platformlar" meta={`${platforms.length} KATEGORİ`} tagline="Sağlayıcıda ne varsa">
+            {platforms.map((entry) => (
+              <PlatformCard
+                key={entry.key}
+                name={entry.name}
+                count={entry.count}
+                logo={entry.logo}
+                color={entry.logo ? (logoColors.get(entry.logo) ?? null) : null}
+                onClick={() => onOpenPlatform(entry.name, entry.categories)}
+              />
+            ))}
+          </Row>
+        ) : null}
+
         <Row
           title="Bugünkü Maçlar"
           meta="SAĞLAYICI EPG"
@@ -148,7 +186,13 @@ export function Home({
           onAction={() => onSeeAll('live')}
         >
           {data.featured.map((channel) => (
-            <ChannelCard key={channel.id} channel={channel} guide={data.guide.get(channel.id) ?? null} onPlay={() => onPlayChannel(channel)} />
+            <ChannelCard
+              key={channel.id}
+              channel={channel}
+              guide={data.guide.get(channel.id) ?? null}
+              color={channel.logo ? (logoColors.get(channel.logo) ?? null) : null}
+              onPlay={() => onPlayChannel(channel)}
+            />
           ))}
         </Row>
 

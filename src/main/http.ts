@@ -1,3 +1,5 @@
+import { isProviderUrl, throttleProvider } from './ratelimit'
+
 /** JSON fetcher with an in-memory TTL cache that also de-duplicates concurrent requests. */
 
 interface Entry { at: number; ttl: number; data: unknown }
@@ -12,7 +14,13 @@ export function clearCache(prefix?: string): void {
 
 export async function getJson<T>(
   url: string,
-  opts: { headers?: Record<string, string>; ttl?: number; timeout?: number } = {}
+  opts: {
+    headers?: Record<string, string>
+    ttl?: number
+    timeout?: number
+    /** Work nobody is waiting on; yields to anything the viewer triggered. */
+    background?: boolean
+  } = {}
 ): Promise<T> {
   const ttl = opts.ttl ?? 10 * 60_000
   const hit = cache.get(url)
@@ -22,6 +30,12 @@ export async function getJson<T>(
   if (running) return running as Promise<T>
 
   const task = (async () => {
+    /*
+     * Gated on the host rather than on a flag at each call site: the panel locks
+     * out bursts, and a new call site added later would otherwise slip past.
+     * TMDB is untouched.
+     */
+    if (isProviderUrl(url)) await throttleProvider(opts.background)
     const ctrl = new AbortController()
     const t = setTimeout(() => ctrl.abort(), opts.timeout ?? 15_000)
     try {

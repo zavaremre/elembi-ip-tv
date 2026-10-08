@@ -35,6 +35,16 @@
 }
 
 @layer base {
+  /*
+   * The app draws subtitles itself. Hiding Chromium's renderer here, rather than
+   * leaving tracks disabled, means cues are still parsed and reported — a track
+   * the browser ignores fires no cuechange, which is how subtitles ended up on
+   * but invisible.
+   */
+  video::-webkit-media-text-track-container {
+    display: none;
+  }
+
   /* ═══ BASE ═══ */
   :root {
     --pad: clamp(20px, 4vw, 56px);
@@ -128,6 +138,21 @@
         hsl(calc(var(--h, 210) - 14) 92% 30%) 0%,
         hsl(calc(var(--h, 210) + 34) 88% 14%) 58%,
         hsl(calc(var(--h, 210) + 86) 80% 6%) 100%
+      );
+  }
+  /*
+   * Built from the logo's own colour instead of a hue derived from the name. The
+   * far end is mixed towards the page ground so the card still reads as part of
+   * the shelf rather than a block of flat brand colour.
+   */
+  .art.tinted::before {
+    background:
+      radial-gradient(56% 50% at 78% 12%, color-mix(in srgb, var(--tint) 72%, white) 0%, transparent 62%),
+      linear-gradient(
+        203deg,
+        var(--tint) 0%,
+        color-mix(in srgb, var(--tint) 46%, #07070b) 64%,
+        color-mix(in srgb, var(--tint) 14%, #07070b) 100%
       );
   }
   .art > img {

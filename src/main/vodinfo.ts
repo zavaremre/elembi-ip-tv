@@ -2,6 +2,7 @@ import { app } from 'electron'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { config } from './config'
+import { throttleProvider } from './ratelimit'
 import type { AudioVariant } from '../shared/types'
 
 /*
@@ -15,7 +16,6 @@ import type { AudioVariant } from '../shared/types'
  * sit unresolved on screen for good.
  */
 const CONCURRENCY = 2
-const GAP_MS = 150
 const TIMEOUT_MS = 10_000
 /** A file's audio track does not change, so hits are kept for a long time. */
 const HIT_TTL_MS = 60 * 24 * 3600_000
@@ -78,6 +78,8 @@ async function lookup(id: number): Promise<AudioInfo> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
   try {
+    /* Nobody is waiting on a badge, so it queues behind interactive work. */
+    await throttleProvider(true)
     const res = await fetch(url, { signal: controller.signal })
     if (!res.ok) return { language: null, variant: null }
     const body = (await res.json()) as { info?: { audio?: { tags?: { language?: string } } } }
@@ -114,7 +116,6 @@ export async function audioInfo(ids: number[]): Promise<Record<number, AudioInfo
         store[id] = { ...info, at: Date.now() }
         out[id] = info
         changed = true
-        await new Promise((resolve) => setTimeout(resolve, GAP_MS))
       }
     })
   )

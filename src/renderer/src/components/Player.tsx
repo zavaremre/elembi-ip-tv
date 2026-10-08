@@ -136,8 +136,7 @@ export function Player({
   const subs = useSubtitles(
     videoRef,
     { imdbId: target.imdbId, query: target.title, season: target.season, episode: target.episode, syncKey },
-    engine.timeline?.offset ?? 0,
-    engine.fps
+    engine.timeline?.offset ?? 0
   )
   const subtitleStyle = useSubtitleStyle()
   const controls = usePlayerControls(videoRef, containerRef, {
@@ -196,7 +195,12 @@ export function Player({
         }}
       />
 
-      <SubtitleOverlay lines={subs.cues} style={subtitleStyle.style} raised={full && controls.controlsVisible} />
+      {/* One source at a time: a loaded file wins, else what the stream carries. */}
+      <SubtitleOverlay
+        lines={subs.active ? subs.cues : engine.embeddedCues}
+        style={subtitleStyle.style}
+        raised={full && controls.controlsVisible}
+      />
 
       {full && (engine.preparing || waiting) && !engine.error ? (
         <PlayerLoading preparing={engine.preparing} />
@@ -257,6 +261,16 @@ export function Player({
           <div>tampon {engine.stats.buffer.toFixed(1)} sn</div>
           <div>düşen kare {engine.stats.dropped}</div>
         </div>
+      ) : null}
+
+      {full && !controls.fullscreen ? (
+        /*
+         * The overlay is nodrag as a whole, which also covers the title bar band
+         * and left the window impossible to move while watching. This strip hands
+         * that band back. app-region is not inherited, so a child can opt back in.
+         * Only outside real full screen, where there is no band to grab.
+         */
+        <div className="drag absolute inset-x-0 top-0 z-30 h-[52px]" aria-hidden="true" />
       ) : null}
 
       {full ? (

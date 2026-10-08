@@ -4,7 +4,7 @@ import { createServer, type Server } from 'node:http'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { randomBytes } from 'node:crypto'
-import type { AudioTrackInfo, MediaProbe } from '../shared/types'
+import type { AudioTrackInfo, MediaProbe, SubtitleTrackInfo } from '../shared/types'
 
 const FFMPEG = 'ffmpeg'
 const FFPROBE = 'ffprobe'
@@ -12,6 +12,14 @@ const PROBE_TIMEOUT_MS = 20_000
 
 /** Chromium decodes none of AC-3, E-AC-3, DTS or TrueHD. */
 const PLAYABLE_AUDIO = new Set(['aac', 'mp3', 'opus', 'vorbis', 'flac'])
+
+/*
+ * Text subtitle codecs, the ones ffmpeg can turn into WebVTT. The bitmap formats
+ * — PGS, VobSub, DVB — are pictures of words and would need OCR, so they are
+ * listed but never offered.
+ */
+const TEXT_SUBTITLES = new Set(['subrip', 'ass', 'ssa', 'mov_text', 'webvtt', 'text', 'subviewer', 'microdvd'])
+
 
 function run(command: string, args: string[], timeoutMs: number): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -54,18 +62,10 @@ interface RawStream {
   codec_type?: string
   codec_name?: string
   channels?: number
-  r_frame_rate?: string
-  avg_frame_rate?: string
   tags?: { language?: string; title?: string }
+  disposition?: Record<string, number>
 }
 
-/** ffprobe reports frame rates as "24000/1001"; 0 denominators do occur. */
-function toFps(value: string | undefined): number | null {
-  if (!value) return null
-  const [num, den] = value.split('/')
-  const fps = Number(num) / (Number(den) || 1)
-  return Number.isFinite(fps) && fps > 1 && fps < 1000 ? Math.round(fps * 1000) / 1000 : null
-}
 
 /** Reads the real track list, which the provider API only half reports. */
 export async function probe(url: string): Promise<MediaProbe> {
@@ -94,8 +94,15 @@ export async function probe(url: string): Promise<MediaProbe> {
    * Matroska seek never completes because Chromium hunts for the index. So the
    * pipe is used for every container except MP4, where it would only add delay.
    */
-  const video = streams.find((stream) => stream.codec_type === 'video')
-  const fps = toFps(video?.r_frame_rate) ?? toFps(video?.avg_frame_rate)
+  const subtitles: SubtitleTrackInfo[] = streams
+    .filter((stream) => stream.codec_type === 'subtitle')
+    .map((stream, order) => ({
+      order,
+      language: stream.tags?.language ?? null,
+      title: stream.tags?.title ?? null,
+      codec: stream.codec_name ?? 'bilinmiyor',
+      text: TEXT_SUBTITLES.has(stream.codec_name ?? '')
+    }))
 
   const format = data.format?.format_name ?? ''
   const seekable = /mp4|mov|m4a/.test(format)
@@ -104,7 +111,7 @@ export async function probe(url: string): Promise<MediaProbe> {
   return {
     duration: Number(data.format?.duration ?? 0) || 0,
     audio,
-    fps,
+    subtitles,
     needsRemux: !seekable || audio.length > 1 || unplayableAudio
   }
 }
@@ -113,6 +120,7 @@ export async function probe(url: string): Promise<MediaProbe> {
 
 let server: Server | null = null
 let port = 0
+
 
 async function ensureServer(): Promise<number> {
   if (server && port) return port
@@ -124,22 +132,30 @@ async function ensureServer(): Promise<number> {
      * lives. A query token cannot be used because hls.js resolves segment URLs
      * against the playlist path and drops the query string.
      */
-    const match = /^\/hls\/([a-f0-9]+)\/([A-Za-z0-9.]+)$/.exec(url.pathname)
-    if (!match) {
-      res.writeHead(404).end()
-      return
+    const headers = {
+      'Cache-Control': 'no-store',
+      /* Without this a Web Audio tap on the element would output silence. */
+      'Access-Control-Allow-Origin': '*'
     }
-    const file = hlsFile(match[1], match[2])
+
+    const match = /^\/hls\/([a-f0-9]+)\/([A-Za-z0-9._]+)$/.exec(url.pathname)
+    const file = match ? hlsFile(match[1], match[2]) : null
     if (!file) {
       res.writeHead(404).end()
       return
     }
-    res.writeHead(200, {
-      'Content-Type': file.type,
-      'Cache-Control': 'no-store',
-      /* Without this a Web Audio tap on the element would output silence. */
-      'Access-Control-Allow-Origin': '*'
-    })
+
+    /*
+     * ffmpeg labels the subtitle group "subtitle_0" and names no language, so the
+     * master playlist is rewritten on the way out. It is four lines of text and
+     * the player reads it once.
+     */
+    if (match![2] === 'master.m3u8') {
+      res.writeHead(200, { ...headers, 'Content-Type': file.type }).end(labelledMaster(file.path))
+      return
+    }
+
+    res.writeHead(200, { ...headers, 'Content-Type': file.type })
     createReadStream(file.path).pipe(res)
   })
 
@@ -162,38 +178,113 @@ interface HlsSession {
   src: string
   audioOrder: number
   start: number
+  /** The one embedded track carried inside this session's stream. */
+  subtitle: SubtitleTrackInfo | null
 }
 
 let session: HlsSession | null = null
+/**
+ * The session being replaced. Its ffmpeg is already gone — the subscription
+ * allows a single connection — but its segments stay readable so the element can
+ * play on while the replacement starts. Measured: a restart needs 3.1–4.3s, and
+ * deleting these straight away was what cut the sound for exactly that long.
+ */
+let retiring: HlsSession | null = null
 
-function hlsArgs(src: string, audioOrder: number, start: number, dir: string): string[] {
+/**
+ * The subtitle travels inside the HLS output rather than beside it.
+ *
+ * This is the whole point: ffmpeg normalises each output against its own first
+ * packet, and those differ, so a sidecar file needed its own correction and the
+ * correction kept being wrong. Measured on The Odyssey seeking to 1800s — in one
+ * stream the video lands at 1.442 and the cue at 1.173, a difference of -0.269,
+ * matching the absolute times exactly. The player aligns subtitles the same way
+ * it aligns audio, and no arithmetic of ours is involved. It is also why mpv and
+ * VLC never had this problem: they keep one clock. -copyts was the wrong answer
+ * and a trap besides — it is global, so it silently moved video and audio too.
+ *
+ * ffmpeg's webvtt muxer takes one stream per group, so one language is carried
+ * at a time and switching restarts the session, as changing audio track does.
+ */
+function hlsArgs(
+  src: string,
+  audioOrder: number,
+  start: number,
+  dir: string,
+  subtitle: SubtitleTrackInfo | null
+): string[] {
   return [
     '-nostdin',
     '-v', 'error',
+    /*
+     * Without this the audio is trimmed to the requested position while the video
+     * falls back to the preceding keyframe. Measured: audio arrived 6.187s after
+     * the first frame, which is the silence heard after every seek. With it, 0.020s.
+     */
+    '-noaccurate_seek',
     ...(start > 0 ? ['-ss', String(start)] : []),
     '-i', src,
     '-map', '0:v:0',
     '-map', `0:a:${audioOrder}`,
+    ...(subtitle ? ['-map', `0:s:${subtitle.order}`] : []),
     '-c:v', 'copy',
     '-c:a', 'aac',
     '-b:a', '192k',
     '-ac', '2',
+    ...(subtitle ? ['-c:s', 'webvtt'] : []),
     '-af', 'aresample=async=1:min_hard_comp=0.100',
     '-f', 'hls',
     '-hls_time', String(SEGMENT_SECONDS),
     '-hls_list_size', '0',
     '-hls_playlist_type', 'event',
     '-hls_flags', 'independent_segments+temp_file',
-    '-hls_segment_filename', join(dir, 'seg%05d.ts'),
-    join(dir, 'index.m3u8')
+    /* Named the same way with or without a subtitle, so one path serves both. */
+    '-var_stream_map', subtitle ? 'v:0,a:0,s:0,sgroup:subs,name:main' : 'v:0,a:0,name:main',
+    '-master_pl_name', 'master.m3u8',
+    '-hls_segment_filename', join(dir, 'v%v_seg%05d.ts'),
+    join(dir, 'v%v.m3u8')
   ]
 }
 
-export function stopHls(): void {
-  if (!session) return
+const LANGUAGE_NAMES: Record<string, string> = {
+  tur: 'Türkçe',
+  eng: 'İngilizce',
+  ger: 'Almanca',
+  deu: 'Almanca',
+  fre: 'Fransızca',
+  fra: 'Fransızca',
+  spa: 'İspanyolca',
+  ita: 'İtalyanca',
+  rus: 'Rusça',
+  ara: 'Arapça',
+  ukr: 'Ukraynaca',
+  dut: 'Felemenkçe',
+  swe: 'İsveççe',
+  fin: 'Fince'
+}
+
+function discard(dead: HlsSession | null): void {
+  if (!dead) return
+  try {
+    rmSync(dead.dir, { recursive: true, force: true })
+  } catch {
+    /* A temp directory that will not go is the OS's problem, not ours. */
+  }
+}
+
+/** Ends the running session's ffmpeg but leaves its files for the moment. */
+function retire(): HlsSession | null {
+  if (!session) return null
   session.child.kill('SIGKILL')
-  rmSync(session.dir, { recursive: true, force: true })
+  const dead = session
   session = null
+  return dead
+}
+
+export function stopHls(): void {
+  discard(retire())
+  discard(retiring)
+  retiring = null
 }
 
 /**
@@ -201,24 +292,35 @@ export function stopHls(): void {
  * gives the player real segment durations, so seeking inside what has already
  * been produced is instant and exact instead of restarting ffmpeg.
  */
-export async function startHls(src: string, audioOrder: number, start: number): Promise<string> {
-  stopHls()
+export async function startHls(
+  src: string,
+  audioOrder: number,
+  start: number,
+  subtitle: SubtitleTrackInfo | null = null
+): Promise<string> {
+  /* Anything left from an earlier switch has served its purpose by now. */
+  discard(retiring)
+  retiring = retire()
+
   const id = randomBytes(8).toString('hex')
   const dir = join(tmpdir(), `akis-hls-${id}`)
   mkdirSync(dir, { recursive: true })
 
-  const child = spawn(FFMPEG, hlsArgs(src, audioOrder, start, dir), { stdio: ['ignore', 'ignore', 'pipe'] })
+  const child = spawn(FFMPEG, hlsArgs(src, audioOrder, start, dir, subtitle), { stdio: ['ignore', 'ignore', 'pipe'] })
   let stderr = ''
   child.stderr.on('data', (chunk: Buffer) => (stderr += chunk.toString()))
-  session = { id, dir, child, src, audioOrder, start }
+  session = { id, dir, child, src, audioOrder, start, subtitle }
 
-  const playlist = join(dir, 'index.m3u8')
+  const playlist = join(dir, 'vmain.m3u8')
   const deadline = Date.now() + PLAYLIST_WAIT_MS
   while (Date.now() < deadline) {
     if (session?.id !== id) throw new Error('Oturum iptal edildi')
     if (existsSync(playlist) && readFileSync(playlist, 'utf8').includes('#EXTINF')) {
       const port = await ensureServer()
-      return `http://127.0.0.1:${port}/hls/${id}/index.m3u8`
+      /* This session can serve itself now, so the previous files can go. */
+      discard(retiring)
+      retiring = null
+      return `http://127.0.0.1:${port}/hls/${id}/master.m3u8`
     }
     if (child.exitCode !== null) {
       throw new Error(stderr.trim().split('\n').pop() ?? 'ffmpeg beklenmedik şekilde kapandı')
@@ -228,11 +330,41 @@ export async function startHls(src: string, audioOrder: number, start: number): 
   throw new Error('HLS oturumu zamanında başlamadı')
 }
 
-/** Serves one file from the active session directory; the id guards the path. */
+
+/**
+ * Gives the subtitle group a name and a language the player can show, which
+ * ffmpeg does not write. Falls back to the file as-is if anything looks off.
+ */
+function labelledMaster(path: string): string {
+  const text = readFileSync(path, 'utf8')
+  const track = (session ?? retiring)?.subtitle
+  if (!track) return text
+  /*
+   * The language wins over the track's own title. These files label tracks with
+   * release tags — "tr #turkseed" on the film this was built against — which is
+   * noise to the viewer, so the title is only a fallback.
+   */
+  const name = track.language
+    ? (LANGUAGE_NAMES[track.language] ?? track.language.toUpperCase())
+    : track.title?.trim() || 'Altyazı'
+  return text.replace(/^#EXT-X-MEDIA:TYPE=SUBTITLES.*$/m, (line) =>
+    line
+      .replace(/NAME="[^"]*"/, `NAME="${name}"`)
+      .replace(/(TYPE=SUBTITLES)/, `$1${track.language ? `,LANGUAGE="${track.language}"` : ''}`)
+  )
+}
+
 export function hlsFile(id: string, file: string): { path: string; type: string } | null {
-  if (!session || session.id !== id) return null
-  if (!/^[a-z0-9.]+$/i.test(file)) return null
-  const path = join(session.dir, file)
+  /* The retiring session is still answered, which is the whole point of it. */
+  const owner = session?.id === id ? session : retiring?.id === id ? retiring : null
+  if (!owner) return null
+  if (!/^[A-Za-z0-9._]+$/.test(file) || file.includes('..')) return null
+  const path = join(owner.dir, file)
   if (!existsSync(path)) return null
-  return { path, type: file.endsWith('.m3u8') ? 'application/vnd.apple.mpegurl' : 'video/mp2t' }
+  const type = file.endsWith('.m3u8')
+    ? 'application/vnd.apple.mpegurl'
+    : file.endsWith('.vtt')
+      ? 'text/vtt; charset=utf-8'
+      : 'video/mp2t'
+  return { path, type }
 }

@@ -8,6 +8,12 @@ interface ArtProps {
   alt: string
   /** Hue for the Grainient skeleton shown until the image decodes. */
   hue: number
+  /**
+   * Brand colour read out of the artwork, when there is one. It replaces the
+   * hue-derived ground, so a channel sits on its own colour rather than on one
+   * computed from its name.
+   */
+  tint?: string | null
   shape?: Shape
   contain?: boolean
   /** Drops the darkening scrim; for tiles that carry no text. */
@@ -24,13 +30,13 @@ interface ArtProps {
 const SHAPE: Record<Shape, string> = { poster: 'poster', still: 'still', fill: 'absolute inset-0', box: '' }
 
 /** Key art with a colour-matched loading skeleton and the pointer-driven specular sheen. */
-export function Art({ src, alt, hue, shape = 'poster', contain, flat, className = '', children }: ArtProps): React.JSX.Element {
+export function Art({ src, alt, hue, tint, shape = 'poster', contain, flat, className = '', children }: ArtProps): React.JSX.Element {
   const [ready, setReady] = useState(false)
 
   return (
     <div
-      className={`art ${SHAPE[shape]} ${flat ? 'flat' : ''} ${className}`}
-      style={{ '--h': hue } as CSSProperties}
+      className={`art ${SHAPE[shape]} ${flat ? 'flat' : ''} ${tint ? 'tinted' : ''} ${className}`}
+      style={{ '--h': hue, ...(tint ? { '--tint': tint } : {}) } as CSSProperties}
     >
       {src ? (
         <img

@@ -24,3 +24,30 @@ export function tc(sec: number): string {
   const p = (n: number): string => String(n).padStart(2, '0')
   return h ? `${h}:${p(m)}:${p(ss)}` : `${p(m)}:${p(ss)}`
 }
+
+const SUBTITLE_LANGUAGES: Record<string, string> = {
+  tur: 'Türkçe',
+  eng: 'İngilizce',
+  ger: 'Almanca',
+  deu: 'Almanca',
+  fre: 'Fransızca',
+  fra: 'Fransızca',
+  spa: 'İspanyolca',
+  ita: 'İtalyanca',
+  rus: 'Rusça',
+  ara: 'Arapça',
+  ukr: 'Ukraynaca',
+  dut: 'Felemenkçe',
+  swe: 'İsveççe',
+  fin: 'Fince'
+}
+
+/**
+ * Names a subtitle track the file only labels with a three-letter code. The
+ * language wins over the track's own title: these files carry release tags there
+ * — "tr #turkseed" and the like — which mean nothing to the viewer.
+ */
+export function subtitleTrackLabel(track: { language: string | null; title: string | null }): string {
+  if (track.language) return SUBTITLE_LANGUAGES[track.language] ?? track.language.toUpperCase()
+  return track.title?.trim() || 'Altyazı'
+}

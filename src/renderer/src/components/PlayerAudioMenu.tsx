@@ -1,3 +1,4 @@
+import { subtitleTrackLabel } from '@/lib/fmt'
 import type { PlayerEngine } from '@/hooks/usePlayerEngine'
 import type { AudioDelay } from '@/hooks/useAudioDelay'
 import type { SubtitleStyleState } from '@/hooks/useSubtitleStyle'
@@ -108,6 +109,38 @@ export function PlayerAudioMenu({
       </Section>
 
       <Section title="Altyazı">
+        {/*
+          * Offered first: these come out of the file and travel inside the
+          * stream, so the player times them against the picture itself. Nothing
+          * to adjust, and nothing to download.
+          */}
+        {engine.embedded.length > 0 ? (
+          <>
+            <div className="px-3 pb-1 text-[10.5px] leading-snug text-score">
+              Dosyanın içinde altyazı var — senkronu kusursuz, ayar gerekmez
+            </div>
+            <Option
+              label="Kapalı"
+              active={engine.embeddedTrack === null}
+              onClick={() => engine.setEmbeddedTrack(null)}
+            />
+            {engine.embedded.map((track) => (
+              <Option
+                key={track.order}
+                label={subtitleTrackLabel(track)}
+                active={engine.embeddedTrack === track.order}
+                onClick={() => engine.setEmbeddedTrack(track.order)}
+              />
+            ))}
+            {engine.embedded.length > 1 ? (
+              <div className="px-3 pt-0.5 pb-1 text-[10px] leading-snug text-tx3">
+                Dil değiştirmek akışı yeniden başlatır, birkaç saniye sürer.
+              </div>
+            ) : null}
+            <div className="mt-1 mb-1 border-t border-line" />
+          </>
+        ) : null}
+
         {engine.subtitleTracks.length > 0 ? (
           <>
             <Option label="Yayındaki altyazı kapalı" active={engine.subtitleTrack === -1} onClick={() => engine.setSubtitleTrack(-1)} />
@@ -126,25 +159,19 @@ export function PlayerAudioMenu({
           <>
             <div className="truncate px-3 py-1 text-[12px] text-acc">{subs.active}</div>
             <div className="flex items-center gap-1 px-3 py-1.5">
-              <span className="mono mr-1 text-[11px] text-tx3">gecikme</span>
-              <Chip active={false} onClick={() => subs.nudgeDelay(-1)} label="−1" />
-              <Chip active={false} onClick={() => subs.nudgeDelay(-0.25)} label="−¼" />
-              <span className="mono w-16 text-center text-[11.5px]">{subs.delay.toFixed(2)} sn</span>
-              <Chip active={false} onClick={() => subs.nudgeDelay(0.25)} label="+¼" />
+                <span className="mono mr-1 text-[11px] text-tx3">gecikme</span>
+                <Chip active={false} onClick={() => subs.nudgeDelay(-1)} label="−1" />
+                <Chip active={false} onClick={() => subs.nudgeDelay(-0.25)} label="−¼" />
+                <span className="mono w-16 text-center text-[11.5px]">{subs.delay.toFixed(2)} sn</span>
+                <Chip active={false} onClick={() => subs.nudgeDelay(0.25)} label="+¼" />
               <Chip active={false} onClick={() => subs.nudgeDelay(1)} label="+1" />
             </div>
-            {subs.scale !== 1 && subs.subtitleFps && engine.fps ? (
-              <div className="px-3 pb-1 text-[10.5px] leading-snug text-tx3">
-                <span className="text-score">kare hızı uyarlandı</span> · altyazı {subs.subtitleFps} fps, dosya {engine.fps} fps —
-                zamanlama buna göre gerildi, yoksa film ilerledikçe kayardı
-              </div>
-            ) : null}
             {subs.remembered ? (
               <div className="px-3 pb-1 text-[10.5px] leading-snug text-tx3">
                 Bu başlık için ayarladığın zamanlama hatırlandı
               </div>
             ) : null}
-            {subs.delay !== 0 || subs.scale !== 1 ? (
+            {subs.delay !== 0 ? (
               <Option label="Zamanlamayı sıfırla" active={false} onClick={subs.resetSync} />
             ) : null}
             <Option label="Altyazıyı kaldır" active={false} onClick={subs.clear} />
@@ -153,53 +180,6 @@ export function PlayerAudioMenu({
 
         <Option label={subs.busy ? 'çalışıyor…' : 'Dosyadan yükle…'} active={false} onClick={subs.loadLocal} />
 
-        {subs.serviceAvailable ? (
-          <Option label="İnternetten ara" active={false} onClick={subs.search} />
-        ) : (
-          <div className="px-3 py-1.5 text-[11.5px] leading-snug text-tx3">
-            Otomatik altyazı için <span className="mono text-tx2">OPENSUBTITLES_KEY</span> gerekiyor
-          </div>
-        )}
-
-        {subs.candidates.length > 0 ? (
-          <div className="max-h-[180px] overflow-y-auto border-t border-line pt-1">
-            {engine.fps ? (
-              <div className="mono px-3 pb-1 text-[10px] leading-snug text-tx3">
-                dosya {engine.fps} fps · aynı kare hızındakiler üstte
-              </div>
-            ) : null}
-            {subs.candidates.map((candidate) => (
-              <button
-                key={candidate.fileId}
-                type="button"
-                onClick={() => subs.pick(candidate)}
-                className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[12px] text-tx2 hover:text-tx"
-              >
-                <span className="mono shrink-0 text-[10px] text-acc uppercase">{candidate.language}</span>
-                <span className="truncate">{candidate.label}</span>
-                {/* Frame rate decides whether a subtitle can hold sync at all. */}
-                {candidate.fps ? (
-                  <span
-                    className={`mono ml-auto shrink-0 text-[10px] ${candidate.fpsMatch ? 'text-score' : 'text-tx3'}`}
-                    title={candidate.fpsMatch ? 'Kare hızı dosyayla aynı' : 'Kare hızı farklı — zamanlama uyarlanır'}
-                  >
-                    {candidate.fps} fps
-                  </span>
-                ) : (
-                  <span className="mono ml-auto shrink-0 text-[10px] text-tx3">{candidate.downloads}</span>
-                )}
-              </button>
-            ))}
-          </div>
-        ) : null}
-
-        {subs.remaining !== null ? (
-          <div className="mono px-3 py-1 text-[10.5px] text-tx3">
-            kalan indirme hakkı: <span className={subs.remaining <= 1 ? 'text-live' : 'text-tx2'}>{subs.remaining}</span>
-            {subs.remaining <= 1 ? <span className="text-live"> · hesap eklersen kota artar</span> : null}
-          </div>
-        ) : null}
-        {subs.notice ? <div className="px-3 py-1 text-[11px] leading-snug text-tx3">{subs.notice}</div> : null}
         {subs.error ? <div className="px-3 py-1.5 text-[11.5px] leading-snug text-live">{subs.error}</div> : null}
       </Section>
 

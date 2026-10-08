@@ -6,6 +6,15 @@ import type { AudioVariant, VodItem } from '@shared/types'
  * only answers one id per request, so lookups are batched, cached on disk by the
  * main process, and never repeated for ids already known.
  */
+
+/*
+ * Asked in small groups rather than one call for the whole page. The main process
+ * holds the panel to a fixed number of requests per minute — it locks an address
+ * out otherwise — so a page's worth of badges takes a while, and arriving in
+ * groups means they appear as they are answered instead of all at the end.
+ */
+const CHUNK = 8
+
 export function useAudioVariants(items: VodItem[]): Map<number, AudioVariant> {
   const [variants, setVariants] = useState<Map<number, AudioVariant>>(new Map())
   const requested = useRef(new Set<number>())
@@ -30,18 +39,22 @@ export function useAudioVariants(items: VodItem[]): Map<number, AudioVariant> {
 
     /* Not debounced: the signature empties as soon as the ids are registered, so
        a pending timer would be cancelled by the cleanup before it fired. */
-    window.akis.iptv
-      .audioInfo(pending)
-      .then((result) => {
-        /* Mount-scoped only; the request itself stays valid. */
+    const run = async (): Promise<void> => {
+      for (let i = 0; i < pending.length; i += CHUNK) {
+        /* Mount-scoped only; a request already sent stays valid. */
         if (!mounted.current) return
+        const chunk = pending.slice(i, i + CHUNK)
+        const result = await window.akis.iptv.audioInfo(chunk).catch(() => null)
+        if (!result || !mounted.current) continue
         setVariants((current) => {
           const next = new Map(current)
           for (const [id, info] of Object.entries(result)) next.set(Number(id), info.variant)
           return next
         })
-      })
-      .catch(() => undefined)
+      }
+    }
+
+    void run()
   }, [key])
 
   return variants

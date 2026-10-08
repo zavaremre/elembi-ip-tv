@@ -7,9 +7,8 @@ interface Shape {
   progress: Progress[]
   favorites: number[]
   /**
-   * Subtitle sync per title. The provider's files are re-encodes that no
-   * subtitle database has seen, so an offset found by hand is the only reliable
-   * one — worth keeping rather than making the user find it again every time.
+   * Subtitle offset per title, for files loaded from disk. Worth keeping rather
+   * than making the viewer find the same value again on every episode.
    */
   subtitleSync: Record<string, SubtitleSync>
 }
@@ -50,13 +49,13 @@ export const store = {
     return this.progress()
   },
   subtitleSync(key: string): SubtitleSync {
-    return read().subtitleSync[key] ?? { delay: 0, scale: 1, fileId: null }
+    return read().subtitleSync[key] ?? { delay: 0 }
   },
   saveSubtitleSync(key: string, sync: SubtitleSync): void {
     const s = read()
-    /* A title back at defaults is dropped rather than stored as a no-op. */
-    if (sync.delay === 0 && sync.scale === 1) delete s.subtitleSync[key]
-    else s.subtitleSync[key] = sync
+    /* A title back at zero is dropped rather than stored as a no-op. */
+    if (sync.delay === 0) delete s.subtitleSync[key]
+    else s.subtitleSync[key] = { delay: sync.delay }
     write()
   },
   favorites(): number[] {

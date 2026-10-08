@@ -246,37 +246,15 @@ export interface SeasonDetail {
 
 /* ── subtitles ────────────────────────────────── */
 
-export interface SubtitleCandidate {
-  fileId: number
-  label: string
-  language: string
-  downloads: number
-  hearingImpaired: boolean
-  /** Frame rate the subtitle was timed against, when the service reports it. */
-  fps: number | null
-  /** True when that frame rate matches the file we are playing. */
-  fpsMatch: boolean
-}
-
-/** Subtitle timing for one title: a constant offset plus a linear rate fix. */
+/** Remembered subtitle offset for one title, in seconds. */
 export interface SubtitleSync {
   delay: number
-  scale: number
-  /**
-   * The subtitle the scale was worked out for. The offset belongs to the title —
-   * the stream's own leading padding — but a rate fix belongs to one file, so
-   * picking a different subtitle keeps the offset and re-derives the rate.
-   */
-  fileId?: number | null
 }
 
 export interface SubtitleFile {
   label: string
   /** WebVTT text, ready to be turned into a blob track. */
   vtt: string
-  /** Downloads left on the OpenSubtitles quota, when the service reports it. */
-  remaining: number | null
-  notice: string | null
 }
 
 /* ── local remux ──────────────────────────────── */
@@ -292,13 +270,27 @@ export interface AudioTrackInfo {
   playable: boolean
 }
 
+/**
+ * A subtitle track carried inside the file. These are worth far more than
+ * anything downloaded: they ship with the video, so their timing cannot drift.
+ */
+export interface SubtitleTrackInfo {
+  /** Position among subtitle streams, which is what ffmpeg's -map 0:s:N wants. */
+  order: number
+  language: string | null
+  title: string | null
+  codec: string
+  /** False for bitmap formats like PGS, which cannot become text without OCR. */
+  text: boolean
+}
+
 export interface MediaProbe {
   duration: number
   audio: AudioTrackInfo[]
+  subtitles: SubtitleTrackInfo[]
   needsRemux: boolean
-  /** Frame rate of the video track; the strongest subtitle-sync signal we have. */
-  fps: number | null
 }
+
 
 /** One artwork lookup for a provider entry. */
 export interface ArtworkRequest {

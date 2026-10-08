@@ -15,7 +15,11 @@ interface PlayerSeekBarProps {
  */
 export function PlayerSeekBar({ time, duration, buffered, onSeek }: PlayerSeekBarProps): React.JSX.Element {
   const [scrub, setScrub] = useState<number | null>(null)
+  /** Position the pointer is over, so the time can be read without dragging. */
+  const [hover, setHover] = useState<number | null>(null)
   const position = scrub ?? time
+  /* While dragging, the handle is the thing being read, not the pointer. */
+  const marker = scrub ?? hover
   const pct = (value: number): string => `${Math.min(100, Math.max(0, (value / duration) * 100))}%`
 
   const commit = (): void => {
@@ -24,8 +28,19 @@ export function PlayerSeekBar({ time, duration, buffered, onSeek }: PlayerSeekBa
     setScrub(null)
   }
 
+  const track = (event: React.PointerEvent<HTMLDivElement>): void => {
+    const box = event.currentTarget.getBoundingClientRect()
+    if (box.width === 0) return
+    const ratio = (event.clientX - box.left) / box.width
+    setHover(Math.min(duration, Math.max(0, ratio * duration)))
+  }
+
   return (
-    <div className="group relative mb-3 h-5">
+    <div
+      className="group relative mb-3 h-5"
+      onPointerMove={track}
+      onPointerLeave={() => setHover(null)}
+    >
       <div className="absolute inset-x-0 top-1/2 h-[5px] -translate-y-1/2 overflow-hidden rounded-full bg-white/22">
         <i className="absolute inset-y-0 left-0 bg-white/30" style={{ width: pct(buffered) }} />
         <i className="absolute inset-y-0 left-0 bg-acc" style={{ width: pct(position) }} />
@@ -36,13 +51,20 @@ export function PlayerSeekBar({ time, duration, buffered, onSeek }: PlayerSeekBa
         style={{ left: pct(position) }}
       />
 
-      {scrub !== null ? (
-        <span
-          className="mono pointer-events-none absolute -top-7 -translate-x-1/2 rounded-[7px] border border-line bg-ink/90 px-1.5 py-0.5 text-[11px]"
-          style={{ left: pct(scrub) }}
-        >
-          {tc(scrub)}
-        </span>
+      {marker !== null ? (
+        <>
+          {/* A tick under the cursor ties the read-out to the place it describes. */}
+          <span
+            className="pointer-events-none absolute top-1/2 h-[11px] w-px -translate-x-1/2 -translate-y-1/2 bg-white/55"
+            style={{ left: pct(marker) }}
+          />
+          <span
+            className="mono pointer-events-none absolute -top-7 -translate-x-1/2 rounded-[7px] border border-line bg-ink/90 px-1.5 py-0.5 text-[11px] tabular-nums"
+            style={{ left: pct(marker) }}
+          >
+            {tc(marker)}
+          </span>
+        </>
       ) : null}
 
       <label className="absolute inset-0">

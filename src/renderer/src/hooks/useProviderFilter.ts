@@ -52,18 +52,33 @@ const countFacets = (values: (string | null)[]): Facet[] => {
  * Country and category facets for the provider catalogue, plus text search and
  * a render cap, because the VOD list runs to thousands of entries.
  */
-export function useProviderFilter<T extends ProviderEntry>(items: T[], defaultSort: ProviderSort): ProviderFilter<T> {
+export function useProviderFilter<T extends ProviderEntry>(
+  items: T[],
+  defaultSort: ProviderSort,
+  /**
+   * Categories the page was opened for, from a platform card. They scope what
+   * the page can show at all; the category control still narrows within them.
+   */
+  scope: string[] = []
+): ProviderFilter<T> {
   const [country, setCountryState] = useState('')
   const [category, setCategoryState] = useState('')
   const [query, setQueryState] = useState('')
   const [sort, setSortState] = useState<ProviderSort>(defaultSort)
   const [limit, setLimit] = useState(PAGE_SIZE)
 
-  const countries = useMemo(() => countFacets(items.map((i) => i.country)), [items])
+  const scoped = useMemo(() => {
+    if (scope.length === 0) return items
+    const allowed = new Set(scope)
+    return items.filter((item) => allowed.has(item.group))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, scope.join('|')])
+
+  const countries = useMemo(() => countFacets(scoped.map((i) => i.country)), [scoped])
 
   const inCountry = useMemo(
-    () => (country ? items.filter((i) => i.country === country) : items),
-    [items, country]
+    () => (country ? scoped.filter((i) => i.country === country) : scoped),
+    [scoped, country]
   )
 
   const categories = useMemo(() => countFacets(inCountry.map((i) => i.group)), [inCountry])

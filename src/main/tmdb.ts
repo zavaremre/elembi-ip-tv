@@ -228,6 +228,29 @@ export const tmdb = {
   async genres(): Promise<Genre[]> {
     return (await genres()).list
   },
+  /**
+   * The services available in the configured region, for labelling the
+   * provider's own categories. Amazon's resold channels and JustWatch's own
+   * entry are dropped: they are not platforms the catalogue is grouped by.
+   */
+  async watchProviders(): Promise<WatchProvider[]> {
+    const res = await call<{
+      results?: { provider_id?: number; provider_name?: string; logo_path?: string; display_priority?: number }[]
+    }>(
+      '/watch/providers/tv',
+      { watch_region: config().TMDB_REGION },
+      12 * 3600_000
+    )
+    return (res.results ?? [])
+      .filter((row) => row.provider_name && row.logo_path)
+      .filter((row) => !/ channel$| channel |justwatch/i.test(row.provider_name ?? ''))
+      .sort((a, b) => (a.display_priority ?? 999) - (b.display_priority ?? 999))
+      .map((row) => ({
+        id: row.provider_id ?? 0,
+        name: row.provider_name as string,
+        logo: `${IMG}/w154${row.logo_path}`
+      }))
+  },
   async search(q: string): Promise<TmdbItem[]> {
     if (!q.trim()) return []
     const [{ map }, res] = await Promise.all([

@@ -6,7 +6,16 @@ import type { Collection } from '@/components/ShowcaseCard'
 import { pickFeatured } from '@/lib/channels'
 import { buildProviderIndex, type ProviderIndex } from '@/lib/providerIndex'
 import { backdrop } from '@/lib/img'
-import type { Channel, Genre, Match, NowNext, ProviderStatus, TmdbItem, VodItem } from '@shared/types'
+import type {
+  Channel,
+  Genre,
+  Match,
+  NowNext,
+  ProviderStatus,
+  TmdbItem,
+  VodItem,
+  WatchProvider
+} from '@shared/types'
 
 const HERO_COUNT = 10
 /** The provider filter removes most of a single page, so several are fetched. */
@@ -23,6 +32,8 @@ export interface HomeData {
   channels: AsyncState<Channel[]>
   vod: AsyncState<VodItem[]>
   providerSeries: AsyncState<VodItem[]>
+  /** TMDB's services for the region, for logos on the platform cards. */
+  watchProviders: AsyncState<WatchProvider[]>
   genres: AsyncState<Genre[]>
   featured: Channel[]
   guide: Map<number, NowNext>
@@ -72,6 +83,7 @@ export function useHomeData(): HomeData {
   const matches = useAsync(() => window.akis.iptv.matches(), [nonce])
   const vod = useAsync(() => window.akis.iptv.vod(), [nonce])
   const providerSeries = useAsync(() => window.akis.iptv.series(), [nonce])
+  const watchProviders = useAsync(() => window.akis.tmdb.watchProviders(), [nonce])
   const status = useAsync(() => window.akis.iptv.status(), [nonce])
   const teamBadges = useTeamBadges(matches.data ?? [])
 
@@ -222,6 +234,7 @@ export function useHomeData(): HomeData {
     channels,
     vod,
     providerSeries,
+    watchProviders,
     genres,
     featured,
     guide,

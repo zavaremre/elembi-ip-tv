@@ -3,6 +3,7 @@ import { PosterCard } from '@/components/PosterCard'
 import { ProviderFilterBar } from '@/components/ProviderFilterBar'
 import { useAudioVariants } from '@/hooks/useAudioVariants'
 import { useProviderPosters } from '@/hooks/useProviderPosters'
+import { useLogoColors } from '@/hooks/useLogoColors'
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll'
 import { useProviderFilter, type ProviderSort } from '@/hooks/useProviderFilter'
 import { poster } from '@/lib/img'
@@ -21,6 +22,8 @@ interface ProviderBrowserProps {
   guide: Map<number, NowNext>
   onPlayChannel: (channel: Channel) => void
   onPlayVod: (item: VodItem) => void
+  /** Opens scoped to a platform's categories, as the platform cards do. */
+  categories?: string[]
 }
 
 const CHANNEL_SORTS: { value: ProviderSort; label: string }[] = [
@@ -35,6 +38,9 @@ const VOD_SORTS: { value: ProviderSort; label: string }[] = [
 ]
 
 /** Only VodItem carries a `kind`, which makes it the discriminant. */
+/* A stable empty array, so the scope memo does not see a new one each render. */
+const EMPTY_SCOPE: string[] = []
+
 const isVod = (entry: Channel | VodItem): entry is VodItem => 'kind' in entry
 const isChannel = (entry: Channel | VodItem): entry is Channel => !('kind' in entry)
 
@@ -46,13 +52,19 @@ export function ProviderBrowser({
   error,
   guide,
   onPlayChannel,
-  onPlayVod
+  onPlayVod,
+  categories
 }: ProviderBrowserProps): React.JSX.Element {
   const isChannels = dataset.kind === 'channels'
-  const filter = useProviderFilter<Channel | VodItem>(dataset.items, isChannels ? 'number' : 'newest')
+  const filter = useProviderFilter<Channel | VodItem>(
+    dataset.items,
+    isChannels ? 'number' : 'newest',
+    categories ?? EMPTY_SCOPE
+  )
   const visibleVod = filter.visible.filter(isVod)
   const audioVariants = useAudioVariants(visibleVod)
   const tmdbPosters = useProviderPosters(visibleVod)
+  const logoColors = useLogoColors(filter.visible.filter(isChannel).map((channel) => channel.logo))
   /* Nothing until the lookup answers, so the card never swaps artwork. */
   const artworkFor = (key: string, cover: string | null): string | null =>
     poster(tmdbPosters.paths.get(key)) ?? (tmdbPosters.resolved.has(key) ? cover : null)
@@ -104,6 +116,7 @@ export function ProviderBrowser({
                     channel={channel}
                     guide={guide.get(channel.id) ?? null}
                     layout="grid"
+                    color={channel.logo ? (logoColors.get(channel.logo) ?? null) : null}
                     onPlay={() => onPlayChannel(channel)}
                   />
                 ))

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Hls from 'hls.js'
-import type { AudioTrackInfo } from '@shared/types'
+import { LOCAL_TRACK_ID } from './useSubtitles'
+import type { AudioTrackInfo, SubtitleTrackInfo } from '@shared/types'
 
 export interface QualityLevel {
   index: number
@@ -50,8 +51,18 @@ export interface PlayerEngine {
   error: string | null
   notice: string | null
   timeline: Timeline | null
-  /** Frame rate of the file, when probed; used to rank subtitle candidates. */
-  fps: number | null
+  /**
+   * Subtitle tracks found inside the file. One at a time rides inside the stream,
+   * so its timing comes from the same clock as the picture and needs no fixing.
+   */
+  embedded: SubtitleTrackInfo[]
+  /** Which of them the running session carries, if any. */
+  embeddedTrack: number | null
+  setEmbeddedTrack: (order: number | null) => void
+  /** Text of the cues showing right now, parsed by the player from the stream. */
+  embeddedCues: string[]
+  /** Language of the audio track playing, so subtitles can default sensibly. */
+  audioLanguage: string | null
   retry: () => void
 }
 
@@ -88,10 +99,65 @@ export function usePlayerEngine(
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [preparing, setPreparing] = useState(false)
-  const [fps, setFps] = useState<number | null>(null)
+  const [embedded, setEmbedded] = useState<SubtitleTrackInfo[]>([])
+  const [embeddedTrack, setEmbeddedTrackState] = useState<number | null>(null)
+  const [embeddedCues, setEmbeddedCues] = useState<string[]>([])
+  const chosenSub = useRef<SubtitleTrackInfo | null>(null)
+  const cueUnbind = useRef<(() => void) | null>(null)
+  const [audioInfo, setAudioInfo] = useState<AudioTrackInfo[]>([])
   const [attempt, setAttempt] = useState(0)
   const [offset, setOffset] = useState(0)
   const [duration, setDuration] = useState(0)
+
+  /**
+   * Feeds the overlay from whatever the player parsed out of the stream.
+   *
+   * Bound through `addtrack` rather than once on an event: the track element does
+   * not exist yet when the subtitle list is announced, so reading `textTracks`
+   * then found nothing and the cues never arrived — subtitles were on and
+   * invisible. Our own loaded-from-disk track is skipped by id, since mixing the
+   * two is what made them look scrambled once before. Chromium's own painting is
+   * switched off in CSS, so leaving the mode alone costs nothing.
+   */
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+    const list = video.textTracks
+    const bound = new Set<TextTrack>()
+
+    const read = (): void => {
+      const texts: string[] = []
+      for (const track of bound) {
+        const cues = track.activeCues
+        for (let i = 0; i < (cues?.length ?? 0); i++) {
+          const cue = cues?.[i] as VTTCue | undefined
+          if (cue?.text) texts.push(cue.text)
+        }
+      }
+      setEmbeddedCues(texts)
+    }
+
+    const attach = (track: TextTrack): void => {
+      if (bound.has(track) || track.id === LOCAL_TRACK_ID) return
+      if (track.kind !== 'subtitles' && track.kind !== 'captions') return
+      bound.add(track)
+      /* A disabled track is parsed by nobody, so cues would never show up. */
+      if (track.mode === 'disabled') track.mode = 'hidden'
+      track.addEventListener('cuechange', read)
+    }
+
+    for (let i = 0; i < list.length; i++) attach(list[i])
+    const onAdd = (event: Event): void => {
+      const track = (event as TrackEvent).track
+      if (track instanceof TextTrack) attach(track)
+    }
+    list.addEventListener('addtrack', onAdd)
+
+    return () => {
+      list.removeEventListener('addtrack', onAdd)
+      for (const track of bound) track.removeEventListener('cuechange', read)
+    }
+  }, [videoRef])
 
   /**
    * Starts a local HLS session at a position with a chosen track. The playlist
@@ -103,8 +169,10 @@ export function usePlayerEngine(
       const video = videoRef.current
       if (!video) return
       setPreparing(true)
+      /* Guards the poll below: a later title must not adopt this session's list. */
+      const startedFrom = sourceRef.current
       try {
-        const playlist = await window.akis.media.startHls(sourceRef.current, audioOrder, start)
+        const playlist = await window.akis.media.startHls(sourceRef.current, audioOrder, start, chosenSub.current)
         hlsRef.current?.destroy()
         video.pause()
         video.removeAttribute('src')
@@ -113,10 +181,17 @@ export function usePlayerEngine(
         video.load()
         setOffset(start)
         setAudioTrackState(audioOrder)
-        const hls = new Hls({ enableWorker: true, backBufferLength: 120, enableCEA708Captions: false })
+        const hls = new Hls({
+          enableWorker: true,
+          backBufferLength: 120,
+          enableCEA708Captions: false
+        })
         hlsRef.current = hls
         hls.loadSource(playlist)
         hls.attachMedia(video)
+        hls.on(Hls.Events.SUBTITLE_TRACKS_UPDATED, () => {
+          if (hls.subtitleTracks.length > 0 && hls.subtitleTrack < 0) hls.subtitleTrack = 0
+        })
         hls.on(Hls.Events.ERROR, (_e, data) => {
           if (!data.fatal) return
           if (data.type === Hls.ErrorTypes.NETWORK_ERROR) hls.startLoad()
@@ -124,6 +199,7 @@ export function usePlayerEngine(
           else setError('Yerel akış açılamadı')
         })
         void video.play().catch(() => undefined)
+
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Yerel akış başlatılamadı')
       } finally {
@@ -142,8 +218,13 @@ export function usePlayerEngine(
     setNotice(null)
     setLevels([])
     setAudioTracks([])
-    /* Live streams never reach the probe, so a stale rate must not linger. */
-    setFps(null)
+    setEmbedded([])
+    setEmbeddedTrackState(null)
+    setEmbeddedCues([])
+    cueUnbind.current?.()
+    cueUnbind.current = null
+    chosenSub.current = null
+    setAudioInfo([])
     setSubtitleTracks([])
     setOffset(0)
     setDuration(0)
@@ -154,7 +235,12 @@ export function usePlayerEngine(
 
     if (isHls && Hls.isSupported()) {
       setMode('hls')
-      const hls = new Hls({ enableWorker: true, lowLatencyMode: false, backBufferLength: 90, enableCEA708Captions: false })
+      const hls = new Hls({
+        enableWorker: true,
+        lowLatencyMode: false,
+        backBufferLength: 90,
+        enableCEA708Captions: false
+      })
       hlsRef.current = hls
       hls.loadSource(url)
       hls.attachMedia(video)
@@ -216,7 +302,18 @@ export function usePlayerEngine(
 
       const info = await window.akis.media.probe(url).catch(() => null)
       if (cancelled) return
-      setFps(info?.fps ?? null)
+      setAudioInfo(info?.audio ?? [])
+      /*
+       * Turkish by default when the file carries it and the audio is not already
+       * Turkish — picking some other language nobody asked for is worse than
+       * showing nothing, and subtitles over a Turkish dub are just in the way.
+       */
+      const usable = (info?.subtitles ?? []).filter((track) => track.text)
+      setEmbedded(usable)
+      const audioLang = info?.audio[0]?.language ?? null
+      const preferred = audioLang === 'tur' ? null : (usable.find((track) => track.language === 'tur') ?? null)
+      chosenSub.current = preferred
+      setEmbeddedTrackState(preferred?.order ?? null)
 
       if (!info || (!info.needsRemux && !forceRemux)) {
         setMode('native')
@@ -304,6 +401,22 @@ export function usePlayerEngine(
     [audioTrack, offset, openLocal, videoRef]
   )
 
+  /*
+   * ffmpeg's webvtt muxer carries one stream per group, so another language means
+   * another session — the same cost as changing audio track, and rare enough.
+   */
+  const setEmbeddedTrack = useCallback(
+    (order: number | null): void => {
+      const next = order === null ? null : (embedded.find((track) => track.order === order) ?? null)
+      chosenSub.current = next
+      setEmbeddedTrackState(next?.order ?? null)
+      setEmbeddedCues([])
+      const at = offset + (videoRef.current?.currentTime ?? 0)
+      void openLocal(audioTrack, at)
+    },
+    [embedded, audioTrack, offset, openLocal, videoRef]
+  )
+
   const timeline: Timeline | null = mode === 'remux' ? { offset, duration, seek } : null
 
   return {
@@ -323,7 +436,11 @@ export function usePlayerEngine(
     error,
     notice,
     timeline,
-    fps,
+    embedded,
+    embeddedTrack,
+    setEmbeddedTrack,
+    embeddedCues,
+    audioLanguage: audioInfo.find((track) => track.order === audioTrack)?.language ?? null,
     retry: () => setAttempt((n) => n + 1)
   }
 }

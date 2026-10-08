@@ -11,9 +11,8 @@ export interface Config {
   XTREAM_USER: string
   XTREAM_PASS: string
   XTREAM_OUTPUT: string
-  OPENSUBTITLES_KEY: string
-  OPENSUBTITLES_USER: string
-  OPENSUBTITLES_PASS: string
+  /** Requests per minute allowed to the panel; it locks out bursts. */
+  XTREAM_MAX_PER_MINUTE: string
   EXTERNAL_PLAYER: string
 }
 
@@ -26,9 +25,7 @@ const DEFAULTS: Config = {
   XTREAM_USER: '',
   XTREAM_PASS: '',
   XTREAM_OUTPUT: 'hls',
-  OPENSUBTITLES_KEY: '',
-  OPENSUBTITLES_USER: '',
-  OPENSUBTITLES_PASS: '',
+  XTREAM_MAX_PER_MINUTE: '60',
   /** Chromium cannot switch audio tracks in progressive files; this player can. */
   EXTERNAL_PLAYER: 'VLC'
 }

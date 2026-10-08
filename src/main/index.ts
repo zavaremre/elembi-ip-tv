@@ -5,10 +5,11 @@ import { config, patchConfig } from './config'
 import { clearCache } from './http'
 import { store } from './store'
 import { tmdb } from './tmdb'
-import { subtitles, openLocalSubtitle } from './subtitles'
+import { openLocalSubtitle } from './subtitles'
 import { teamBadges } from './teams'
 import { available as ffmpegAvailable, probe, startHls, stopHls } from './transcode'
 import { posters } from './artwork'
+import { logoColors } from './logocolor'
 import { audioInfo } from './vodinfo'
 import { liveUrl, seriesUrl, vodUrl, xtream } from './xtream'
 import type {
@@ -16,7 +17,8 @@ import type {
   ArtworkRequest,
   DiscoverFilters,
   MediaKind,
-  SubtitleSync
+  SubtitleSync,
+  SubtitleTrackInfo
 } from '../shared/types'
 
 const isDev = !app.isPackaged
@@ -100,6 +102,8 @@ function registerIpc(): void {
   on('tmdb:airingToday', () => tmdb.airingToday())
   on('tmdb:byGenre', (kind: MediaKind, id: number) => tmdb.byGenre(kind, id))
   on('tmdb:genres', () => tmdb.genres())
+  on('tmdb:watchProviders', () => tmdb.watchProviders())
+  on('art:logoColors', (urls: string[]) => logoColors(urls))
   on('tmdb:search', (q: string) => tmdb.search(q))
   on('tmdb:detail', (kind: MediaKind, id: number) => tmdb.detail(kind, id))
   on('tmdb:full', (kind: MediaKind, id: number) => tmdb.full(kind, id))
@@ -124,7 +128,9 @@ function registerIpc(): void {
   /* local remux: audio tracks and unsupported codecs */
   on('media:available', () => ffmpegAvailable())
   on('media:probe', (url: string) => probe(url))
-  on('media:startHls', (src: string, audioOrder: number, start: number) => startHls(src, audioOrder, start))
+  on('media:startHls', (src: string, audioOrder: number, start: number, subtitle: SubtitleTrackInfo | null = null) =>
+    startHls(src, audioOrder, start, subtitle)
+  )
   on('media:stop', () => {
     stopHls()
     return true
@@ -137,10 +143,7 @@ function registerIpc(): void {
   on('teams:badges', (names: string[]) => teamBadges(names))
 
   /* subtitles */
-  on('subs:available', () => subtitles.configured())
   on('subs:openLocal', () => openLocalSubtitle())
-  on('subs:search', (params: Parameters<typeof subtitles.search>[0]) => subtitles.search(params))
-  on('subs:download', (fileId: number) => subtitles.download(fileId))
   on('subs:sync', (key: string) => store.subtitleSync(key))
   on('subs:saveSync', ({ key, sync }: { key: string; sync: SubtitleSync }) => {
     store.saveSubtitleSync(key, sync)

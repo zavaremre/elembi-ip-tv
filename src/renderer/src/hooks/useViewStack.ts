@@ -10,6 +10,8 @@ export interface View {
   detailRef: DetailRef | null
   /** A series in the provider catalogue, shown with its own season list. */
   providerSeries: VodItem | null
+  /** Set when a page was opened for a platform: its categories and its name. */
+  providerScope: { name: string; categories: string[] } | null
   filters: DiscoverFilters
 }
 

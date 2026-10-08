@@ -6,6 +6,7 @@ import {
   cleanTitle,
   countryFromGroup,
   countryFromName,
+  fillCountries,
   parseFixture
 } from './fixtures'
 import { catalog, catalogIsStale, catalogSavedAt, clearCatalog } from './catalog'
@@ -227,7 +228,7 @@ export const xtream = {
   },
 
   async channels(): Promise<Channel[]> {
-    return catalog('channels', 6 * 3600_000, loadChannels)
+    return catalog('channels', 6 * 3600_000, async () => fillCountries(await loadChannels()))
   },
 
   /** XMLTV first; the panel's own short EPG is only a fallback. */
@@ -317,11 +318,11 @@ export const xtream = {
   },
 
   async vod(): Promise<VodItem[]> {
-    return catalog('vod', 12 * 3600_000, loadVod)
+    return catalog('vod', 12 * 3600_000, async () => fillCountries(await loadVod()))
   },
 
   async series(): Promise<VodItem[]> {
-    return catalog('series', 12 * 3600_000, loadSeries)
+    return catalog('series', 12 * 3600_000, async () => fillCountries(await loadSeries()))
   },
 
   async seriesInfo(seriesId: number): Promise<{
