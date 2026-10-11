@@ -10,6 +10,7 @@ import type {
   SeasonDetail,
   TmdbDetail,
   TmdbItem,
+  TrendingPerson,
   WatchOptions,
   WatchProvider
 } from '../shared/types'
@@ -118,6 +119,7 @@ function toWatchProviders(list: RawWatchProvider[] | undefined): WatchProvider[]
 }
 
 interface RawFull extends RawItem {
+  belongs_to_collection?: { id: number; name: string } | null
   tagline?: string
   status?: string
   runtime?: number
@@ -233,6 +235,75 @@ export const tmdb = {
    * provider's own categories. Amazon's resold channels and JustWatch's own
    * entry are dropped: they are not platforms the catalogue is grouped by.
    */
+  /**
+   * The films in a series, oldest first.
+   *
+   * Release order rather than TMDB's own: a viewer looking at the second film
+   * wants to see where it sits, and the list is short enough that sorting it
+   * properly costs nothing.
+   */
+  async collection(id: number): Promise<TmdbItem[]> {
+    const { map } = await genres()
+    const res = await call<{ parts?: RawItem[] }>(`/collection/${id}`, {}, 12 * 3600_000)
+    return (res.parts ?? [])
+      .filter((part) => part.poster_path)
+      .map((part) => toItem(part, 'movie', map))
+      .sort((a, b) => (a.year ?? '9999').localeCompare(b.year ?? '9999'))
+  },
+
+  /**
+   * The faces behind this week's trending titles, most-billed first.
+   *
+   * Only the leading few of each cast are counted: a film lists a hundred
+   * people and the hundredth is not why anyone would recognise it.
+   */
+  async trendingPeople(): Promise<TrendingPerson[]> {
+    const { map } = await genres()
+    const [movies, shows] = await Promise.all([
+      call<{ results?: RawItem[] }>('/trending/movie/week', {}, 6 * 3600_000).catch(() => ({ results: [] })),
+      call<{ results?: RawItem[] }>('/trending/tv/week', {}, 6 * 3600_000).catch(() => ({ results: [] }))
+    ])
+
+    const titles = [
+      ...(movies.results ?? []).slice(0, 8).map((r) => ({ kind: 'movie' as MediaKind, raw: r })),
+      ...(shows.results ?? []).slice(0, 6).map((r) => ({ kind: 'tv' as MediaKind, raw: r }))
+    ].filter((entry) => entry.raw.poster_path)
+
+    const people = new Map<number, TrendingPerson & { score: number }>()
+    await Promise.all(
+      titles.map(async ({ kind, raw }) => {
+        const credits = await call<{ cast?: { id: number; name: string; profile_path?: string }[] }>(
+          `/${kind}/${raw.id}/credits`,
+          {},
+          6 * 3600_000
+        ).catch(() => ({ cast: [] }))
+        const item = toItem(raw, kind, map)
+        /* Billing order is the cast's own ranking; the top of it is the draw. */
+        for (const [order, member] of (credits.cast ?? []).slice(0, 6).entries()) {
+          if (!member.profile_path) continue
+          const found = people.get(member.id)
+          if (found) {
+            found.score += 6 - order
+            if (!found.titles.some((x) => x.id === item.id)) found.titles.push(item)
+            continue
+          }
+          people.set(member.id, {
+            id: member.id,
+            name: member.name,
+            profile: member.profile_path,
+            titles: [item],
+            score: 6 - order
+          })
+        }
+      })
+    )
+
+    return [...people.values()]
+      .sort((a, b) => b.score - a.score || b.titles.length - a.titles.length)
+      .slice(0, 20)
+      .map(({ score: _score, ...person }) => person)
+  },
+
   async watchProviders(): Promise<WatchProvider[]> {
     const res = await call<{
       results?: { provider_id?: number; provider_name?: string; logo_path?: string; display_priority?: number }[]
@@ -359,6 +430,9 @@ export const tmdb = {
           poster: s.poster_path ?? null,
           overview: s.overview ?? ''
         })),
+      collection: r.belongs_to_collection
+        ? { id: r.belongs_to_collection.id, name: r.belongs_to_collection.name }
+        : null,
       similar: (r.similar?.results ?? []).filter((x) => x.poster_path).slice(0, 14).map((x) => toItem(x, kind, map)),
       recommendations: (r.recommendations?.results ?? []).filter((x) => x.poster_path).slice(0, 14).map((x) => toItem(x, kind, map)),
       imdbId: r.external_ids?.imdb_id ?? null,
@@ -430,6 +504,35 @@ export const tmdb = {
    * so the result is filtered and sorted here and the UI says so.
    */
   async discover(f: DiscoverFilters): Promise<DiscoverResult> {
+    /*
+     * A person's work comes from their own credits rather than /discover.
+     * Measured: /discover/movie?with_cast= filters correctly, but the tv
+     * endpoint ignores it and returns the whole catalogue — 20001 results for
+     * any id. combined_credits is exact for both and costs one request.
+     */
+    if (f.person) {
+      const { map } = await genres()
+      const res = await call<{ cast?: (RawItem & { media_type?: string })[] }>(
+        `/person/${f.person.id}/combined_credits`,
+        {},
+        6 * 3600_000
+      )
+      const wanted = (res.cast ?? [])
+        .filter((row) => row.media_type === f.kind && row.poster_path)
+        .map((row) => toItem(row, f.kind, map))
+      /* The same title can appear twice when someone plays two roles in it. */
+      const unique = wanted.filter((item, i, all) => all.findIndex((x) => x.id === item.id) === i)
+      const ordered = applyLocalFilters(unique, f)
+      const size = 20
+      return {
+        items: ordered.slice((f.page - 1) * size, f.page * size),
+        page: f.page,
+        totalPages: Math.max(1, Math.ceil(ordered.length / size)),
+        totalResults: ordered.length,
+        filteredLocally: true
+      }
+    }
+
     if (f.query.trim()) {
       const paged = await listPaged(`/search/${f.kind}`, f.kind, {
         query: f.query.trim(),

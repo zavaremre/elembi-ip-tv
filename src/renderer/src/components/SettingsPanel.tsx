@@ -3,6 +3,9 @@ import type { AppConfig, ProviderStatus } from '@shared/types'
 
 interface SettingsPanelProps {
   onRefresh: () => void
+  /** Opens the setup screen again, for a changed or second subscription. */
+  onEditProvider: () => void
+  onOpenInfo: (tab: 'about' | 'help' | 'privacy' | 'terms') => void
 }
 
 function Field({ label, value }: { label: string; value: string }): React.JSX.Element {
@@ -15,7 +18,7 @@ function Field({ label, value }: { label: string; value: string }): React.JSX.El
 }
 
 /** Provider and TMDB status, read from the main process. Credentials stay in .env. */
-export function SettingsPanel({ onRefresh }: SettingsPanelProps): React.JSX.Element {
+export function SettingsPanel({ onRefresh, onEditProvider, onOpenInfo }: SettingsPanelProps): React.JSX.Element {
   const status = useAsync<ProviderStatus>(() => window.akis.iptv.status(), [])
   const config = useAsync<AppConfig>(() => window.akis.app.config(), [])
 
@@ -59,8 +62,32 @@ export function SettingsPanel({ onRefresh }: SettingsPanelProps): React.JSX.Elem
             <Field label="Kullanıcı" value={config.data?.xtream.user ?? '—'} />
             <Field label="Çıkış biçimi" value={config.data?.xtream.output ?? '—'} />
           </div>
+          <div className="mt-4 flex flex-wrap gap-2.5">
+            <button
+              type="button"
+              onClick={onEditProvider}
+              className="rounded-[10px] border border-line bg-white/8 px-4 py-2 text-[13px] font-bold hover:border-acc/40"
+            >
+              Aboneliği değiştir
+            </button>
+          </div>
+
+          <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-line pt-5 text-[13px] font-semibold text-tx3">
+            {(
+              [
+                ['about', 'Hakkında'],
+                ['help', 'Yardım'],
+                ['privacy', 'Gizlilik politikası'],
+                ['terms', 'Şartlar ve koşullar']
+              ] as const
+            ).map(([id, label]) => (
+              <button key={id} type="button" onClick={() => onOpenInfo(id)} className="hover:text-tx">
+                {label}
+              </button>
+            ))}
+          </div>
           <button type="button" onClick={onRefresh} className="mt-4 rounded-[10px] border border-line bg-white/8 px-4 py-2 text-[13px] font-bold hover:border-acc/40">
-            Önbelleği temizle ve yenile
+            Listeyi yenile
           </button>
         </section>
       </div>

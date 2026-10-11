@@ -7,6 +7,7 @@ import { GenreTile } from '@/components/GenreTile'
 import { Hero } from '@/components/Hero'
 import { MatchCard } from '@/components/MatchCard'
 import { MiniEpg } from '@/components/MiniEpg'
+import { PersonCard } from '@/components/PersonCard'
 import { PlatformCard } from '@/components/PlatformCard'
 import { PosterCard } from '@/components/PosterCard'
 import { Row } from '@/components/Row'
@@ -42,6 +43,7 @@ interface HomeProps {
   onOpenGenre: (genre: Genre) => void
   onOpenCollection: (id: string) => void
   onOpenPlatform: (name: string, categories: string[]) => void
+  onOpenPerson: (person: { id: number; name: string }) => void
   onSeeAll: (target: SeeAllTarget) => void
 }
 
@@ -60,6 +62,7 @@ export function Home({
   onOpenGenre,
   onOpenCollection,
   onOpenPlatform,
+  onOpenPerson,
   onSeeAll
 }: HomeProps): React.JSX.Element {
   /*
@@ -139,6 +142,26 @@ export function Home({
             />
           ))}
         </Row>
+
+        {(data.people.data ?? []).length > 0 ? (
+          <Row
+            title="Haftanın Oyuncuları"
+            tagline="Bu hafta öne çıkan yapımlardan"
+            loading={data.people.loading}
+          >
+            {(data.people.data ?? []).map((person) => (
+              <PersonCard
+                key={person.id}
+                id={person.id}
+                name={person.name}
+                profile={person.profile}
+                /* Why they are on the list, which is more use than a job title. */
+                note={person.titles[0]?.title}
+                onOpen={() => onOpenPerson({ id: person.id, name: person.name })}
+              />
+            ))}
+          </Row>
+        ) : null}
 
         {platforms.length > 0 ? (
           <Row title="Platformlar" meta={`${platforms.length} KATEGORİ`} tagline="Sağlayıcıda ne varsa">

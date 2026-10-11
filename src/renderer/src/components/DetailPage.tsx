@@ -14,6 +14,7 @@ import type { EpisodeSource } from '@/hooks/usePlayback'
 import type { EpisodeTarget } from '@/lib/episodes'
 import type { ProviderMatchState } from '@/lib/match'
 import type { Keyword, Progress, TmdbDetail, TmdbItem, VodItem } from '@shared/types'
+import { useCollection } from '@/hooks/useCollection'
 
 interface DetailPageProps {
   detail: TmdbDetail | null
@@ -24,6 +25,7 @@ interface DetailPageProps {
   onBack: () => void
   onOpenItem: (item: TmdbItem) => void
   onKeyword: (keyword: Keyword) => void
+  onPerson: (person: { id: number; name: string }) => void
   onPlayEpisodes: (episodes: EpisodeTarget[], index: number, source: EpisodeSource) => void
   progress: Progress[]
   /** Only titles the provider carries are offered as related watching. */
@@ -50,12 +52,22 @@ export function DetailPage({
   onBack,
   onOpenItem,
   onKeyword,
+  onPerson,
   onPlayEpisodes,
   progress,
   isPlayable,
   onManualSearch
 }: DetailPageProps): React.JSX.Element {
   const [trailerOpen, setTrailerOpen] = useState(false)
+  /*
+   * The series this film belongs to, kept to what the provider actually has —
+   * listing a sequel that cannot be opened is worse than not mentioning it.
+   *
+   * Called before the loading branch below, not after: a hook that runs on only
+   * some renders changes the hook count between them, which React treats as a
+   * fatal error — and the page simply did not open.
+   */
+  const collection = useCollection(detail?.collection?.id ?? null)
 
   if (loading || !detail) {
     return (
@@ -64,6 +76,8 @@ export function DetailPage({
       </main>
     )
   }
+
+  const series = (collection.data ?? []).filter((item) => item.id !== detail.id).filter(isPlayable)
 
   const similar = detail.similar.filter(isPlayable)
   const recommendations = detail.recommendations.filter(isPlayable)
@@ -237,8 +251,15 @@ export function DetailPage({
         {detail.cast.length > 0 ? (
           <Row title="Oyuncular" meta={`${detail.cast.length} KİŞİ`}>
             {detail.cast.map((person) => (
-              <PersonCard key={person.id} person={person} />
-            ))}
+                <PersonCard
+                  key={person.id}
+                  id={person.id}
+                  name={person.name}
+                  profile={person.profile}
+                  note={person.character}
+                  onOpen={() => onPerson({ id: person.id, name: person.name })}
+                />
+              ))}
           </Row>
         ) : null}
 

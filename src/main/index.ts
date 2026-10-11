@@ -10,6 +10,7 @@ import { teamBadges } from './teams'
 import { available as ffmpegAvailable, probe, startHls, stopHls } from './transcode'
 import { posters } from './artwork'
 import { logoColors } from './logocolor'
+import { resolveProviderLink } from './resolve'
 import { audioInfo } from './vodinfo'
 import { liveUrl, seriesUrl, vodUrl, xtream } from './xtream'
 import type {
@@ -102,6 +103,8 @@ function registerIpc(): void {
   on('tmdb:airingToday', () => tmdb.airingToday())
   on('tmdb:byGenre', (kind: MediaKind, id: number) => tmdb.byGenre(kind, id))
   on('tmdb:genres', () => tmdb.genres())
+  on('tmdb:collection', (id: number) => tmdb.collection(id))
+  on('tmdb:trendingPeople', () => tmdb.trendingPeople())
   on('tmdb:watchProviders', () => tmdb.watchProviders())
   on('art:logoColors', (urls: string[]) => logoColors(urls))
   on('tmdb:search', (q: string) => tmdb.search(q))
@@ -157,13 +160,17 @@ function registerIpc(): void {
   on('store:toggleFavorite', (id: number) => store.toggleFavorite(id))
 
   /* settings */
+  on('provider:resolve', (link: string) => resolveProviderLink(link))
+
   on('app:config', (): AppConfig => {
     const c = config()
     return {
       xtream: { host: c.XTREAM_HOST, user: c.XTREAM_USER, pass: c.XTREAM_PASS ? '•'.repeat(8) : '', output: c.XTREAM_OUTPUT },
       tmdb: { lang: c.TMDB_LANG, region: c.TMDB_REGION, hasToken: Boolean(c.TMDB_TOKEN || c.TMDB_KEY) },
       externalPlayer: c.EXTERNAL_PLAYER,
-      favorites: store.favorites()
+      favorites: store.favorites(),
+      dataDir: app.getPath('userData'),
+      platform: process.platform
     }
   })
   on('app:setConfig', (patch: Record<string, string>) => {

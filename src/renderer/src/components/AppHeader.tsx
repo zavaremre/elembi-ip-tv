@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
-export type Section = 'home' | 'search' | 'movies' | 'series' | 'live' | 'sports' | 'settings'
+export type Section = 'home' | 'search' | 'movies' | 'series' | 'live' | 'sports' | 'settings' | 'info'
 
 interface AppHeaderProps {
   section: Section

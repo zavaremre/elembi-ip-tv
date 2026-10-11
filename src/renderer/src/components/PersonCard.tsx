@@ -1,18 +1,31 @@
 import { Art } from './Art'
 import { hue, poster } from '@/lib/img'
-import type { CastMember } from '@shared/types'
 
 interface PersonCardProps {
-  person: CastMember
+  id: number
+  name: string
+  profile: string | null
+  /** The role in a cast list, or what they are in on the trending row. */
+  note?: string | null
+  onOpen: () => void
 }
 
-/** Cast entry: the face carries recognition, the role explains it. */
-export function PersonCard({ person }: PersonCardProps): React.JSX.Element {
+/**
+ * A face with a line of context under it. A button rather than a div, because it
+ * leads to the rest of their work — and a clickable div is unreachable by
+ * keyboard.
+ */
+export function PersonCard({ id, name, profile, note, onOpen }: PersonCardProps): React.JSX.Element {
   return (
-    <div className="w-[clamp(104px,8vw,128px)]">
-      <Art src={poster(person.profile, 'w185')} alt={person.name} hue={hue(person.id)} shape="poster" flat className="rounded-[12px]" />
-      <div className="mt-2 truncate text-[12.5px] font-bold">{person.name}</div>
-      {person.character ? <div className="truncate text-[11.5px] text-tx3">{person.character}</div> : null}
-    </div>
+    <button
+      type="button"
+      onClick={onOpen}
+      aria-label={`${name} yapımları`}
+      className="spot w-[clamp(104px,8vw,128px)] text-left"
+    >
+      <Art src={poster(profile, 'w185')} alt={name} hue={hue(id)} shape="poster" className="lift-sm" />
+      <div className="mt-2 truncate text-[12.5px] font-bold">{name}</div>
+      {note ? <div className="truncate text-[11.5px] text-tx3">{note}</div> : null}
+    </button>
   )
 }

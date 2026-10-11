@@ -19,9 +19,20 @@ import { sportChannels } from './lib/channels'
 import { Home, type SeeAllTarget } from './pages/Home'
 import { ListPage, type ListView } from './pages/ListPage'
 import { ProviderBrowser } from './pages/ProviderBrowser'
+import { ProviderMoviePage } from './pages/ProviderMoviePage'
+import { InfoPage, type InfoTab } from './pages/InfoPage'
+import { SetupPage } from './pages/SetupPage'
 import { ProviderSeriesPage } from './pages/ProviderSeriesPage'
 import { SearchPage } from './pages/SearchPage'
-import type { DiscoverFilters, Genre, Keyword, Match, TmdbItem, VodItem } from '@shared/types'
+import type {
+  DiscoverFilters,
+  Genre,
+  Keyword,
+  Match,
+  MediaKind,
+  TmdbItem,
+  VodItem
+} from '@shared/types'
 
 const COLLECTION_TITLES: Record<CollectionId, string> = {
   'top-rated': 'En Çok Oylananlar',
@@ -35,6 +46,7 @@ const DEFAULT_FILTERS: DiscoverFilters = {
   query: '',
   genreIds: [],
   keywordIds: [],
+  person: null,
   yearFrom: null,
   yearTo: null,
   minRating: null,
@@ -55,17 +67,21 @@ export function App(): React.JSX.Element {
     section: 'home',
     collection: null,
     detailRef: null,
-    providerSeries: null, providerScope: null,
+    providerSeries: null, providerMovie: null, providerScope: null,
     filters: DEFAULT_FILTERS
   })
-  const { section, collection, detailRef, providerSeries, providerScope, filters } = stack.view
+  const { section, collection, detailRef, providerSeries, providerMovie, providerScope, filters } = stack.view
   /* Titles the provider does not carry are hidden by default. */
   const [providerOnly, setProviderOnly] = useState(true)
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [paletteQuery, setPaletteQuery] = useState('')
   const [refreshing, setRefreshing] = useState(false)
+  const [setupOpen, setSetupOpen] = useState(false)
+  /* Bumped after saving, so the config is re-read rather than trusted. */
+  const [setupNonce, setSetupNonce] = useState(0)
+  const [infoTab, setInfoTab] = useState<InfoTab>('about')
 
-  const appConfig = useAsync(() => window.akis.app.config(), [])
+  const appConfig = useAsync(() => window.akis.app.config(), [setupNonce])
   const collectionList = useCollectionList(collection)
   const detail = useTmdbDetail(detailRef)
   /* Derived during render: no effect needed to keep the match in sync. */
@@ -107,12 +123,15 @@ export function App(): React.JSX.Element {
     toTop()
   }
 
-  const openDetail = (item: TmdbItem): void => go({ detailRef: { kind: item.kind, id: item.id }, providerSeries: null, providerScope: null })
+  const openDetail = (item: TmdbItem): void => go({ detailRef: { kind: item.kind, id: item.id }, providerSeries: null, providerMovie: null, providerScope: null })
 
-  /** A provider series opens its episode list; a movie plays straight away. */
+  /**
+   * Nothing plays straight from a card. A series opens its episode list and a
+   * film its own page, so there is one way in wherever it was clicked from.
+   */
   const openVod = (item: VodItem): void => {
-    if (item.kind === 'series') go({ providerSeries: item, detailRef: null })
-    else void playback.playVod(item)
+    if (item.kind === 'series') go({ providerSeries: item, providerMovie: null, detailRef: null })
+    else go({ providerMovie: item, providerSeries: null, detailRef: null })
   }
 
   const goSection = (next: Section): void => {
@@ -121,11 +140,23 @@ export function App(): React.JSX.Element {
       back()
       return
     }
-    go({ section: next, collection: null, detailRef: null, providerSeries: null, providerScope: null })
+    go({ section: next, collection: null, detailRef: null, providerSeries: null, providerMovie: null, providerScope: null })
   }
 
   const openCollection = (id: string): void =>
-    go({ collection: id as CollectionId, detailRef: null, providerSeries: null, providerScope: null })
+    go({ collection: id as CollectionId, detailRef: null, providerSeries: null, providerMovie: null, providerScope: null })
+
+  /** A cast member's own credits, on the same page keywords and genres land on. */
+  const openPerson = (person: { id: number; name: string }, kind: MediaKind): void =>
+    go({
+      section: 'search',
+      collection: null,
+      detailRef: null,
+      providerSeries: null,
+      providerMovie: null,
+      providerScope: null,
+      filters: { ...DEFAULT_FILTERS, kind, person }
+    })
 
   /** Genre tiles and keyword chips both land on the search page with filters applied. */
   const openGenre = (genre: Genre): void =>
@@ -133,7 +164,7 @@ export function App(): React.JSX.Element {
       section: 'search',
       collection: null,
       detailRef: null,
-      providerSeries: null, providerScope: null,
+      providerSeries: null, providerMovie: null, providerScope: null,
       filters: { ...DEFAULT_FILTERS, kind: genre.kind, genreIds: [genre.id] }
     })
 
@@ -142,7 +173,7 @@ export function App(): React.JSX.Element {
       section: 'search',
       collection: null,
       detailRef: null,
-      providerSeries: null, providerScope: null,
+      providerSeries: null, providerMovie: null, providerScope: null,
       filters: { ...DEFAULT_FILTERS, kind: detailRef?.kind ?? 'movie', keywordIds: [keyword.id] }
     })
 
@@ -153,19 +184,46 @@ export function App(): React.JSX.Element {
         section: 'search',
         collection: null,
         detailRef: null,
-        providerSeries: null, providerScope: null,
+        providerSeries: null, providerMovie: null, providerScope: null,
         filters: { ...DEFAULT_FILTERS, kind: target === 'popular-series' ? 'tv' : 'movie' }
       })
       return
     }
     const section: Section =
       target === 'sports' ? 'sports' : target === 'live' ? 'live' : target === 'provider-series' ? 'series' : 'movies'
-    go({ section, collection: null, detailRef: null, providerSeries: null, providerScope: null })
+    go({ section, collection: null, detailRef: null, providerSeries: null, providerMovie: null, providerScope: null })
   }
 
   const playMatch = (match: Match): void => {
     const channel = data.channels.data?.find((c) => c.id === match.channelId)
     if (channel) playback.playChannel(channel)
+  }
+
+  /*
+   * Nothing works without a subscription, and until this session there was no
+   * way to enter one outside a .env file. The setup screen stands in front of
+   * the app when the panel details are missing, and Settings can call it back.
+   */
+  const configured = Boolean(appConfig.data?.xtream.host && appConfig.data.xtream.user)
+  const needsSetup = !appConfig.loading && (!configured || setupOpen)
+
+  if (needsSetup) {
+    return (
+      <SetupPage
+        initial={{
+          host: appConfig.data?.xtream.host ?? '',
+          user: appConfig.data?.xtream.user ?? '',
+          output: appConfig.data?.xtream.output ?? 'hls',
+          hasToken: appConfig.data?.tmdb.hasToken ?? false
+        }}
+        onSaved={() => {
+          setSetupOpen(false)
+          setSetupNonce((n) => n + 1)
+          data.reload()
+        }}
+        onCancel={configured ? () => setSetupOpen(false) : undefined}
+      />
+    )
   }
 
   const refresh = (): void => {
@@ -196,7 +254,7 @@ export function App(): React.JSX.Element {
     : data.channels.loading
 
   const browser =
-    !collection && !providerSeries && (section === 'live' || section === 'movies' || section === 'series')
+    !collection && !providerSeries && !providerMovie && (section === 'live' || section === 'movies' || section === 'series')
       ? section === 'live'
         ? { title: 'Canlı TV', dataset: { kind: 'channels' as const, items: data.channels.data ?? [] }, state: data.channels }
         : section === 'movies'
@@ -228,12 +286,22 @@ export function App(): React.JSX.Element {
             error={detail.error}
             match={providerMatchState}
             onPlay={(match) => {
-              back()
-              openVod(match)
+              /*
+               * This page is already the detail page, so its play control plays.
+               * A series is the exception: what it opens is the episode list, and
+               * that replaces this view rather than stacking on top of it.
+               */
+              if (match.kind === 'series') {
+                back()
+                openVod(match)
+                return
+              }
+              void playback.playVod(match)
             }}
             onBack={back}
             onOpenItem={openDetail}
             onKeyword={openKeyword}
+            onPerson={(person) => openPerson(person, detail.data?.kind ?? 'movie')}
             onPlayEpisodes={playback.playEpisodeList}
             progress={playback.progress}
             isPlayable={data.isPlayable}
@@ -242,13 +310,36 @@ export function App(): React.JSX.Element {
               setPaletteOpen(true)
             }}
           />
+        ) : section === 'info' ? (
+          <InfoPage
+            tab={infoTab}
+            onTab={setInfoTab}
+            onBack={() => goSection('settings')}
+            dataDir={appConfig.data?.dataDir ?? ''}
+            platform={appConfig.data?.platform ?? ''}
+          />
         ) : section === 'settings' ? (
-          <SettingsPanel onRefresh={refresh} />
+          <SettingsPanel
+            onRefresh={refresh}
+            onEditProvider={() => setSetupOpen(true)}
+            onOpenInfo={(next) => {
+              setInfoTab(next)
+              goSection('info')
+            }}
+          />
         ) : providerSeries ? (
           <ProviderSeriesPage
             item={providerSeries}
             onPlayEpisodes={playback.playEpisodeList}
             progress={playback.progress}
+            onOpenTmdb={openDetail}
+            onBack={back}
+          />
+        ) : providerMovie ? (
+          <ProviderMoviePage
+            item={providerMovie}
+            progress={playback.progress}
+            onPlay={() => void playback.playVod(providerMovie)}
             onOpenTmdb={openDetail}
             onBack={back}
           />
@@ -300,12 +391,13 @@ export function App(): React.JSX.Element {
             onOpenGenre={openGenre}
             onOpenCollection={openCollection}
             onSeeAll={seeAll}
+            onOpenPerson={(person) => openPerson(person, 'movie')}
             onOpenPlatform={(name, categories) =>
               go({
                 section: 'series',
                 collection: null,
                 detailRef: null,
-                providerSeries: null,
+                providerSeries: null, providerMovie: null,
                                 providerScope: { name, categories }
               })
             }
@@ -313,7 +405,7 @@ export function App(): React.JSX.Element {
         )}
       </div>
 
-      {section === 'home' && !detailRef && !providerSeries && !collection ? (
+      {section === 'home' && !detailRef && !providerSeries && !providerMovie && !collection ? (
         <ProviderToast
           status={data.status.data}
           loading={data.channels.loading || data.vod.loading || data.providerSeries.loading}
@@ -367,7 +459,7 @@ export function App(): React.JSX.Element {
         onPlayVod={openVod}
         onOpenTmdb={openDetail}
         onSeeAll={(query) =>
-          go({ section: 'search', collection: null, detailRef: null, providerSeries: null, providerScope: null, filters: { ...DEFAULT_FILTERS, query } })
+          go({ section: 'search', collection: null, detailRef: null, providerSeries: null, providerMovie: null, providerScope: null, filters: { ...DEFAULT_FILTERS, query } })
         }
       />
 

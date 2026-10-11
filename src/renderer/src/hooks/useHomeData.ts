@@ -13,6 +13,7 @@ import type {
   NowNext,
   ProviderStatus,
   TmdbItem,
+  TrendingPerson,
   VodItem,
   WatchProvider
 } from '@shared/types'
@@ -34,6 +35,8 @@ export interface HomeData {
   providerSeries: AsyncState<VodItem[]>
   /** TMDB's services for the region, for logos on the platform cards. */
   watchProviders: AsyncState<WatchProvider[]>
+  /** The cast of this week's trending titles. */
+  people: AsyncState<TrendingPerson[]>
   genres: AsyncState<Genre[]>
   featured: Channel[]
   guide: Map<number, NowNext>
@@ -84,6 +87,7 @@ export function useHomeData(): HomeData {
   const vod = useAsync(() => window.akis.iptv.vod(), [nonce])
   const providerSeries = useAsync(() => window.akis.iptv.series(), [nonce])
   const watchProviders = useAsync(() => window.akis.tmdb.watchProviders(), [nonce])
+  const people = useAsync(() => window.akis.tmdb.trendingPeople(), [nonce])
   const status = useAsync(() => window.akis.iptv.status(), [nonce])
   const teamBadges = useTeamBadges(matches.data ?? [])
 
@@ -235,6 +239,7 @@ export function useHomeData(): HomeData {
     vod,
     providerSeries,
     watchProviders,
+    people,
     genres,
     featured,
     guide,

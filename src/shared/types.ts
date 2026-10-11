@@ -103,6 +103,9 @@ export interface AppConfig {
   tmdb: { lang: string; region: string; hasToken: boolean }
   externalPlayer: string
   favorites: number[]
+  /** Where settings and caches live; differs on every platform. */
+  dataDir: string
+  platform: string
 }
 
 export interface ProviderStatus {
@@ -121,6 +124,22 @@ export interface CastMember {
   name: string
   character: string
   profile: string | null
+}
+
+/**
+ * Someone worth noticing this week, with the trending titles they are in.
+ *
+ * Not from TMDB's own person trending list: that is driven by raw page views and
+ * measured as unusable — twenty entries with popularity between 1 and 19, no
+ * known-for credits at all, and names from the adult industry. The cast of the
+ * week's trending titles is the same question answered with real data.
+ */
+export interface TrendingPerson {
+  id: number
+  name: string
+  profile: string | null
+  /** The trending titles they appear in, which is why they are listed. */
+  titles: TmdbItem[]
 }
 
 export interface CrewMember {
@@ -165,6 +184,8 @@ export interface TmdbDetail extends TmdbItem {
   recommendations: TmdbItem[]
   imdbId: string | null
   watch: WatchOptions
+  /** The series a film belongs to, when TMDB groups it into one. */
+  collection: { id: number; name: string } | null
 }
 
 /** 'dub' = Turkish audio, 'sub' = original audio with subtitles. */
@@ -205,6 +226,11 @@ export interface DiscoverFilters {
   query: string
   genreIds: number[]
   keywordIds: number[]
+  /**
+   * A cast member whose work is being browsed. The name travels with the id so
+   * the chip can say who it is — unlike keywords, which show as a bare "#1234".
+   */
+  person: { id: number; name: string } | null
   yearFrom: number | null
   yearTo: number | null
   minRating: number | null

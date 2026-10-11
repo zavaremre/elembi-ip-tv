@@ -21,6 +21,7 @@ import type {
   SubtitleTrackInfo,
   TmdbDetail,
   TmdbItem,
+  TrendingPerson,
   VodItem,
   WatchProvider
 } from '../shared/types'
@@ -43,6 +44,8 @@ const api = {
     airingToday: () => call<TmdbItem[]>('tmdb:airingToday'),
     byGenre: (kind: MediaKind, id: number) => call<TmdbItem[]>('tmdb:byGenre', kind, id),
     genres: () => call<Genre[]>('tmdb:genres'),
+    collection: (id: number) => call<TmdbItem[]>('tmdb:collection', id),
+    trendingPeople: () => call<TrendingPerson[]>('tmdb:trendingPeople'),
     watchProviders: () => call<WatchProvider[]>('tmdb:watchProviders'),
     search: (q: string) => call<TmdbItem[]>('tmdb:search', q),
     detail: (kind: MediaKind, id: number) => call<TmdbItem>('tmdb:detail', kind, id),
@@ -92,6 +95,11 @@ const api = {
   },
   app: {
     config: () => call<AppConfig>('app:config'),
+    resolveLink: (link: string) =>
+      call<{ credentials: { host: string; user: string; pass: string } | null; error: string | null }>(
+        'provider:resolve',
+        link
+      ),
     setConfig: (patch: Record<string, string>) => call<boolean>('app:setConfig', patch),
     refresh: () => call<boolean>('app:refresh'),
     openInPlayer: (url: string) => call<boolean>('app:openInPlayer', url),
