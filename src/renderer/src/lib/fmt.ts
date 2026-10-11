@@ -1,6 +1,28 @@
 export const clock = (ms: number): string =>
   new Date(ms).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
 
+const DAY_NAME = new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'short', weekday: 'short' })
+
+/** Midnight of the day a timestamp falls on, in local time. */
+function startOfDay(ms: number): number {
+  const date = new Date(ms)
+  date.setHours(0, 0, 0, 0)
+  return date.getTime()
+}
+
+/**
+ * Which day a fixture is on. Compared by calendar day rather than by hours
+ * elapsed: a match at 01:00 is tomorrow's even though it is three hours away,
+ * and the guide this reads covers from four hours back to thirty ahead.
+ */
+export function matchDay(ms: number): string {
+  const days = Math.round((startOfDay(ms) - startOfDay(Date.now())) / 86_400_000)
+  if (days === 0) return 'Bugün'
+  if (days === 1) return 'Yarın'
+  if (days === -1) return 'Dün'
+  return DAY_NAME.format(new Date(ms))
+}
+
 export function dur(min: number | null | undefined): string | null {
   if (!min) return null
   const h = Math.floor(min / 60)

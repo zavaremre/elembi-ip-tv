@@ -1,6 +1,6 @@
 import { Art } from './Art'
 import { CountUp } from './fx/CountUp'
-import { clock } from '@/lib/fmt'
+import { clock, matchDay } from '@/lib/fmt'
 import { hue } from '@/lib/img'
 import type { CardLayout } from './PosterCard'
 import type { FixtureTag, Match } from '@shared/types'
@@ -82,7 +82,13 @@ export function MatchCard({ match, onPlay, onRemind, reminded, layout = 'rail', 
 
       <div className="my-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
         <Team name={match.home} badge={badges.get(match.home)} />
-        <div className="mono text-center text-[19px] leading-none text-tx2">{clock(match.start)}</div>
+        <div className="flex flex-col items-center gap-1">
+          <span className="mono text-[19px] leading-none text-tx2">{clock(match.start)}</span>
+          {/* The guide reaches into tomorrow, so the hour alone does not say when. */}
+          <span className="mono text-[10px] leading-none tracking-[0.07em] text-tx3 uppercase">
+            {matchDay(match.start)}
+          </span>
+        </div>
         <Team name={match.away} badge={badges.get(match.away)} />
       </div>
 
