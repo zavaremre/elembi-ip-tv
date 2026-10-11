@@ -22,6 +22,16 @@ const file = (name: CatalogName): string => join(app.getPath('userData'), `catal
 
 /** True while any catalogue on screen came from disk after a failed refresh. */
 let servedStale = false
+/**
+ * Names whose saved copy should be ignored on the next read.
+ *
+ * A refresh used to delete the files outright, which defeated the point of
+ * keeping them: the copy was gone before anyone knew whether the panel could be
+ * reached, so an outage during a refresh left the app empty. Marking instead of
+ * deleting means the network is tried and the old copy still answers if it
+ * fails.
+ */
+const expired = new Set<CatalogName>()
 
 function read<T>(name: CatalogName): Row<T> | null {
   try {
@@ -38,7 +48,8 @@ function read<T>(name: CatalogName): Row<T> | null {
 /** Fresh copy wins; a refresh that throws falls back to the stale copy. */
 export async function catalog<T>(name: CatalogName, ttlMs: number, load: () => Promise<T>): Promise<T> {
   const row = read<T>(name)
-  if (row && Date.now() - row.at < ttlMs) return row.data
+  const fresh = row && Date.now() - row.at < ttlMs && !expired.has(name)
+  if (fresh) return row.data
 
   try {
     const data = await load()
@@ -47,6 +58,7 @@ export async function catalog<T>(name: CatalogName, ttlMs: number, load: () => P
     } catch {
       /* A cache that cannot be written is still a successful fetch. */
     }
+    expired.delete(name)
     servedStale = false
     return data
   } catch (error) {
@@ -66,8 +78,18 @@ export function catalogSavedAt(): number | null {
   return times.length ? Math.min(...times) : null
 }
 
+/**
+ * Forces the next read to go to the panel while leaving the saved copy in place
+ * as a fallback. This is what a refresh wants; deleting is not.
+ */
+export function expireCatalog(): void {
+  for (const name of NAMES) expired.add(name)
+}
+
+/** Drops the saved copies for good. Only for forgetting a subscription. */
 export function clearCatalog(): void {
   servedStale = false
+  expired.clear()
   for (const name of NAMES) {
     try {
       rmSync(file(name), { force: true })

@@ -9,7 +9,7 @@ import {
   fillCountries,
   parseFixture
 } from './fixtures'
-import { catalog, catalogIsStale, catalogSavedAt, clearCatalog } from './catalog'
+import { catalog, catalogIsStale, catalogSavedAt, expireCatalog } from './catalog'
 import { getJson } from './http'
 import { guide, resetGuide } from './xmltv'
 import type { Channel, EpgEntry, Match, NowNext, ProviderStatus, VodItem } from '../shared/types'
@@ -350,7 +350,9 @@ export const xtream = {
   },
 
   resetGuideCache(): void {
-    clearCatalog()
+    /* Marked, not deleted: a refresh that cannot reach the panel must still
+       leave the viewer with the catalogue they had. */
+    expireCatalog()
     resetGuide()
   }
 }
