@@ -8,6 +8,16 @@ const YEAR_RE = /(?:^|[([\s.\-_])((?:19|20)\d{2})(?:[)\]\s.\-_]|$)/g
 /** This panel prefixes many entries with a catalogue number, e.g. "069-". */
 const CATALOGUE_PREFIX = /^\s*\d{1,4}\s*[-.]\s*/
 
+/*
+ * "Chapter 3", "Bölüm 3", "Kapitel 4" are the same sequel wearing three
+ * languages, and a catalogue carries whichever its source used — the provider
+ * had "John Wick: Bölüm 3 - Parabellum" while TMDB returned "Chapter 3", so the
+ * film went unmatched. The word is dropped only when a number follows it, which
+ * leaves a title that merely contains the word alone. Turkish episode numbering
+ * reads "3. Bölüm", with the number first, and is untouched for the same reason.
+ */
+const SEQUEL_WORD = /\b(chapter|bolum|kapitel|part|teil|parte|capitulo|episodio)\s+(\d{1,2})\b/g
+
 /** Trailing words that do not change which title an entry is. */
 const HARMLESS_SUFFIX = /^(the movie|film|filmi|serisi|collection|koleksiyon|part|bolum|izle)$/i
 
@@ -44,6 +54,7 @@ export function parseTitle(raw: string): ParsedTitle {
     .replace(YEAR_RE, ' ')
     .replace(TAGS, ' ')
     .replace(/[^a-z0-9 ]+/g, ' ')
+      .replace(SEQUEL_WORD, ' $2 ')
     .replace(/\s+/g, ' ')
     .trim()
 
