@@ -5,6 +5,7 @@ import { config } from './config'
 import { decodeXmlText, parseXmltvTime } from './fixtures'
 import type { EpgEntry } from '../shared/types'
 import { throttleProvider } from './ratelimit'
+import { describeStatus } from './httperror'
 
 const PROGRAMME_RE = /<programme\s+start="([^"]+)"\s+stop="([^"]+)"\s+channel="([^"]*)"[^>]*>([\s\S]*?)<\/programme>/g
 const TITLE_RE = /<title[^>]*>([\s\S]*?)<\/title>/
@@ -76,7 +77,7 @@ async function download(): Promise<Guide> {
   try {
     await throttleProvider()
     const res = await fetch(url, { signal: controller.signal })
-    if (!res.ok) throw new Error(`XMLTV HTTP ${res.status}`)
+    if (!res.ok) throw new Error(describeStatus(url.toString(), res.status))
     return parse(await res.text())
   } finally {
     clearTimeout(timer)

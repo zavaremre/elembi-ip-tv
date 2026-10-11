@@ -1,3 +1,4 @@
+import { describeFailure, describeStatus } from './httperror'
 import { isProviderUrl, throttleProvider } from './ratelimit'
 
 /** JSON fetcher with an in-memory TTL cache that also de-duplicates concurrent requests. */
@@ -39,8 +40,14 @@ export async function getJson<T>(
     const ctrl = new AbortController()
     const t = setTimeout(() => ctrl.abort(), opts.timeout ?? 15_000)
     try {
-      const res = await fetch(url, { headers: opts.headers, signal: ctrl.signal })
-      if (!res.ok) throw new Error(`HTTP ${res.status} — ${url.replace(/password=[^&]*/, 'password=***')}`)
+      let res: Response
+      try {
+        res = await fetch(url, { headers: opts.headers, signal: ctrl.signal })
+      } catch (error) {
+        /* Nothing came back at all, which reads differently from a refusal. */
+        throw new Error(describeFailure(url, error))
+      }
+      if (!res.ok) throw new Error(describeStatus(url, res.status))
       const data = (await res.json()) as T
       cache.set(url, { at: Date.now(), ttl, data })
       return data
