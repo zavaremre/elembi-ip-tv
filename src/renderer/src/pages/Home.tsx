@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import { useLogoColors } from '@/hooks/useLogoColors'
 import { ChannelCard } from '@/components/ChannelCard'
 import { ChannelLogoLoop } from '@/components/ChannelLogoLoop'
 import { ContinueCard } from '@/components/ContinueCard'
@@ -75,12 +74,6 @@ export function Home({
     () => buildPlatforms(data.providerSeries.data ?? [], data.watchProviders.data ?? [], data.channels.data ?? []),
     [data.providerSeries.data, data.watchProviders.data, data.channels.data]
   )
-  /* One call for everything on the page: the hook asks only for logos it has
-     not seen, and the main process keeps the answers on disk. */
-  const logoColors = useLogoColors([
-    ...platforms.map((entry) => entry.logo),
-    ...data.featured.map((channel) => channel.logo)
-  ])
 
   const railVod = (data.vod.data ?? []).slice(0, PROVIDER_RAIL_COUNT)
   const railSeries = (data.providerSeries.data ?? []).slice(0, PROVIDER_RAIL_COUNT)
@@ -97,6 +90,21 @@ export function Home({
 
       <main className="shell relative z-4 -mt-10 pb-24">
 
+        {platforms.length > 0 ? (
+          <Row title="Platformlar" meta={`${platforms.length} KATEGORİ`} tagline="Sağlayıcıda ne varsa">
+            {platforms.map((entry) => (
+              <PlatformCard
+                key={entry.key}
+                name={entry.name}
+                count={entry.count}
+                logo={entry.logo}
+                categories={entry.categories}
+                onClick={() => onOpenPlatform(entry.name, entry.categories)}
+              />
+            ))}
+          </Row>
+        ) : null}
+
         <Row
           title="Popüler Filmler"
           meta={data.movies.data ? `SAĞLAYICIDA ${data.movies.data.length}` : undefined}
@@ -111,7 +119,7 @@ export function Home({
               key={item.id}
               title={item.title}
               image={poster(item.poster)}
-              hueSeed={item.id}
+             
               rating={item.rating}
               meta={[item.year, dur(item.runtime)].filter(Boolean).join(' · ')}
               onOpen={() => onOpenTmdb(item)}
@@ -135,7 +143,7 @@ export function Home({
               key={item.id}
               title={item.title}
               image={poster(item.poster)}
-              hueSeed={item.id}
+             
               rating={item.rating}
               meta={item.year}
               onOpen={() => onOpenTmdb(item)}
@@ -158,21 +166,6 @@ export function Home({
                 /* Why they are on the list, which is more use than a job title. */
                 note={person.titles[0]?.title}
                 onOpen={() => onOpenPerson({ id: person.id, name: person.name })}
-              />
-            ))}
-          </Row>
-        ) : null}
-
-        {platforms.length > 0 ? (
-          <Row title="Platformlar" meta={`${platforms.length} KATEGORİ`} tagline="Sağlayıcıda ne varsa">
-            {platforms.map((entry) => (
-              <PlatformCard
-                key={entry.key}
-                name={entry.name}
-                count={entry.count}
-                logo={entry.logo}
-                color={entry.logo ? (logoColors.get(entry.logo) ?? null) : null}
-                onClick={() => onOpenPlatform(entry.name, entry.categories)}
               />
             ))}
           </Row>
@@ -213,7 +206,6 @@ export function Home({
               key={channel.id}
               channel={channel}
               guide={data.guide.get(channel.id) ?? null}
-              color={channel.logo ? (logoColors.get(channel.logo) ?? null) : null}
               onPlay={() => onPlayChannel(channel)}
             />
           ))}
@@ -288,7 +280,7 @@ export function Home({
               key={item.id}
               title={item.name}
               image={artworkFor(`vod-${item.id}`, item.cover)}
-              hueSeed={`vod-${item.id}`}
+             
               rating={item.rating}
               meta={item.group}
               audio={item.audio ?? audioVariants.get(item.id) ?? null}
@@ -310,7 +302,7 @@ export function Home({
               key={item.id}
               title={item.name}
               image={artworkFor(`series-${item.id}`, item.cover)}
-              hueSeed={`series-${item.id}`}
+             
               rating={item.rating}
               meta={item.group}
               audio={item.audio}

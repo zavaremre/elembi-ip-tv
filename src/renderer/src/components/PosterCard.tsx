@@ -1,5 +1,4 @@
 import { Art } from './Art'
-import { hue } from '@/lib/img'
 
 type FlagTone = 'new' | 'live' | 'rec'
 
@@ -9,7 +8,6 @@ export type CardLayout = 'rail' | 'grid'
 interface PosterCardProps {
   title: string
   image: string | null
-  hueSeed: string | number
   rating?: number | null
   meta?: string | null
   /** Shown as an oversized outline numeral; only for genuine top-N rails. */
@@ -21,7 +19,6 @@ interface PosterCardProps {
   layout?: CardLayout
   onOpen: () => void
 }
-
 
 /** The provider rarely states this, so the badge appears only when it does. */
 const AUDIO_BADGE: Record<'dub' | 'sub', string> = { dub: 'DUBLAJ', sub: 'ALTYAZI' }
@@ -36,7 +33,6 @@ const FLAG_TONE: Record<FlagTone, string> = {
 export function PosterCard({
   title,
   image,
-  hueSeed,
   rating,
   meta,
   rank,
@@ -62,7 +58,7 @@ export function PosterCard({
         </span>
       ) : null}
 
-      <Art src={image} alt={title} hue={hue(hueSeed)} shape="poster" className="lift shadow-[0_14px_34px_-16px_rgba(0,0,0,.9)]">
+      <Art src={image} alt={title} shape="poster" className="lift shadow-[0_14px_34px_-16px_rgba(0,0,0,.9)]">
         {flag ? (
           <span className={`absolute top-2.5 left-2.5 z-3 mono flex items-center gap-1.5 rounded-md border px-1.5 py-0.5 text-[10px] font-semibold tracking-[0.07em] backdrop-blur-sm ${FLAG_TONE[flag.tone]}`}>
             {flag.tone === 'live' ? <i className="pulse" /> : null}

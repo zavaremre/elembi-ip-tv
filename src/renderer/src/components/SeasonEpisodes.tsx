@@ -4,7 +4,7 @@ import { useSeasonEpisodes } from '@/hooks/useSeasonEpisodes'
 import { episodeKey, fetchSeasonEpisodes, toEpisodeTarget, type EpisodeTarget, type PlayableEpisode } from '@/lib/episodes'
 import type { EpisodeSource } from '@/hooks/usePlayback'
 import { dur } from '@/lib/fmt'
-import { backdrop, hue, poster } from '@/lib/img'
+import { backdrop, poster } from '@/lib/img'
 import type { Progress, SeasonSummary } from '@shared/types'
 
 interface SeasonEpisodesProps {
@@ -103,7 +103,7 @@ export function SeasonEpisodes({
                     <Art
                       src={backdrop(episode.still, 'w300') ?? episode.providerStill}
                       alt={episode.name}
-                      hue={hue(`${tvId}-${active}-${episode.number}`)}
+                     
                       shape="still"
                       className="rounded-[10px]"
                     />

@@ -6,7 +6,7 @@ import { StarBorder } from './fx/StarBorder'
 import { Art } from './Art'
 import { useMagnet } from '@/hooks/useFx'
 import { dur } from '@/lib/fmt'
-import { backdrop, hue, logo } from '@/lib/img'
+import { backdrop, logo } from '@/lib/img'
 import type { TmdbItem } from '@shared/types'
 
 interface HeroProps {
@@ -42,7 +42,7 @@ export function Hero({ items, loading, onPlay, onOpen }: HeroProps): React.JSX.E
   if (loading || !item) {
     return (
       <section className="relative h-[clamp(500px,76vh,760px)] shrink-0 -mt-[66px]">
-        <Art src={null} alt="" hue={214} shape="fill" />
+        <Art src={null} alt="" shape="fill" />
         <div className="absolute inset-x-0 bottom-0 h-[140px] bg-linear-to-t from-ink to-transparent" />
       </section>
     )
@@ -52,7 +52,7 @@ export function Hero({ items, loading, onPlay, onOpen }: HeroProps): React.JSX.E
 
   return (
     <section className="relative h-[clamp(500px,76vh,760px)] shrink-0 -mt-[66px] overflow-hidden">
-      <Art key={item.id} src={backdrop(item.backdrop, 'w1280')} alt={item.title} hue={hue(item.id)} shape="fill" flat />
+      <Art key={item.id} src={backdrop(item.backdrop, 'w1280')} alt={item.title} shape="fill" anchor="top" flat />
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,8,12,.97)_0%,rgba(8,8,12,.8)_34%,rgba(8,8,12,.08)_66%,rgba(8,8,12,.55)_100%),linear-gradient(0deg,var(--color-ink)_1%,rgba(8,8,12,.35)_30%,transparent_62%)]" />
       <NoiseOverlay />
 

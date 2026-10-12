@@ -76,7 +76,6 @@ const api = {
     stop: () => call<boolean>('media:stop')
   },
   art: {
-    logoColors: (urls: string[]) => call<Record<string, string | null>>('art:logoColors', urls),
     posters: (requests: ArtworkRequest[]) => call<Record<string, string | null>>('art:posters', requests)
   },
   teams: {

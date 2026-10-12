@@ -9,7 +9,7 @@ import { ShinyText } from './fx/ShinyText'
 import { TrailerModal } from './TrailerModal'
 import { WatchOptionsPanel } from './WatchOptionsPanel'
 import { dur } from '@/lib/fmt'
-import { backdrop, hue, logo, poster } from '@/lib/img'
+import { backdrop, logo, poster } from '@/lib/img'
 import type { EpisodeSource } from '@/hooks/usePlayback'
 import type { EpisodeTarget } from '@/lib/episodes'
 import type { ProviderMatchState } from '@/lib/match'
@@ -96,7 +96,7 @@ export function DetailPage({
   return (
     <main className="pb-24">
       <section className="relative h-[clamp(320px,46vh,460px)] -mt-[66px] overflow-hidden">
-        <Art src={backdrop(detail.backdrop, 'w1280')} alt={detail.title} hue={hue(detail.id)} shape="fill" flat />
+        <Art src={backdrop(detail.backdrop, 'w1280')} alt={detail.title} shape="fill" flat />
         <div className="absolute inset-0 bg-[linear-gradient(0deg,var(--color-ink)_2%,rgba(8,8,12,.5)_46%,rgba(8,8,12,.75)_100%)]" />
         <NoiseOverlay />
         <button
@@ -116,7 +116,7 @@ export function DetailPage({
           <Art
             src={poster(detail.poster, 'w500')}
             alt={detail.title}
-            hue={hue(detail.id)}
+           
             shape="poster"
             className="shadow-[0_24px_54px_-20px_rgba(0,0,0,.95)]"
           />
@@ -284,7 +284,7 @@ export function DetailPage({
                 key={item.id}
                 title={item.title}
                 image={poster(item.poster)}
-                hueSeed={item.id}
+               
                 rating={item.rating}
                 meta={item.year}
                 onOpen={() => onOpenItem(item)}
@@ -300,7 +300,7 @@ export function DetailPage({
                 key={item.id}
                 title={item.title}
                 image={poster(item.poster)}
-                hueSeed={item.id}
+               
                 rating={item.rating}
                 meta={item.year}
                 onOpen={() => onOpenItem(item)}

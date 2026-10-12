@@ -3,7 +3,6 @@ import { PosterCard } from '@/components/PosterCard'
 import { ProviderFilterBar } from '@/components/ProviderFilterBar'
 import { useAudioVariants } from '@/hooks/useAudioVariants'
 import { useProviderPosters } from '@/hooks/useProviderPosters'
-import { useLogoColors } from '@/hooks/useLogoColors'
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll'
 import { useProviderFilter, type ProviderSort } from '@/hooks/useProviderFilter'
 import { poster } from '@/lib/img'
@@ -64,7 +63,6 @@ export function ProviderBrowser({
   const visibleVod = filter.visible.filter(isVod)
   const audioVariants = useAudioVariants(visibleVod)
   const tmdbPosters = useProviderPosters(visibleVod)
-  const logoColors = useLogoColors(filter.visible.filter(isChannel).map((channel) => channel.logo))
   /* Nothing until the lookup answers, so the card never swaps artwork. */
   const artworkFor = (key: string, cover: string | null): string | null =>
     poster(tmdbPosters.paths.get(key)) ?? (tmdbPosters.resolved.has(key) ? cover : null)
@@ -116,7 +114,6 @@ export function ProviderBrowser({
                     channel={channel}
                     guide={guide.get(channel.id) ?? null}
                     layout="grid"
-                    color={channel.logo ? (logoColors.get(channel.logo) ?? null) : null}
                     onPlay={() => onPlayChannel(channel)}
                   />
                 ))
@@ -125,7 +122,7 @@ export function ProviderBrowser({
                     key={`${item.kind}-${item.id}`}
                     title={item.name}
                     image={artworkFor(`${item.kind}-${item.id}`, item.cover)}
-                    hueSeed={`${item.kind}-${item.id}`}
+                   
                     rating={item.rating}
                     meta={item.group}
                     audio={item.audio ?? audioVariants.get(item.id) ?? null}

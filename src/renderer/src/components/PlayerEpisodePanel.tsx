@@ -1,5 +1,5 @@
 import { Art } from './Art'
-import { hue } from '@/lib/img'
+
 import type { EpisodeTarget } from '@/lib/episodes'
 import type { SeasonOption } from '@/hooks/usePlayback'
 import type { Progress } from '@shared/types'
@@ -78,7 +78,7 @@ export function PlayerEpisodePanel({
                 className={`flex w-full items-center gap-3 rounded-[11px] p-2 text-left ${playing ? 'bg-acc/14 shadow-[inset_2px_0_0_var(--color-acc)]' : 'hover:bg-white/6'}`}
               >
                 <div className="relative w-[92px] shrink-0">
-                  <Art src={episode.image} alt={episode.sub} hue={hue(episode.episodeId)} shape="still" className="rounded-[7px]" />
+                  <Art src={episode.image} alt={episode.sub} shape="still" className="rounded-[7px]" />
                   {ratio > 0 ? (
                     <span className="absolute inset-x-1 bottom-1 z-4 h-[2.5px] overflow-hidden rounded-full bg-black/55">
                       <i className="block h-full bg-acc" style={{ width: `${Math.min(100, Math.round(ratio * 100))}%` }} />

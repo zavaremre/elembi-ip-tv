@@ -1,7 +1,7 @@
 import { Art } from './Art'
 import { CountUp } from './fx/CountUp'
 import { clock, matchDay } from '@/lib/fmt'
-import { hue } from '@/lib/img'
+
 import type { CardLayout } from './PosterCard'
 import type { FixtureTag, Match } from '@shared/types'
 
@@ -42,7 +42,7 @@ function Team({ name, badge }: { name: string; badge?: string }): React.JSX.Elem
       {badge ? (
         <img src={badge} alt="" loading="lazy" className="h-[42px] w-[42px] shrink-0 object-contain" />
       ) : (
-        <Art src={null} alt="" hue={hue(name)} shape="box" flat className="h-[42px] w-[42px] rounded-[13px]">
+        <Art src={null} alt="" shape="box" flat className="h-[42px] w-[42px] rounded-[13px]">
           <span className="absolute inset-0 z-3 grid place-items-center font-disp text-[13px] font-black">{initials(name)}</span>
         </Art>
       )}

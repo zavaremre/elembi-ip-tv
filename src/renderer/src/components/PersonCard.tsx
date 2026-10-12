@@ -1,5 +1,5 @@
 import { Art } from './Art'
-import { hue, poster } from '@/lib/img'
+import { poster } from '@/lib/img'
 
 interface PersonCardProps {
   id: number
@@ -23,7 +23,7 @@ export function PersonCard({ id, name, profile, note, onOpen }: PersonCardProps)
       aria-label={`${name} yapımları`}
       className="spot w-[clamp(104px,8vw,128px)] text-left"
     >
-      <Art src={poster(profile, 'w185')} alt={name} hue={hue(id)} shape="poster" className="lift-sm" />
+      <Art src={poster(profile, 'w185')} alt={name} shape="poster" className="lift-sm" />
       <div className="mt-2 truncate text-[12.5px] font-bold">{name}</div>
       {note ? <div className="truncate text-[11.5px] text-tx3">{note}</div> : null}
     </button>

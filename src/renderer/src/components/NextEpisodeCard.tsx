@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import { Art } from './Art'
-import { hue } from '@/lib/img'
 
 interface NextEpisodeCardProps {
   title: string
@@ -33,7 +32,7 @@ export function NextEpisodeCard({ title, sub, image, seconds, onPlay, onCancel }
   return (
     <div className="absolute right-[var(--pad)] bottom-28 z-20 flex w-[352px] gap-3.5 rounded-[16px] border border-white/16 bg-ink2/92 p-3.5 shadow-[0_26px_60px_-20px_rgba(0,0,0,.95)] backdrop-blur-[22px]">
       <div className="w-[116px] shrink-0">
-        <Art src={image ?? null} alt={title} hue={hue(title)} shape="still" className="rounded-[10px]" />
+        <Art src={image ?? null} alt={title} shape="still" className="rounded-[10px]" />
       </div>
       <div className="min-w-0 flex-1">
         <div className="mono text-[10px] tracking-[0.14em] text-acc uppercase">Sıradaki bölüm · {left}</div>

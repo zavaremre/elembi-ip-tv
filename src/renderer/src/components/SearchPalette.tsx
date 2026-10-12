@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatedList } from './fx/AnimatedList'
 import { Art } from './Art'
 import { norm } from '@/lib/match'
-import { hue, poster } from '@/lib/img'
+import { poster } from '@/lib/img'
 import type { Channel, TmdbItem, VodItem } from '@shared/types'
 
 export interface PaletteHit {
@@ -186,7 +186,7 @@ export function SearchPalette({
                     i === cursor ? 'bg-acc/12 shadow-[inset_2px_0_0_var(--color-acc)]' : ''
                   }`}
                 >
-                  <Art src={hit.image} alt="" hue={hue(hit.label)} shape="box" flat contain className="h-[26px] w-[40px] shrink-0 rounded-[5px]" />
+                  <Art src={hit.image} alt="" shape="box" flat contain className="h-[26px] w-[40px] shrink-0 rounded-[5px]" />
                   <span className="min-w-0 flex-1 truncate font-semibold">{hit.label}</span>
                   <span className="mono shrink-0 text-[9.5px] tracking-[0.08em] text-tx3 uppercase">{hit.kindLabel}</span>
                 </button>

@@ -129,7 +129,6 @@ export function SearchPage({
 
       ) : null}
 
-
       {filters.keywordIds.length > 0 ? (
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <span className="mono text-[10px] tracking-[0.12em] text-tx3 uppercase">Seçili konular</span>
@@ -178,7 +177,7 @@ export function SearchPage({
                 key={`${item.kind}-${item.id}`}
                 title={item.title}
                 image={poster(item.poster)}
-                hueSeed={item.id}
+               
                 rating={item.rating}
                 meta={item.year}
                 layout="grid"

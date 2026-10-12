@@ -4,7 +4,7 @@ import { NoiseOverlay } from '@/components/fx/NoiseOverlay'
 import type { EpisodeSource } from '@/hooks/usePlayback'
 import type { EpisodeTarget } from '@/lib/episodes'
 import { useProviderSeries, type ProviderEpisode } from '@/hooks/useProviderSeries'
-import { backdrop, hue, logo, poster } from '@/lib/img'
+import { backdrop, logo, poster } from '@/lib/img'
 import type { Progress, TmdbItem, VodItem } from '@shared/types'
 
 type ProviderSeriesEpisodes = ProviderEpisode[]
@@ -69,7 +69,7 @@ export function ProviderSeriesPage({ item, progress, onPlayEpisodes, onOpenTmdb,
   return (
     <main className="pb-24">
       <section className="relative h-[clamp(260px,34vh,360px)] -mt-[66px] overflow-hidden">
-        <Art src={backdrop(tmdb?.backdrop, 'w1280')} alt={item.name} hue={hue(`series-${item.id}`)} shape="fill" flat />
+        <Art src={backdrop(tmdb?.backdrop, 'w1280')} alt={item.name} shape="fill" flat />
         <div className="absolute inset-0 bg-[linear-gradient(0deg,var(--color-ink)_2%,rgba(8,8,12,.5)_48%,rgba(8,8,12,.78)_100%)]" />
         <NoiseOverlay />
         <button
@@ -91,7 +91,7 @@ export function ProviderSeriesPage({ item, progress, onPlayEpisodes, onOpenTmdb,
                swapping to the poster afterwards reads as a flicker. */
             src={view.loading ? null : (poster(tmdb?.poster, 'w500') ?? item.cover)}
             alt={item.name}
-            hue={hue(`series-${item.id}`)}
+           
             shape="poster"
             className="shadow-[0_24px_54px_-20px_rgba(0,0,0,.95)]"
           />
@@ -213,7 +213,7 @@ export function ProviderSeriesPage({ item, progress, onPlayEpisodes, onOpenTmdb,
                         <Art
                           src={episode.still}
                           alt={episode.title}
-                          hue={hue(`${item.id}-${current}-${episode.num}`)}
+                         
                           shape="still"
                           className="rounded-[10px]"
                         />

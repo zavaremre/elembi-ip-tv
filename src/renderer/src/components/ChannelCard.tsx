@@ -1,6 +1,6 @@
 import { Art } from './Art'
 import { clock } from '@/lib/fmt'
-import { hue } from '@/lib/img'
+
 import type { CardLayout } from './PosterCard'
 import type { Channel, NowNext } from '@shared/types'
 
@@ -8,13 +8,11 @@ interface ChannelCardProps {
   channel: Channel
   guide: NowNext | null
   layout?: CardLayout
-  /** Brand colour from the channel's logo; falls back to the name's hue. */
-  color?: string | null
   onPlay: () => void
 }
 
 /** Live channel card: what is on now, how far in, and what follows. */
-export function ChannelCard({ channel, guide, layout = 'rail', color, onPlay }: ChannelCardProps): React.JSX.Element {
+export function ChannelCard({ channel, guide, layout = 'rail', onPlay }: ChannelCardProps): React.JSX.Element {
   const now = guide?.now ?? null
   const next = guide?.next ?? null
 
@@ -24,7 +22,7 @@ export function ChannelCard({ channel, guide, layout = 'rail', color, onPlay }: 
       onClick={onPlay}
       className={`spot group rounded-[14px] text-left ${layout === 'rail' ? 'w-[clamp(220px,19vw,268px)]' : 'w-full'}`}
     >
-      <Art src={channel.logo} alt={channel.name} hue={hue(channel.name)} tint={color} shape="still" contain className="lift-sm">
+      <Art src={channel.logo} alt={channel.name} shape="still" contain className="lift-sm">
         <span className="mono absolute top-2.5 left-2.5 z-3 flex items-center gap-1.5 rounded-md bg-live px-1.5 py-0.5 text-[10px] font-semibold tracking-[0.07em] text-white">
           <i className="pulse" />
           CANLI

@@ -126,34 +126,17 @@
     isolation: isolate;
     box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.13);
   }
+  /*
+   * One dark ground for every piece of key art, the same one the platform cards
+   * sit on. It used to be a gradient built from a hue derived from the name, and
+   * for logos from the logo's own colour — which turned a shelf of channels into
+   * a swatch chart and put white logos on whatever hue was read out of them.
+   */
   .art::before {
     content: '';
     position: absolute;
-    inset: -18%;
-    background:
-      radial-gradient(42% 40% at 74% 14%, hsl(var(--h, 210) 100% 64%) 0%, hsl(var(--h, 210) 100% 50%) 22%, transparent 64%),
-      radial-gradient(58% 54% at 14% 86%, hsl(calc(var(--h, 210) + 52) 95% 48%) 0%, transparent 66%),
-      linear-gradient(
-        203deg,
-        hsl(calc(var(--h, 210) - 14) 92% 30%) 0%,
-        hsl(calc(var(--h, 210) + 34) 88% 14%) 58%,
-        hsl(calc(var(--h, 210) + 86) 80% 6%) 100%
-      );
-  }
-  /*
-   * Built from the logo's own colour instead of a hue derived from the name. The
-   * far end is mixed towards the page ground so the card still reads as part of
-   * the shelf rather than a block of flat brand colour.
-   */
-  .art.tinted::before {
-    background:
-      radial-gradient(56% 50% at 78% 12%, color-mix(in srgb, var(--tint) 72%, white) 0%, transparent 62%),
-      linear-gradient(
-        203deg,
-        var(--tint) 0%,
-        color-mix(in srgb, var(--tint) 46%, #07070b) 64%,
-        color-mix(in srgb, var(--tint) 14%, #07070b) 100%
-      );
+    inset: 0;
+    background: linear-gradient(152deg, #16161d 0%, #101015 58%, #0b0b0f 100%);
   }
   .art > img {
     position: absolute;
@@ -171,6 +154,9 @@
   .art > img.contain {
     object-fit: contain;
     padding: 12%;
+  }
+  .art > img.anchor-top {
+    object-position: top center;
   }
   .art::after {
     content: '';
@@ -411,7 +397,7 @@
       transform: translateY(-8px) scale(1.035);
       box-shadow:
         inset 0 1px 0 rgb(255 255 255 / 0.22),
-        0 24px 54px -14px hsl(var(--h, 210) 95% 48% / 0.5),
+        0 24px 54px -14px rgb(0 0 0 / 0.9),
         0 10px 26px -8px rgb(0 0 0 / 0.85);
     }
     .lift-sm {
@@ -423,7 +409,7 @@
       transform: translateY(-6px) scale(1.02);
       box-shadow:
         inset 0 1px 0 rgb(255 255 255 / 0.22),
-        0 22px 48px -16px hsl(var(--h, 210) 95% 48% / 0.45),
+        0 22px 48px -16px rgb(0 0 0 / 0.86),
         0 8px 22px -8px rgb(0 0 0 / 0.8);
     }
     .fadeup {

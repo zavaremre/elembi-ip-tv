@@ -5,7 +5,6 @@ import { useProviderPosters } from '@/hooks/useProviderPosters'
 import { poster } from '@/lib/img'
 import type { Reminders } from '@/hooks/useReminders'
 import type { Channel, Match, NowNext, TmdbItem, VodItem } from '@shared/types'
-import { useLogoColors } from '@/hooks/useLogoColors'
 
 export type ListView =
   | { kind: 'tmdb'; title: string; meta?: string; items: TmdbItem[] }
@@ -39,7 +38,6 @@ export function ListPage({
   onPlayChannel,
   onPlayMatch
 }: ListPageProps): React.JSX.Element {
-  const logoColors = useLogoColors(view.kind === 'channels' ? view.items.map((channel) => channel.logo) : [])
   /* Kept inside the branch so the discriminated union stays narrowed below. */
   const providerItems = view.kind === 'provider' ? view.items : []
   const tmdbPosters = useProviderPosters(providerItems)
@@ -75,7 +73,7 @@ export function ListPage({
                   key={item.id}
                   title={item.title}
                   image={poster(item.poster)}
-                  hueSeed={item.id}
+                 
                   rating={item.rating}
                   meta={item.year}
                   layout="grid"
@@ -90,7 +88,7 @@ export function ListPage({
                   key={`${item.kind}-${item.id}`}
                   title={item.name}
                   image={artworkFor(`${item.kind}-${item.id}`, item.cover)}
-                  hueSeed={`${item.kind}-${item.id}`}
+                 
                   rating={item.rating}
                   meta={item.group}
                   audio={item.audio}
@@ -107,7 +105,6 @@ export function ListPage({
                   channel={channel}
                   guide={guide.get(channel.id) ?? null}
                   layout="grid"
-                  color={channel.logo ? (logoColors.get(channel.logo) ?? null) : null}
                   onPlay={() => onPlayChannel(channel)}
                 />
               ))

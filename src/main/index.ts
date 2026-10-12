@@ -9,7 +9,7 @@ import { openLocalSubtitle } from './subtitles'
 import { teamBadges } from './teams'
 import { available as ffmpegAvailable, probe, startHls, stopHls } from './transcode'
 import { posters } from './artwork'
-import { logoColors } from './logocolor'
+import { captureShots } from './devshots'
 import { resolveProviderLink } from './resolve'
 import { audioInfo } from './vodinfo'
 import { liveUrl, seriesUrl, vodUrl, xtream } from './xtream'
@@ -37,6 +37,9 @@ function createWindow(): BrowserWindow {
     webPreferences: {
       preload: join(import.meta.dirname, '../preload/index.mjs'),
       sandbox: false,
+      /* A throttled window stops repainting, and capturePage then returns the
+         last frame it drew — which made every screenshot identical. */
+      backgroundThrottling: process.env.AKIS_SHOTS !== '1',
       contextIsolation: true,
       nodeIntegration: false
     }
@@ -55,6 +58,11 @@ function createWindow(): BrowserWindow {
     )
     Menu.buildFromTemplate(template).popup({ window: win })
   })
+
+  /* Screenshots for the README; inert unless the environment asks for them. */
+  if (process.env.AKIS_SHOTS === '1') {
+    win.webContents.once('did-finish-load', () => void captureShots(win))
+  }
 
   /**
    * A plain link navigates the renderer itself, which leaves the app stranded on
@@ -106,7 +114,6 @@ function registerIpc(): void {
   on('tmdb:collection', (id: number) => tmdb.collection(id))
   on('tmdb:trendingPeople', () => tmdb.trendingPeople())
   on('tmdb:watchProviders', () => tmdb.watchProviders())
-  on('art:logoColors', (urls: string[]) => logoColors(urls))
   on('tmdb:search', (q: string) => tmdb.search(q))
   on('tmdb:detail', (kind: MediaKind, id: number) => tmdb.detail(kind, id))
   on('tmdb:full', (kind: MediaKind, id: number) => tmdb.full(kind, id))

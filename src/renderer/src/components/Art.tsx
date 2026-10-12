@@ -1,21 +1,19 @@
 import { useState } from 'react'
-import type { CSSProperties, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 type Shape = 'poster' | 'still' | 'fill' | 'box'
 
 interface ArtProps {
   src: string | null | undefined
   alt: string
-  /** Hue for the Grainient skeleton shown until the image decodes. */
-  hue: number
-  /**
-   * Brand colour read out of the artwork, when there is one. It replaces the
-   * hue-derived ground, so a channel sits on its own colour rather than on one
-   * computed from its name.
-   */
-  tint?: string | null
   shape?: Shape
   contain?: boolean
+  /**
+   * Which edge of the image to keep when `cover` has to crop it. Backdrops are
+   * wider than the stage they fill, so the default centre crop eats the top of
+   * the frame — where the subject usually is.
+   */
+  anchor?: 'top'
   /** Drops the darkening scrim; for tiles that carry no text. */
   flat?: boolean
   className?: string
@@ -30,13 +28,12 @@ interface ArtProps {
 const SHAPE: Record<Shape, string> = { poster: 'poster', still: 'still', fill: 'absolute inset-0', box: '' }
 
 /** Key art with a colour-matched loading skeleton and the pointer-driven specular sheen. */
-export function Art({ src, alt, hue, tint, shape = 'poster', contain, flat, className = '', children }: ArtProps): React.JSX.Element {
+export function Art({ src, alt, shape = 'poster', contain, anchor, flat, className = '', children }: ArtProps): React.JSX.Element {
   const [ready, setReady] = useState(false)
 
   return (
     <div
-      className={`art ${SHAPE[shape]} ${flat ? 'flat' : ''} ${tint ? 'tinted' : ''} ${className}`}
-      style={{ '--h': hue, ...(tint ? { '--tint': tint } : {}) } as CSSProperties}
+      className={`art ${SHAPE[shape]} ${flat ? 'flat' : ''} ${className}`}
     >
       {src ? (
         <img
@@ -45,7 +42,7 @@ export function Art({ src, alt, hue, tint, shape = 'poster', contain, flat, clas
           loading="lazy"
           decoding="async"
           draggable={false}
-          className={`${ready ? 'ready' : ''} ${contain ? 'contain' : ''}`}
+          className={`${ready ? 'ready' : ''} ${contain ? 'contain' : ''} ${anchor === 'top' ? 'anchor-top' : ''}`}
           onLoad={() => setReady(true)}
           onError={() => setReady(false)}
         />

@@ -13,10 +13,3 @@ export function logo(path: string | null | undefined, size: 'w300' | 'w500' = 'w
   return path ? `${BASE}/${size}${path}` : null
 }
 
-/** Stable hue derived from the item itself, so every skeleton keeps its own tone. */
-export function hue(seed: string | number): number {
-  const s = String(seed)
-  let h = 0
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 360
-  return h
-}

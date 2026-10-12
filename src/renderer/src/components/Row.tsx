@@ -58,7 +58,7 @@ export function Row({
               key={`skeleton-${i}`}
               className={skeleton === 'poster' ? 'w-[clamp(136px,11.5vw,186px)]' : 'w-[clamp(220px,19vw,268px)]'}
             >
-              <Art src={null} alt="" hue={200 + i * 17} shape={skeleton} className="opacity-30" />
+              <Art src={null} alt="" shape={skeleton} className="opacity-30" />
             </div>
           ))}
         </div>
