@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="470" viewBox="0 0 1200 470">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b0c12"/><stop offset="1" stop-color="#05050a"/></linearGradient>
+      <marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#00d8ff"/></marker></defs>
+<rect x="0" y="0" width="1200" height="470" rx="0" fill="url(#bg)"/>
+<ellipse cx="600" cy="150" rx="520" ry="200" fill="#00d8ff" opacity="0.055"/>
+<text x="30" y="56" font-family="Archivo, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="30" fill="#f7f8fb" font-weight="800" text-anchor="start" letter-spacing="-1">Tek saat</text>
+<text x="30" y="84" font-family="Manrope, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="14" fill="#a8aebe" font-weight="500" text-anchor="start">Görüntü, ses ve altyazı aynı ffmpeg oturumundan, aynı zaman çizgisinde çıkar.</text>
+<rect x="30" y="122" width="258" height="158" rx="16" fill="rgba(21,23,31,0.72)" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="30" y="122" width="258" height="3" rx="2" fill="#6e7486"/>
+<text x="48" y="154" font-family="Archivo, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="17" fill="#f7f8fb" font-weight="800" text-anchor="start">Sağlayıcı</text>
+<text x="48" y="180" font-family="'IBM Plex Mono', 'SF Mono', Menlo, monospace" font-size="12" fill="#a8aebe" font-weight="500" text-anchor="start">Xtream Codes API</text>
+<text x="48" y="201" font-family="'IBM Plex Mono', 'SF Mono', Menlo, monospace" font-size="12" fill="#a8aebe" font-weight="500" text-anchor="start">MKV / MP4 akış</text>
+<text x="48" y="222" font-family="'IBM Plex Mono', 'SF Mono', Menlo, monospace" font-size="12" fill="#a8aebe" font-weight="500" text-anchor="start">tek bağlantı</text>
+<line x1="294" y1="201" x2="308" y2="201" stroke="#00d8ff" stroke-width="2" marker-end="url(#ar)"/>
+<rect x="314" y="122" width="258" height="158" rx="16" fill="rgba(21,23,31,0.72)" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="314" y="122" width="258" height="3" rx="2" fill="#00d8ff"/>
+<text x="332" y="154" font-family="Archivo, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="17" fill="#f7f8fb" font-weight="800" text-anchor="start">ffmpeg</text>
+<text x="332" y="180" font-family="'IBM Plex Mono', 'SF Mono', Menlo, monospace" font-size="12" fill="#a8aebe" font-weight="500" text-anchor="start">-noaccurate_seek</text>
+<text x="332" y="201" font-family="'IBM Plex Mono', 'SF Mono', Menlo, monospace" font-size="12" fill="#a8aebe" font-weight="500" text-anchor="start">video kopyalanır</text>
+<text x="332" y="222" font-family="'IBM Plex Mono', 'SF Mono', Menlo, monospace" font-size="12" fill="#a8aebe" font-weight="500" text-anchor="start">ses AAC’ye</text>
+<text x="332" y="243" font-family="'IBM Plex Mono', 'SF Mono', Menlo, monospace" font-size="12" fill="#a8aebe" font-weight="500" text-anchor="start">altyazı WebVTT’ye</text>
+<line x1="578" y1="201" x2="592" y2="201" stroke="#00d8ff" stroke-width="2" marker-end="url(#ar)"/>
+<rect x="598" y="122" width="258" height="158" rx="16" fill="rgba(21,23,31,0.72)" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="598" y="122" width="258" height="3" rx="2" fill="#00d8ff"/>
+<text x="616" y="154" font-family="Archivo, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="17" fill="#f7f8fb" font-weight="800" text-anchor="start">127.0.0.1</text>
+<text x="616" y="180" font-family="'IBM Plex Mono', 'SF Mono', Menlo, monospace" font-size="12" fill="#a8aebe" font-weight="500" text-anchor="start">HLS playlist</text>
+<text x="616" y="201" font-family="'IBM Plex Mono', 'SF Mono', Menlo, monospace" font-size="12" fill="#a8aebe" font-weight="500" text-anchor="start">segmentler</text>
+<text x="616" y="222" font-family="'IBM Plex Mono', 'SF Mono', Menlo, monospace" font-size="12" fill="#a8aebe" font-weight="500" text-anchor="start">altyazı grubu</text>
+<line x1="862" y1="201" x2="876" y2="201" stroke="#00d8ff" stroke-width="2" marker-end="url(#ar)"/>
+<rect x="882" y="122" width="258" height="158" rx="16" fill="rgba(21,23,31,0.72)" stroke="rgba(255,255,255,0.09)" stroke-width="1"/>
+<rect x="882" y="122" width="258" height="3" rx="2" fill="#19e57a"/>
+<text x="900" y="154" font-family="Archivo, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="17" fill="#f7f8fb" font-weight="800" text-anchor="start">Oynatıcı</text>
+<text x="900" y="180" font-family="'IBM Plex Mono', 'SF Mono', Menlo, monospace" font-size="12" fill="#a8aebe" font-weight="500" text-anchor="start">hls.js + MSE</text>
+<text x="900" y="201" font-family="'IBM Plex Mono', 'SF Mono', Menlo, monospace" font-size="12" fill="#a8aebe" font-weight="500" text-anchor="start">altyazıyı kendi çizer</text>
+<text x="900" y="222" font-family="'IBM Plex Mono', 'SF Mono', Menlo, monospace" font-size="12" fill="#a8aebe" font-weight="500" text-anchor="start">konumlu sarma</text>
+<rect x="30" y="312" width="1140" height="1" rx="0" fill="rgba(255,255,255,0.08)"/>
+<text x="30" y="348" font-family="Archivo, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="15" fill="#f7f8fb" font-weight="800" text-anchor="start">Neden böyle</text>
+<text x="30" y="376" font-family="Manrope, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="12.5" fill="#a8aebe" font-weight="500" text-anchor="start">Chromium MKV’de konumlu sarma yapamaz</text>
+<text x="30" y="396" font-family="Manrope, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="12.5" fill="#6e7486" font-weight="500" text-anchor="start">ve AC-3 / E-AC-3 sesi hiç çözemez.</text>
+<text x="412" y="376" font-family="Manrope, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="12.5" fill="#a8aebe" font-weight="500" text-anchor="start">Altyazı ayrı dosya olunca her çıktı kendi</text>
+<text x="412" y="396" font-family="Manrope, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="12.5" fill="#6e7486" font-weight="500" text-anchor="start">ilk paketine göre sıfırlanıyor, kayma doğuyor.</text>
+<text x="794" y="376" font-family="Manrope, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="12.5" fill="#a8aebe" font-weight="500" text-anchor="start">Ölçüm: video 1.442 · ses 1.462 · altyazı 1.173</text>
+<text x="794" y="396" font-family="Manrope, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="12.5" fill="#6e7486" font-weight="500" text-anchor="start">Hepsi tek saatte — düzeltme gerekmiyor.</text>
+<text x="30" y="440" font-family="Manrope, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="12.5" fill="#6e7486" font-weight="500" text-anchor="start">Katalog diske yazılır; sağlayıcıya ulaşılamasa bile uygulama dolu açılır.</text>
+</svg>

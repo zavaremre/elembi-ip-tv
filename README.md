@@ -1,206 +1,195 @@
 # Akış
 
-Electron + React + Tailwind IPTV client. Live TV, VOD and series come from an
-Xtream Codes panel; artwork, metadata and discovery come from TMDB.
+A desktop player for your own IPTV subscription. It reads the channel, film and
+series catalogue from an Xtream Codes panel and dresses it with TMDB's artwork,
+summaries, cast and keywords.
 
-## Setup
+**It ships no content.** There is no bundled playlist, no subscription and no
+server behind it — what you can watch is decided entirely by the subscription
+you enter. The interface is in Turkish.
+
+![Home](docs/screenshots/01-home.jpg)
+
+## What you need
+
+| | |
+| --- | --- |
+| An Xtream Codes subscription | Any link the provider hands out: `get.php`, `player_api.php`, `xmltv.php`, or a stream address |
+| A TMDB read token | Free. Without it the catalogue still works, but posters and summaries stay empty |
+| **ffmpeg on your PATH** | Not optional — see below |
+
+ffmpeg does the work Chromium cannot. Most providers ship films as Matroska, and
+Chromium can neither seek accurately inside those nor decode AC-3 / E-AC-3 at
+all — about 37% of this catalogue. Without ffmpeg you lose seeking, sound on
+those titles, and the subtitles carried inside the file.
+
+```bash
+brew install ffmpeg      # macOS
+winget install ffmpeg    # Windows
+apt install ffmpeg       # Debian/Ubuntu
+```
+
+## Getting started
 
 ```bash
 npm install
-cp .env.example .env   # fill in the values
 npm run dev
 ```
 
-`.env` keys:
+The first run asks for the subscription. One field: paste whatever address the
+provider gave you. The username and password live inside that address, so you
+are not asked for them separately — and when the link carries nothing itself,
+the playlist behind it is opened and read (only the opening; the playlist for
+the provider this was built against is 14 MB).
 
-| Key | Purpose |
-| --- | --- |
-| `TMDB_TOKEN` | TMDB v4 read token (preferred) |
-| `TMDB_KEY` | TMDB v3 api key (fallback) |
-| `TMDB_LANG` / `TMDB_REGION` | `tr-TR` / `TR` |
-| `XTREAM_HOST` | e.g. `http://host:8080` |
-| `XTREAM_USER` / `XTREAM_PASS` | panel credentials |
-| `XTREAM_OUTPUT` | `hls` (m3u8) or `ts` |
-| `OPENSUBTITLES_KEY` | optional; enables automatic subtitle search |
-| `OPENSUBTITLES_USER` / `OPENSUBTITLES_PASS` | optional; signing in raises the download quota |
+![Setup](docs/screenshots/15-setup.jpg)
 
-`.env` is gitignored. Credentials never reach the renderer bundle: every TMDB
-and Xtream request is made in the main process and exposed over IPC through
-`src/preload`. Settings can also be stored in `<userData>/config.json`, which
-takes precedence over `.env`.
+Nothing is saved until the panel has answered, so a subscription that cannot
+connect never gets stored — and the reason it failed is more use here than on an
+empty home screen.
 
-## Scripts
+## What it does
+
+### The catalogue, grouped the way you think about it
+
+The provider splits a single service across several categories — Netflix alone
+arrives as five, counting its animation and German-language shelves. Cards are
+grouped by the service they resolve to, so Netflix is one card with 903 titles.
+Logos come from TMDB's list for your region and from the channel icons the
+provider already serves; the brand colour behind each one is read out of the
+logo itself rather than from a palette written into the code.
+
+![Platforms, fixtures and live channels](docs/screenshots/03-platforms.jpg)
+
+### Only what actually plays
+
+Every TMDB rail, collection, genre list and related row is filtered to titles the
+provider carries, so nothing on screen is a dead end. The catalogue is indexed
+once per refresh — 11k entries into 18.5k keys in about 55 ms — because scanning
+it per title would stall rendering. Discover keeps a toggle for seeing
+everything.
+
+![Films](docs/screenshots/05-movies.jpg)
+
+Country and category filters are derived from the catalogue rather than a table
+of names: the provider's own prefixes only reached 61% of series, and reading the
+rest from their category, their category's name and the catalogue's own make-up
+takes that to 100% without inventing a code the data has never seen.
+
+### Detail pages worth opening
+
+TMDB credits, keywords that lead into a filtered search, alternative titles,
+certification, trailer, and the season list merged with the episodes the provider
+can actually play. A film's series is listed too — kept to the parts the provider
+has, because naming a sequel that cannot be opened is worse than not mentioning
+it. Clicking a cast member shows their own work.
+
+![Detail](docs/screenshots/09-detail.jpg)
+
+### Live TV and fixtures
+
+736 channels with now/next from the provider's XMLTV guide, filtered by country
+and category. Fixtures are pulled out of the sport channels' guide and tagged as
+live, scheduled, tape-delayed or highlights. The day is shown under the kick-off
+time because the guide reaches thirty hours ahead: a 01:25 match is three hours
+away and still belongs to tomorrow.
+
+![Live TV](docs/screenshots/04-live-tv.jpg)
+
+![Fixtures](docs/screenshots/07-sports.jpg)
+
+### Discover
+
+Genre, keyword, year range, rating, vote count, language and sort order.
+Keywords come from TMDB, so searching lands on subject matter rather than title
+similarity.
+
+![Discover](docs/screenshots/08-discover.jpg)
+
+## How playback works
+
+![Pipeline](docs/pipeline.svg)
+
+Picture, sound and subtitles leave one ffmpeg session on one timeline, and the
+player is handed a local HLS playlist on `127.0.0.1`. That shape was arrived at
+by measurement, not preference:
+
+- **Seeking.** A Matroska file played directly never finishes a seek — Chromium
+  hunts for an index that is not there. Through a local HLS playlist with real
+  segment durations, a seek lands in 17 ms, exactly.
+- **Sound.** AC-3 and E-AC-3 are silent in Chromium, so audio is re-encoded to
+  AAC while the video is copied untouched.
+- **Subtitles travel inside the stream.** They used to be written beside it, and
+  that was wrong: ffmpeg normalises each output against its own first packet, and
+  those differ. Seeking to 1800s put the video at 1795.192 and the first cue at
+  1794.923, leaving the text a quarter-second out by an amount that changed with
+  every seek. In one stream the player aligns subtitles the way it aligns audio.
+- **Sound after a seek.** `-noaccurate_seek`, because without it audio is trimmed
+  to the requested position while video falls back to the preceding keyframe —
+  measured 6.187s of silence at the start of every seek, now 0.020s.
+
+Subtitles carried inside the file are selected on their own when a Turkish track
+is present and the audio is not already Turkish. They cannot drift, because they
+shipped with the video.
+
+## Being a good guest on someone's panel
+
+The subscription has no request quota, but the panel locks an address out when it
+sees too many requests in a minute — which cost several hours of access once.
+Every request now passes a token bucket holding the sustained rate to
+`XTREAM_MAX_PER_MINUTE` (60 by default) with a small burst for responsiveness,
+gated by host so a new call site cannot slip past. Work nobody is waiting on
+queues behind anything you clicked.
+
+The catalogue is also kept on disk, so a restart costs the panel nothing and an
+outage leaves the app full rather than empty. Refreshing marks it stale instead
+of deleting it: the network is tried, a success overwrites, and a failure still
+answers from the copy that was there.
+
+## Privacy
+
+There is no server behind this and no analytics of any kind. Everything lives in
+your own user-data directory, and the app talks only to your provider, TMDB and
+TheSportsDB. Two things are worth saying plainly: the Xtream protocol sends your
+username and password in the address of every request, and TMDB learns which
+titles you open. The full text is in the app under **Settings → Privacy**.
+
+![Privacy](docs/screenshots/14-privacy.jpg)
+
+## Development
 
 | Script | Does |
 | --- | --- |
-| `npm run dev` | electron-vite dev server + app |
+| `npm run dev` | electron-vite dev server and the app |
 | `npm run build` | production bundle into `out/` |
 | `npm run typecheck` | `tsc` over the node and web projects |
 
-## Features
+Credentials never reach the renderer bundle: every provider and TMDB request is
+made in the main process and exposed over IPC through `src/preload`. Settings
+live in `<userData>/config.json`, which takes precedence over a `.env` file if
+you prefer to keep one.
 
-- **Home** — hero carousel from TMDB trending, popular movies and series, today's
-  fixtures from the provider EPG, live channels with now/next, favourites loop,
-  continue watching, tonight's guide strip, collections, genres.
-- **Detail page** — TMDB credits, keywords (clickable into a filtered search),
-  alternative titles, certification, trailer in YouTube's embedded player, and the
-  season/episode list merged with the provider's playable episodes.
-- **Only what plays** — TMDB rails, collections, genre lists, related rails and the
-  hero are filtered to titles the provider actually carries, so nothing on screen
-  is a dead end. The catalogue is indexed once per refresh (11k entries → 18.5k
-  keys in ~55 ms, lookups at ~3 µs), because scanning it per title would stall
-  rendering. The Discover page keeps a toggle for seeing everything.
-- **Artwork** — provider covers are uneven: measured, *The Queen's Gambit* ships a
-  600x900 poster while *Game of Thrones* ships a 320x240 thumbnail that looks
-  broken in a 2:3 frame. Posters therefore come from TMDB, matched on normalised
-  title plus year and kept only on a confident match, with the provider's own
-  cover as the fallback. Measured 12 of 14 series matched in 0.7 s, cached on
-  disk afterwards.
-- **Dub or subtitled** — poster badges come from the real audio track, read per
-  title from `get_vod_info` (`info.audio.tags.language`): a Turkish track means
-  dubbed, any other known language means original audio. Roughly 70% of the
-  catalogue is tagged; untagged files get no badge rather than a guess. Lookups
-  are batched for the visible items, capped at five in flight, and cached on disk.
-  The name of a title is not a usable signal here — only 23 of 8947 entries say
-  anything, and *Örümcek Adam (2002)* carries English audio despite its Turkish
-  name.
-- **Team badges** — fixtures carry club and national-team crests from TheSportsDB,
-  with a Turkish-to-English alias map for national teams and disk caching of both
-  hits and misses, since many EPG names are local nicknames that never resolve.
-- **Where to watch** — when a title is missing or unreleased, the detail page shows
-  the legal options for the configured region from TMDB/JustWatch, plus a button
-  that opens the palette prefilled to search the provider by hand.
-- **Discover** — free text plus TMDB discover filters: genre, year range, minimum
-  rating and votes, original language, keyword, sort, and a provider-only toggle.
-- **Provider browsing** — live TV, movies and series filtered by country and
-  category, with text search, sort and paged rendering.
-- **Provider series** — a series in the provider catalogue opens its own season and
-  episode list, dressed with TMDB artwork when a match is found.
-- **Episode queue** — playing from a season list queues the rest of it, so the
-  player rolls into the next episode with a countdown card, and every row shows
-  how far it was watched.
-- **Title matching** — provider entries are matched on full token equality, the
-  release year, and the kind: this catalogue holds 30 titles that exist as both a
-  film and a series, so a film must never resolve to the series of the same name.
-  Unreleased titles are never matched. The matcher also
-  understands this panel's two naming habits: catalogue prefixes like `069-` and
-  compound `Turkish Title - English Title` names.
-- **Subtitles** — embedded stream tracks, a local `.srt`/`.vtt` file (decoded as
-  UTF-8, falling back to windows-1254 for older Turkish files), or an
-  OpenSubtitles search when `OPENSUBTITLES_KEY` is set. Offset control shifts
-  every cue in 0.5 s steps. The anonymous download quota is a handful per day, so
-  downloads are cached per session and the remaining count is shown in the player;
-  adding account credentials raises the quota.
-- **Player** — hls.js with quality, audio and subtitle selection, playback speed,
-  buffered progress, Picture-in-Picture, fullscreen, technical stats and
-  YouTube-style keyboard shortcuts. One video element serves both the full player
-  and the persistent mini player, so switching never restarts the stream.
-- **Navigation** — a view stack, so one back control works on every page.
+Screenshots in this README are captured from the running app by
+`src/main/devshots.ts`, which is inert unless `AKIS_SHOTS=1` is set:
 
-## Local remux
-
-Chromium exposes no `audioTracks` API and decodes neither AC-3 nor E-AC-3, both
-measured in Electron 35 / Chromium 134. In this catalogue that is not an edge
-case: roughly a third of sampled titles carry AC-3 or E-AC-3 audio, which means
-they would play silently, and multi-dub releases would always play their first
-track. Seeking is the other half: an MP4 seeks in about a second and lands
-exactly, while a direct Matroska seek never completes, because Chromium goes
-looking for an index that sits at the end of the file.
-
-So every progressive source except MP4 is routed through a local **HLS session**,
-as is any MP4 with several audio tracks or an undecodable codec. ffmpeg writes a
-growing playlist into a temp directory
-(`-c:v copy -c:a aac -f hls -hls_time 6 -hls_playlist_type event`) and a loopback
-server hands the playlist and its segments to hls.js. Video is copied, so cost
-stays near 4% CPU, and production runs about twelve times real time: measured,
-the playlist is ready in 3.2 s and 222 s of content exists after 18 s.
-
-Because the playlist carries real segment durations, the element gets a seekable
-timeline: a seek inside the produced window took **17 ms and landed exactly** on
-target. Only a jump past what ffmpeg has written restarts the session, and a
-session restart is also how an audio track is switched. The session id is the
-only secret the loopback server checks — hls.js resolves segment URLs against the
-playlist path and drops any query string, so a token cannot travel with them.
-
-This replaced a single fragmented-MP4 pipe, which could not be sought at all: it
-reported a duration of about one second, so Chromium clamped every seek back to
-the start while the offset tracked in the renderer stayed put, and the clock then
-described a position the content was nowhere near.
-
-MP4 files with one playable audio track stay on the native path, where playback
-starts instantly and seeking is already reliable; provider HLS keeps using hls.js
-directly. Requires `ffmpeg` and `ffprobe` on PATH; without them the player falls
-back to native playback and offers an external player instead.
-
-Audio delay is applied with a Web Audio `DelayNode` rather than an ffmpeg filter,
-because the fragmented muxer normalises each stream to zero and erases any
-offset — a deliberate `adelay=500` left no trace. The tap only runs on the local
-session and on provider HLS, both of which arrive through MSE; a tap on a direct
-provider URL would output silence, and once an element is tapped it stays tapped,
-so later titles are forced through the local session.
-
-External subtitle cues are absolute while a session starts at zero, so they are
-shifted by the offset and cues that fall before it are dropped rather than
-clamped to zero — clamping made every earlier line fire at once, which looked
-like the subtitles were wildly out of sync after a seek.
-
-## Architecture
-
-```
-src/main        provider + TMDB clients, EPG parsing, IPC, local state
-src/preload     the only bridge: window.akis.*
-src/renderer    React UI (pages, components, hooks)
-src/shared      types shared by both sides
+```bash
+AKIS_SHOTS=1 npm run dev
 ```
 
-- `main/http.ts` caches every JSON response with a TTL and de-duplicates
-  concurrent requests for the same URL.
-- `main/xmltv.ts` holds the guide. This panel answers `get_short_epg` with an
-  empty list, so the EPG is read from `xmltv.php` (~2 MB, 6.5k programmes),
-  parsed once and cached in memory and on disk.
-- `main/fixtures.ts` turns EPG titles into fixtures and tags them `live`,
-  `scheduled`, `replay` or `highlights` — Turkish sport channels mark
-  tape-delayed and highlight slots, and showing those as live would be wrong.
-- `main/store.ts` keeps resume positions and favourites in
-  `<userData>/state.json`.
+## Known limits
 
-## Provider endpoints
+- **Tested on macOS only.** Electron runs on Windows and Linux and nothing in the
+  code is deliberately macOS-only, but it has not been tried there.
+- **Xtream Codes is required.** A provider that offers nothing but a flat M3U
+  will give a channel list and no category structure, season lists or audio
+  information.
+- **Some panels filter by User-Agent.** The provider this was built against does
+  not, but the pattern is common enough that a panel answering 404 to everything
+  may be doing this.
+- **The interface is Turkish**, as are the heuristics that read dub/subtitle
+  markers and fixture tags out of a provider's own naming.
 
-The panel offers several links; only two are used, because the M3U variants carry
-strictly less information than the API.
+## Credits
 
-| Link | Used | Why |
-| --- | --- | --- |
-| `player_api.php` (Xtream API) | yes | the only source of categories, VOD/series metadata and episode lists |
-| `xmltv.php` (EPG) | yes | this panel answers `get_short_epg` with an empty list, so XMLTV is the only guide |
-| M3U Plus (HLS) | no | a 14 MB flat list whose stream URLs are the ones the app already builds |
-| M3U Plus (TS) / MAG | no | raw MPEG-TS, which Chromium cannot demux; its URLs also omit `/live/` and the extension |
-| M3U Standard | no | no `tvg-*` attributes at all |
-
-Measured on this provider: the live HLS playlist is a single-quality media
-playlist with 10 s segments, so there are no quality levels to choose from and
-latency runs 20–30 s behind. Raw `.ts` streams fine over HTTP and has lower
-latency, but playing it would mean adding an mpegts.js remuxer and giving up
-audio and subtitle track switching.
-
-Containers in this catalogue: 94% `mkv`, 5% `mp4`, 1% `avi`. Matroska plays in
-Electron even though `canPlayType('video/x-matroska')` returns an empty string —
-that API is not a reliable signal here.
-
-## Known constraints
-
-- The provider allows **one simultaneous connection**, so the app takes a
-  single-instance lock and quits if another copy is already running.
-- Only 190 of 736 channels have a usable `epg_channel_id`; channels without one
-  show no now/next line.
-- `tv_archive` is set on 22 channels only, so timeshift is rarely available.
-- Fonts load from Google Fonts, so first paint needs network. Bundle them
-  locally before shipping offline.
-- Embedded subtitles inside progressive files are invisible to Chromium
-  (`textTracks.length === 0` on a file carrying eight subtitle tracks), so loading
-  an external subtitle file remains the only way to get subtitles on them.
-- "Open in VLC" (`EXTERNAL_PLAYER`) is offered only when the remux path is
-  unavailable, which means ffmpeg is not installed.
-- External audio files are not supported: keeping a separate audio file in sync
-  with a remote stream needs two media elements nudged against each other and
-  drifts in practice.
+This product uses the TMDB API but is not endorsed or certified by TMDB. Team
+badges come from TheSportsDB.
