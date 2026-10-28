@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { NoiseOverlay } from './fx/NoiseOverlay'
-import { ShinyText } from './fx/ShinyText'
 import { SplitText } from './fx/SplitText'
 import { StarBorder } from './fx/StarBorder'
 import { Art } from './Art'
@@ -12,18 +11,17 @@ import type { TmdbItem } from '@shared/types'
 interface HeroProps {
   items: TmdbItem[]
   loading: boolean
-  onPlay: (item: TmdbItem) => void
   onOpen: (item: TmdbItem) => void
 }
 
 const ROTATE_MS = 7600
 
 /** Full-bleed featured stage: one slide at a time, title entering with SplitText. */
-export function Hero({ items, loading, onPlay, onOpen }: HeroProps): React.JSX.Element {
+export function Hero({ items, loading, onOpen }: HeroProps): React.JSX.Element {
   const [index, setIndex] = useState(0)
   /* Bumped on manual navigation so the auto-rotate timer starts over. */
   const [epoch, setEpoch] = useState(0)
-  const playRef = useMagnet<HTMLButtonElement>()
+  const openRef = useMagnet<HTMLButtonElement>()
 
   useEffect(() => {
     if (items.length < 2 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
@@ -52,7 +50,7 @@ export function Hero({ items, loading, onPlay, onOpen }: HeroProps): React.JSX.E
 
   return (
     <section className="relative h-[clamp(500px,76vh,760px)] shrink-0 -mt-[66px] overflow-hidden">
-      <Art key={item.id} src={backdrop(item.backdrop, 'w1280')} alt={item.title} shape="fill" anchor="top" flat />
+      <Art key={item.id} src={backdrop(item.backdrop, 'original')} alt={item.title} shape="fill" anchor="top" flat />
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,8,12,.97)_0%,rgba(8,8,12,.8)_34%,rgba(8,8,12,.08)_66%,rgba(8,8,12,.55)_100%),linear-gradient(0deg,var(--color-ink)_1%,rgba(8,8,12,.35)_30%,transparent_62%)]" />
       <NoiseOverlay />
 
@@ -60,7 +58,7 @@ export function Hero({ items, loading, onPlay, onOpen }: HeroProps): React.JSX.E
         <div className="shell relative h-full">
       <div className="pointer-events-auto absolute bottom-[clamp(92px,10.5vh,126px)] left-[var(--pad)] max-w-[min(620px,52vw)]">
         <div className="fadeup flex items-center gap-2.5 text-[11.5px] tracking-[0.18em] text-acc uppercase">
-          <StarBorder>Akış Özel</StarBorder>
+          <StarBorder>Elembi Özel</StarBorder>
           <span className="mono">{item.kind === 'tv' ? 'Dizi' : 'Film'} · haftanın öne çıkanı</span>
         </div>
 
@@ -80,9 +78,6 @@ export function Hero({ items, loading, onPlay, onOpen }: HeroProps): React.JSX.E
           {meta.map((m) => (
             <span key={m}>{m}</span>
           ))}
-          <ShinyText className="mono rounded-[5px] border border-acc/40 bg-acc/10 px-1.5 py-0.5 text-[10.5px] tracking-[0.09em] text-acc uppercase">
-            4K HDR
-          </ShinyText>
         </div>
 
         {item.overview ? (
@@ -91,22 +86,23 @@ export function Hero({ items, loading, onPlay, onOpen }: HeroProps): React.JSX.E
           </p>
         ) : null}
 
+{/*
+         * One action, because there was only ever one: the second button said
+         * "Sağlayıcıda oynat" and opened the same detail page, since nothing is
+         * played before the detail page has shown what the provider carries.
+         */}
         <div className="fadeup mt-6 flex flex-wrap items-center gap-2.5" style={{ animationDelay: '560ms' }}>
           <button
-            ref={playRef}
-            type="button"
-            onClick={() => onPlay(item)}
-            className="spec flex h-[46px] items-center gap-2.5 rounded-[12px] bg-tx px-6 text-[15px] font-bold text-ink shadow-[0_10px_34px_-12px_rgba(255,255,255,.5)] transition-transform duration-[380ms] ease-[var(--ease-out2)]"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
-            Sağlayıcıda oynat
-          </button>
-          <button
+            ref={openRef}
             type="button"
             onClick={() => onOpen(item)}
-            className="flex h-[46px] items-center rounded-[12px] border border-line bg-white/10 px-6 text-[15px] font-bold backdrop-blur-[14px] hover:bg-white/17"
+            className="spec flex h-[46px] items-center gap-2.5 rounded-[12px] bg-tx px-6 text-[15px] font-bold text-ink shadow-[0_10px_34px_-12px_rgba(255,255,255,.5)] transition-transform duration-[380ms] ease-[var(--ease-out2)]"
           >
-            Detay
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 11v5M12 7.6v.4" strokeLinecap="round" />
+            </svg>
+            Detayı aç
           </button>
         </div>
       </div>

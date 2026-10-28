@@ -122,7 +122,6 @@ export function ProviderBrowser({
                     key={`${item.kind}-${item.id}`}
                     title={item.name}
                     image={artworkFor(`${item.kind}-${item.id}`, item.cover)}
-                   
                     rating={item.rating}
                     meta={item.group}
                     audio={item.audio ?? audioVariants.get(item.id) ?? null}

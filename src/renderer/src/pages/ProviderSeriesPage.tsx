@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { FavoriteButton } from '@/components/FavoriteButton'
+import { favoriteKey, type Favorites } from '@/hooks/useFavorites'
 import { Art } from '@/components/Art'
 import { NoiseOverlay } from '@/components/fx/NoiseOverlay'
 import type { EpisodeSource } from '@/hooks/usePlayback'
@@ -13,6 +15,7 @@ interface ProviderSeriesPageProps {
   item: VodItem
   progress: Progress[]
   onPlayEpisodes: (episodes: EpisodeTarget[], index: number, source: EpisodeSource) => void
+  favorites: Favorites
   onOpenTmdb: (item: TmdbItem) => void
   onBack: () => void
 }
@@ -22,7 +25,7 @@ function Skeleton({ className = '' }: { className?: string }): React.JSX.Element
 }
 
 /** Season and episode list for a series in the provider catalogue. */
-export function ProviderSeriesPage({ item, progress, onPlayEpisodes, onOpenTmdb, onBack }: ProviderSeriesPageProps): React.JSX.Element {
+export function ProviderSeriesPage({ item, progress, onPlayEpisodes, favorites, onOpenTmdb, onBack }: ProviderSeriesPageProps): React.JSX.Element {
   const view = useProviderSeries(item)
   const [activeSeason, setActiveSeason] = useState<number | null>(null)
 
@@ -68,8 +71,8 @@ export function ProviderSeriesPage({ item, progress, onPlayEpisodes, onOpenTmdb,
 
   return (
     <main className="pb-24">
-      <section className="relative h-[clamp(260px,34vh,360px)] -mt-[66px] overflow-hidden">
-        <Art src={backdrop(tmdb?.backdrop, 'w1280')} alt={item.name} shape="fill" flat />
+      <section className="relative h-[clamp(474px,62vh,656px)] -mt-[66px] overflow-hidden">
+        <Art src={backdrop(tmdb?.backdrop, 'original')} alt={item.name} shape="fill" anchor="top" flat />
         <div className="absolute inset-0 bg-[linear-gradient(0deg,var(--color-ink)_2%,rgba(8,8,12,.5)_48%,rgba(8,8,12,.78)_100%)]" />
         <NoiseOverlay />
         <button
@@ -91,7 +94,6 @@ export function ProviderSeriesPage({ item, progress, onPlayEpisodes, onOpenTmdb,
                swapping to the poster afterwards reads as a flicker. */
             src={view.loading ? null : (poster(tmdb?.poster, 'w500') ?? item.cover)}
             alt={item.name}
-           
             shape="poster"
             className="shadow-[0_24px_54px_-20px_rgba(0,0,0,.95)]"
           />
@@ -132,7 +134,7 @@ export function ProviderSeriesPage({ item, progress, onPlayEpisodes, onOpenTmdb,
             <p className="mt-3.5 max-w-[72ch] text-[14.5px] leading-[1.62] text-tx2">{tmdb.overview}</p>
           ) : null}
 
-          <div className="mt-4 flex flex-wrap gap-2.5">
+          <div className="mt-4 flex flex-wrap items-center gap-2.5">
             {episodes[0] ? (
               <button
                 type="button"
@@ -143,6 +145,19 @@ export function ProviderSeriesPage({ item, progress, onPlayEpisodes, onOpenTmdb,
                 İlk bölümü oynat
               </button>
             ) : null}
+            <FavoriteButton
+              variant="bar"
+              active={favorites.has(favoriteKey('series', item.id))}
+              onToggle={() =>
+                favorites.toggle({
+                  kind: 'series',
+                  id: item.id,
+                  title: item.name,
+                  image: poster(tmdb?.poster, 'w500') ?? item.cover
+                })
+              }
+            />
+
             {tmdb ? (
               <button
                 type="button"
@@ -182,7 +197,7 @@ export function ProviderSeriesPage({ item, progress, onPlayEpisodes, onOpenTmdb,
           <p className="text-[14px] text-tx3">Sağlayıcı bu dizi için bölüm listesi vermiyor.</p>
         ) : (
           <>
-            <div className="flex gap-2 overflow-x-auto pb-4" style={{ scrollbarWidth: 'none' }}>
+            <div className="flex flex-wrap gap-2 pb-4">
               {seasons.map((season) => (
                 <button
                   key={season.season}
@@ -213,7 +228,6 @@ export function ProviderSeriesPage({ item, progress, onPlayEpisodes, onOpenTmdb,
                         <Art
                           src={episode.still}
                           alt={episode.title}
-                         
                           shape="still"
                           className="rounded-[10px]"
                         />

@@ -46,7 +46,7 @@ export function useProviderPosters(items: VodItem[]): ProviderPosters {
      * timer before it ever fired. The main process batches and caches anyway, and
      * `requested` keeps the same key from being asked twice.
      */
-    window.akis.art
+    window.elembi.art
       .posters(requests)
       .then((result) => {
         /* Guarded on mount only; the request itself stays valid. */

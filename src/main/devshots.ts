@@ -5,7 +5,7 @@ import { join } from 'node:path'
 /**
  * Captures the real interface for the README, driven from inside the app.
  *
- * Only runs when AKIS_SHOTS is set, so it is inert in normal use. Written this
+ * Only runs when ELEMBI_SHOTS is set, so it is inert in normal use. Written this
  * way because the alternatives are worse: a screen grab needs the window's
  * coordinates and the right OS permission, and clicking by coordinate breaks
  * the moment the layout moves. capturePage gives the window's own pixels, and
@@ -57,20 +57,22 @@ interface Step {
 
 const STEPS: Step[] = [
   { name: '01-home', settle: 3000 },
-  { name: '02-home-rows', scroll: 760, settle: 2600 },
-  { name: '03-platforms', scroll: 1520, settle: 2600 },
+  /* Platforms sit directly under the hero now, so the old 1520 scrolled past them. */
+  { name: '02-platforms', scroll: 600, settle: 2600 },
+  { name: '03-home-rows', scroll: 1180, settle: 2600 },
   { name: '04-live-tv', path: [['Canlı TV']], settle: 2600 },
   { name: '05-movies', path: [['Filmler']], settle: 2600 },
   { name: '06-series', path: [['Diziler']], settle: 2600 },
   { name: '07-sports', path: [['Spor']], settle: 2600 },
   { name: '08-discover', path: [['Keşfet']], settle: 2800 },
-  { name: '09-detail', path: [['Detay']], settle: 7000 },
-  { name: '10-detail-cast', path: [['Detay']], scroll: 980, settle: 7000 },
-  { name: '11-settings', path: [['Ayarlar ve sağlayıcı']], settle: 1800 },
-  { name: '12-about', path: [['Ayarlar ve sağlayıcı'], ['Hakkında']], settle: 1600 },
-  { name: '13-help', path: [['Ayarlar ve sağlayıcı'], ['Yardım']], settle: 1600 },
-  { name: '14-privacy', path: [['Ayarlar ve sağlayıcı'], ['Gizlilik politikası']], settle: 1600 },
-  { name: '15-setup', path: [['Ayarlar ve sağlayıcı'], ['Aboneliği değiştir']], settle: 1800 }
+  { name: '09-detail', path: [['Detayı aç']], settle: 7000 },
+  { name: '10-detail-cast', path: [['Detayı aç']], scroll: 1100, settle: 7000 },
+  { name: '11-favorites', path: [['Favorilerim']], settle: 2600 },
+  { name: '12-settings', path: [['Ayarlar ve sağlayıcı']], settle: 1800 },
+  { name: '13-about', path: [['Ayarlar ve sağlayıcı'], ['Hakkında']], settle: 1600 },
+  { name: '14-help', path: [['Ayarlar ve sağlayıcı'], ['Yardım']], settle: 1600 },
+  { name: '15-privacy', path: [['Ayarlar ve sağlayıcı'], ['Gizlilik politikası']], settle: 1600 },
+  { name: '16-setup', path: [['Ayarlar ve sağlayıcı'], ['Aboneliği değiştir']], settle: 1800 }
 ]
 
 export async function captureShots(win: BrowserWindow): Promise<void> {

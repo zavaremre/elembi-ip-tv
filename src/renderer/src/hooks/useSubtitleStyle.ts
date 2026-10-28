@@ -18,7 +18,7 @@ export const SUBTITLE_DEFAULTS: SubtitleStyle = {
   bottom: 12
 }
 
-const STORAGE_KEY = 'akis.subtitleStyle'
+const STORAGE_KEY = 'elembi.subtitleStyle'
 
 function load(): SubtitleStyle {
   try {

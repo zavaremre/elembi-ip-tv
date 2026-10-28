@@ -33,7 +33,7 @@ export function useDiscover(filters: DiscoverFilters): DiscoverState {
       else setLoadingMore(true)
       setError(null)
       try {
-        const result = await window.akis.tmdb.discover({ ...filters, page: targetPage })
+        const result = await window.elembi.tmdb.discover({ ...filters, page: targetPage })
         if (activeSignature.current !== sig) return
         setItems((prev) => (replace ? result.items : [...prev, ...result.items]))
         setPage(result.page)

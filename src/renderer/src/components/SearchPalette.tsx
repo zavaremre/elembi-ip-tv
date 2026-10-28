@@ -3,7 +3,7 @@ import { AnimatedList } from './fx/AnimatedList'
 import { Art } from './Art'
 import { norm } from '@/lib/match'
 import { poster } from '@/lib/img'
-import type { Channel, TmdbItem, VodItem } from '@shared/types'
+import type { Channel, PersonHit, TmdbItem, VodItem } from '@shared/types'
 
 export interface PaletteHit {
   id: string
@@ -22,6 +22,8 @@ interface SearchPaletteProps {
   onPlayChannel: (channel: Channel) => void
   onPlayVod: (item: VodItem) => void
   onOpenTmdb: (item: TmdbItem) => void
+  /** Opens a person's own work, for when the text was a name. */
+  onOpenPerson: (person: { id: number; name: string }) => void
   onSeeAll: (query: string) => void
   /** Prefilled when the palette is opened from a detail page. */
   initialQuery?: string
@@ -40,11 +42,13 @@ export function SearchPalette({
   onPlayChannel,
   onPlayVod,
   onOpenTmdb,
+  onOpenPerson,
   onSeeAll,
   initialQuery = ''
 }: SearchPaletteProps): React.JSX.Element | null {
   const [query, setQuery] = useState('')
   const [tmdbHits, setTmdbHits] = useState<TmdbItem[]>([])
+  const [peopleHits, setPeopleHits] = useState<PersonHit[]>([])
   const [cursor, setCursor] = useState(0)
   const [typed, setTyped] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -56,6 +60,7 @@ export function SearchPalette({
     } else {
       setQuery('')
       setTmdbHits([])
+      setPeopleHits([])
       setCursor(0)
     }
   }, [open, initialQuery])
@@ -93,13 +98,19 @@ export function SearchPalette({
   useEffect(() => {
     if (!query.trim()) {
       setTmdbHits([])
+      setPeopleHits([])
       return
     }
     const timer = window.setTimeout(() => {
-      window.akis.tmdb
+      window.elembi.tmdb
         .search(query)
         .then((r) => setTmdbHits(r.slice(0, LIMIT_PER_GROUP)))
         .catch(() => setTmdbHits([]))
+      /* Same endpoint as the titles above, answered from its cache. */
+      window.elembi.tmdb
+        .searchPeople(query)
+        .then((r) => setPeopleHits(r ?? []))
+        .catch(() => setPeopleHits([]))
     }, 260)
     return () => window.clearTimeout(timer)
   }, [query])
@@ -134,8 +145,16 @@ export function SearchPalette({
       image: poster(t.poster, 'w185'),
       run: () => onOpenTmdb(t)
     }))
-    return [...channelHits, ...providerHits, ...discoveryHits]
-  }, [query, channels, vod, series, tmdbHits, onPlayChannel, onPlayVod, onOpenTmdb])
+    /* People first: typing a name means the name, not a film with it in the title. */
+    const personHits = peopleHits.map<PaletteHit>((p) => ({
+      id: `person-${p.id}`,
+      label: p.name,
+      kindLabel: p.known ? `oyuncu · ${p.known}` : 'oyuncu · TMDB',
+      image: p.profile,
+      run: () => onOpenPerson({ id: p.id, name: p.name })
+    }))
+    return [...personHits, ...channelHits, ...providerHits, ...discoveryHits]
+  }, [query, channels, vod, series, tmdbHits, peopleHits, onPlayChannel, onPlayVod, onOpenTmdb, onOpenPerson])
 
   useEffect(() => setCursor(0), [query])
 
@@ -149,7 +168,7 @@ export function SearchPalette({
   }
 
   return (
-    <div className="fixed inset-0 z-90 flex items-start justify-center bg-ink/70 px-4 pt-[14vh] backdrop-blur-[6px]" onClick={onClose}>
+    <div className="win-clip fixed inset-0 z-90 flex items-start justify-center bg-ink/70 px-4 pt-[14vh] backdrop-blur-[6px]" onClick={onClose}>
       <div
         className="w-full max-w-[640px] overflow-hidden rounded-[18px] border border-white/12 bg-ink2/92 shadow-[0_40px_90px_-30px_rgba(0,0,0,.9)] backdrop-blur-[26px]"
         onClick={(e) => e.stopPropagation()}

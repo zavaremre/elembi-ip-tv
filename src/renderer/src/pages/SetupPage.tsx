@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { WindowControls } from '@/components/WindowControls'
 import { NoiseOverlay } from '@/components/fx/NoiseOverlay'
 import { isComplete, parseXtreamUrl } from '@shared/xtreamUrl'
 import type { ProviderStatus } from '@shared/types'
@@ -54,7 +55,7 @@ export function SetupPage({ initial, onSaved, onCancel }: SetupPageProps): React
        * Resolved in the main process: a link may carry nothing itself and have
        * to be fetched, and the playlist behind it runs to megabytes.
        */
-      const result = await window.akis.app
+      const result = await window.elembi.app
         .resolveLink(link.trim())
         .catch(() => ({ credentials: null, error: 'Bağlantı çözümlenemedi.' }))
       if (!result.credentials) {
@@ -74,8 +75,8 @@ export function SetupPage({ initial, onSaved, onCancel }: SetupPageProps): React
       XTREAM_PASS: found.pass
     }
     if (token.trim()) patch.TMDB_TOKEN = token.trim()
-    await window.akis.app.setConfig(patch).catch(() => false)
-    const status = await window.akis.iptv
+    await window.elembi.app.setConfig(patch).catch(() => false)
+    const status = await window.elembi.iptv
       .status()
       .catch((e: unknown) => ({ ok: false, message: e instanceof Error ? e.message : 'Bağlanılamadı' }))
     setProbe({ state: 'done', status })
@@ -85,6 +86,14 @@ export function SetupPage({ initial, onSaved, onCancel }: SetupPageProps): React
 
   return (
     <main className="relative min-h-dvh">
+      {/*
+        * This screen is the whole window on a first run, and the window has no
+        * system frame — without this band it could be neither moved nor closed.
+        */}
+      <div className="drag fixed inset-x-0 top-0 z-50 flex h-[52px] items-center justify-end px-4">
+        <WindowControls />
+      </div>
+
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <span
           className="absolute -top-40 -right-32 h-[520px] w-[520px] rounded-full opacity-25 blur-[120px]"

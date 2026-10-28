@@ -7,5 +7,5 @@ import type { TmdbItem } from '@shared/types'
  * none — so this costs a request exactly when there is something to show.
  */
 export function useCollection(id: number | null): AsyncState<TmdbItem[]> {
-  return useAsync(async () => (id ? window.akis.tmdb.collection(id) : []), [id])
+  return useAsync(async () => (id ? window.elembi.tmdb.collection(id) : []), [id])
 }

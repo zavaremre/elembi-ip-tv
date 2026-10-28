@@ -5,6 +5,7 @@ import type {
   DiscoverResult,
   Genre,
   Keyword,
+  PersonHit,
   MediaKind,
   SearchResult,
   SeasonDetail,
@@ -57,6 +58,16 @@ async function genres(): Promise<{ map: Map<string, string>; list: Genre[] }> {
 }
 
 /* ── mapping ──────────────────────────────────── */
+interface RawPerson {
+  id: number
+  media_type?: string
+  name?: string
+  profile_path?: string | null
+  known_for_department?: string
+  popularity?: number
+  known_for?: { title?: string; name?: string }[]
+}
+
 interface RawItem {
   id: number
   media_type?: string
@@ -332,6 +343,34 @@ export const tmdb = {
       .filter((r) => (r.media_type === 'movie' || r.media_type === 'tv') && (r.poster_path || r.backdrop_path))
       .map((r) => toItem(r, 'movie', map))
   },
+  /**
+   * People matching the same text. /search/multi already carries them and the
+   * response is cached under its URL, so asking for both costs one request —
+   * the titles call above has usually just made it.
+   */
+  async searchPeople(q: string): Promise<PersonHit[]> {
+    if (!q.trim()) return []
+    const res = await call<{ results: RawPerson[] }>('/search/multi', { query: q, include_adult: 'false' }, 5 * 60_000)
+    return (res.results ?? [])
+      /*
+       * A photo and some credits, which is what separates the person meant from
+       * the namesakes: "Ryan Reynolds" returns four, and the three with neither
+       * are a short film and two empty records.
+       */
+      .filter((r) => r.media_type === 'person' && r.name && r.profile_path && (r.known_for ?? []).length > 0)
+      .sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0))
+      .slice(0, 4)
+      .map((r) => ({
+        id: r.id,
+        name: r.name as string,
+        profile: r.profile_path ? `${IMG}/w185${r.profile_path}` : null,
+        known: (r.known_for ?? [])
+          .map((k) => k.title || k.name)
+          .filter((t): t is string => Boolean(t))
+          .slice(0, 3)
+          .join(' · ')
+      }))
+  },
   /** Hero needs only logo, runtime and seasons; the heavy detail call is separate. */
   async detail(kind: MediaKind, id: number): Promise<TmdbItem> {
     const { map } = await genres()
@@ -450,16 +489,17 @@ export const tmdb = {
     }
   },
 
-  /** Titles plus matching TMDB keywords, so a search can pivot to a topic. */
+  /** Titles, matching keywords and people, so a search can pivot to a topic or a name. */
   async searchRich(q: string): Promise<SearchResult> {
-    if (!q.trim()) return { titles: [], keywords: [] }
-    const [titles, keywords] = await Promise.all([
+    if (!q.trim()) return { titles: [], keywords: [], people: [] }
+    const [titles, keywords, people] = await Promise.all([
       this.search(q),
       call<{ results: Keyword[] }>('/search/keyword', { query: q }, 6 * 3600_000)
         .then((r) => r.results.slice(0, 5))
-        .catch(() => [] as Keyword[])
+        .catch(() => [] as Keyword[]),
+      this.searchPeople(q).catch(() => [] as PersonHit[])
     ])
-    return { titles, keywords }
+    return { titles, keywords, people }
   },
 
   /** Episode list for one season, used by the detail page. */

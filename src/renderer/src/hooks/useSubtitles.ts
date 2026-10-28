@@ -31,7 +31,7 @@ export interface SubtitleState {
 }
 
 /** Marks the track this hook owns, so the engine ignores it when reading cues. */
-export const LOCAL_TRACK_ID = 'akis-local-subtitle'
+export const LOCAL_TRACK_ID = 'elembi-local-subtitle'
 
 const SAVE_DEBOUNCE_MS = 500
 
@@ -65,7 +65,7 @@ export function useSubtitles(
   useEffect(() => {
     let alive = true
     stored.current = { delay: 0 }
-    window.akis.subs
+    window.elembi.subs
       .sync(context.syncKey)
       .then((sync) => {
         if (alive) stored.current = sync
@@ -82,7 +82,7 @@ export function useSubtitles(
       if (saveTimer.current) clearTimeout(saveTimer.current)
       /* Held keys fire this repeatedly, so the write waits for the last one. */
       saveTimer.current = setTimeout(() => {
-        window.akis.subs.saveSync(context.syncKey, next).catch(() => undefined)
+        window.elembi.subs.saveSync(context.syncKey, next).catch(() => undefined)
       }, SAVE_DEBOUNCE_MS)
     },
     [context.syncKey]
@@ -181,7 +181,7 @@ export function useSubtitles(
   const loadLocal = useCallback((): void => {
     setError(null)
     setBusy(true)
-    window.akis.subs
+    window.elembi.subs
       .openLocal()
       .then((file) => {
         if (!file) return

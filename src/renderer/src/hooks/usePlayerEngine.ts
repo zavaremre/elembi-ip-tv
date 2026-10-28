@@ -172,7 +172,7 @@ export function usePlayerEngine(
       /* Guards the poll below: a later title must not adopt this session's list. */
       const startedFrom = sourceRef.current
       try {
-        const playlist = await window.akis.media.startHls(sourceRef.current, audioOrder, start, chosenSub.current)
+        const playlist = await window.elembi.media.startHls(sourceRef.current, audioOrder, start, chosenSub.current)
         hlsRef.current?.destroy()
         video.pause()
         video.removeAttribute('src')
@@ -286,7 +286,7 @@ export function usePlayerEngine(
      * goes through the local ffmpeg pipe instead.
      */
     const start = async (): Promise<void> => {
-      const canRemux = await window.akis.media.available().catch(() => false)
+      const canRemux = await window.elembi.media.available().catch(() => false)
       if (cancelled) return
 
       if (!canRemux) {
@@ -300,7 +300,7 @@ export function usePlayerEngine(
         return
       }
 
-      const info = await window.akis.media.probe(url).catch(() => null)
+      const info = await window.elembi.media.probe(url).catch(() => null)
       if (cancelled) return
       setAudioInfo(info?.audio ?? [])
       /*
@@ -337,7 +337,7 @@ export function usePlayerEngine(
     void start()
     return () => {
       cancelled = true
-      void window.akis.media.stop().catch(() => undefined)
+      void window.elembi.media.stop().catch(() => undefined)
       video.removeAttribute('src')
       video.load()
     }

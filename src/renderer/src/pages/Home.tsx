@@ -14,11 +14,13 @@ import { ShowcaseCard } from '@/components/ShowcaseCard'
 import { useAudioVariants } from '@/hooks/useAudioVariants'
 import { useProviderPosters } from '@/hooks/useProviderPosters'
 import { dur } from '@/lib/fmt'
+import { favoriteKey, type Favorites } from '@/hooks/useFavorites'
+import { addedLabel, recentlyAdded } from '@/lib/fresh'
 import { buildPlatforms } from '@/lib/platforms'
 import { poster } from '@/lib/img'
 import type { HomeData } from '@/hooks/useHomeData'
 import type { Reminders } from '@/hooks/useReminders'
-import type { Channel, Genre, Match, Progress, TmdbItem, VodItem } from '@shared/types'
+import type { Channel, Favorite, Genre, Match, Progress, TmdbItem, VodItem } from '@shared/types'
 
 /** Where a row's "see all" control should land. */
 export type SeeAllTarget =
@@ -29,10 +31,12 @@ export type SeeAllTarget =
   | 'provider-movies'
   | 'provider-series'
   | 'genres'
+  | 'favorites'
 
 interface HomeProps {
   data: HomeData
   reminders: Reminders
+  favorites: Favorites
   progress: Progress[]
   onOpenTmdb: (item: TmdbItem) => void
   onPlayChannel: (channel: Channel) => void
@@ -43,6 +47,7 @@ interface HomeProps {
   onOpenCollection: (id: string) => void
   onOpenPlatform: (name: string, categories: string[]) => void
   onOpenPerson: (person: { id: number; name: string }) => void
+  onOpenFavorite: (row: Favorite) => void
   onSeeAll: (target: SeeAllTarget) => void
 }
 
@@ -52,6 +57,7 @@ const PROVIDER_RAIL_COUNT = 18
 export function Home({
   data,
   reminders,
+  favorites,
   progress,
   onOpenTmdb,
   onPlayChannel,
@@ -62,6 +68,7 @@ export function Home({
   onOpenCollection,
   onOpenPlatform,
   onOpenPerson,
+  onOpenFavorite,
   onSeeAll
 }: HomeProps): React.JSX.Element {
   /*
@@ -77,16 +84,27 @@ export function Home({
 
   const railVod = (data.vod.data ?? []).slice(0, PROVIDER_RAIL_COUNT)
   const railSeries = (data.providerSeries.data ?? []).slice(0, PROVIDER_RAIL_COUNT)
+  /* What the subscription gained lately, films and series in one row. */
+  const fresh = useMemo(
+    () => recentlyAdded(data.vod.data ?? [], data.providerSeries.data ?? []),
+    [data.vod.data, data.providerSeries.data]
+  )
   const audioVariants = useAudioVariants(railVod)
-  const tmdbPosters = useProviderPosters([...railVod, ...railSeries])
+  const tmdbPosters = useProviderPosters([...fresh, ...railVod, ...railSeries])
   /* Nothing until the lookup answers: showing the provider cover first and
      swapping to the TMDB poster afterwards reads as a glitch. */
+  /* One place to turn either kind of item into the heart's two props. */
+  const favOf = (kind: Favorite['kind'], id: number, title: string, image: string | null) => ({
+    favorite: favorites.has(favoriteKey(kind, id)),
+    onToggleFavorite: () => favorites.toggle({ kind, id, title, image })
+  })
+
   const artworkFor = (key: string, cover: string | null): string | null =>
     poster(tmdbPosters.paths.get(key)) ?? (tmdbPosters.resolved.has(key) ? cover : null)
 
   return (
     <>
-      <Hero items={data.hero.data ?? []} loading={data.hero.loading} onPlay={onOpenTmdb} onOpen={onOpenTmdb} />
+      <Hero items={data.hero.data ?? []} loading={data.hero.loading} onOpen={onOpenTmdb} />
 
       <main className="shell relative z-4 -mt-10 pb-24">
 
@@ -100,6 +118,47 @@ export function Home({
                 logo={entry.logo}
                 categories={entry.categories}
                 onClick={() => onOpenPlatform(entry.name, entry.categories)}
+              />
+            ))}
+          </Row>
+        ) : null}
+
+        {favorites.rows.length > 0 ? (
+          <Row
+            title="Favorilerim"
+            meta={`${favorites.rows.length} BAŞLIK`}
+            tagline="Kalbe dokunduklarınız"
+            action="Tümünü gör"
+            onAction={() => onSeeAll('favorites')}
+          >
+            {favorites.rows.slice(0, 18).map((row) => (
+              <PosterCard
+                key={row.key}
+                title={row.title}
+                image={row.image}
+                favorite
+                onToggleFavorite={() => favorites.toggle(row)}
+                onOpen={() => onOpenFavorite(row)}
+              />
+            ))}
+          </Row>
+        ) : null}
+
+        {/* Hidden rather than shown near-empty: a catalogue that gained nothing
+            has nothing to say here. */}
+        {fresh.length >= 4 ? (
+          <Row title="Yeni Eklenenler" meta="SAĞLAYICI" tagline="Son 30 günde kataloğa girenler">
+            {fresh.map((item) => (
+              <PosterCard
+                key={`${item.kind}-${item.id}`}
+                title={item.name}
+                image={artworkFor(`${item.kind === 'series' ? 'series' : 'vod'}-${item.id}`, item.cover)}
+                rating={item.rating}
+                meta={addedLabel(item.added)}
+                audio={item.audio}
+                flag={item.kind === 'series' ? { text: 'DİZİ', tone: 'new' } : undefined}
+                {...favOf(item.kind === 'series' ? 'series' : 'vod', item.id, item.name, artworkFor(`${item.kind === 'series' ? 'series' : 'vod'}-${item.id}`, item.cover))}
+                onOpen={() => onPlayVod(item)}
               />
             ))}
           </Row>
@@ -119,9 +178,9 @@ export function Home({
               key={item.id}
               title={item.title}
               image={poster(item.poster)}
-             
               rating={item.rating}
               meta={[item.year, dur(item.runtime)].filter(Boolean).join(' · ')}
+              {...favOf(item.kind === 'tv' ? 'tmdb-tv' : 'tmdb-movie', item.id, item.title, poster(item.poster))}
               onOpen={() => onOpenTmdb(item)}
             />
           ))}
@@ -143,9 +202,9 @@ export function Home({
               key={item.id}
               title={item.title}
               image={poster(item.poster)}
-             
               rating={item.rating}
               meta={item.year}
+              {...favOf(item.kind === 'tv' ? 'tmdb-tv' : 'tmdb-movie', item.id, item.title, poster(item.poster))}
               onOpen={() => onOpenTmdb(item)}
             />
           ))}
@@ -280,10 +339,10 @@ export function Home({
               key={item.id}
               title={item.name}
               image={artworkFor(`vod-${item.id}`, item.cover)}
-             
               rating={item.rating}
               meta={item.group}
               audio={item.audio ?? audioVariants.get(item.id) ?? null}
+              {...favOf('vod', item.id, item.name, artworkFor(`vod-${item.id}`, item.cover))}
               onOpen={() => onPlayVod(item)}
             />
           ))}
@@ -302,10 +361,10 @@ export function Home({
               key={item.id}
               title={item.name}
               image={artworkFor(`series-${item.id}`, item.cover)}
-             
               rating={item.rating}
               meta={item.group}
               audio={item.audio}
+              {...favOf('series', item.id, item.name, artworkFor(`series-${item.id}`, item.cover))}
               onOpen={() => onPlayVod(item)}
             />
           ))}

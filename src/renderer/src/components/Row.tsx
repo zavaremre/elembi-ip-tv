@@ -1,5 +1,6 @@
-import type { ReactNode } from 'react'
 import { Art } from './Art'
+import { useRailScroll } from '@/hooks/useRailScroll'
+import type { ReactNode } from 'react'
 
 interface RowProps {
   title: string
@@ -29,8 +30,10 @@ export function Row({
   skeleton = 'poster',
   children
 }: RowProps): React.JSX.Element {
+  const rail = useRailScroll()
+
   return (
-    <section className="mb-7 lg:mb-10">
+    <section className="group/row relative mb-7 lg:mb-10">
       <div className="flex items-center gap-3 px-[var(--pad)] pb-3.5">
         <h2 className="text-[19px] font-extrabold lg:text-[25px]">{title}</h2>
         {meta ? <span className="mono pt-1 text-[11px] tracking-[0.08em] text-tx3">{meta}</span> : null}
@@ -65,8 +68,47 @@ export function Row({
       ) : empty ? (
         <p className="px-[var(--pad)] text-[13px] text-tx3">{empty}</p>
       ) : (
-        <div className="scroller">{children}</div>
+        <div className="relative">
+          <div ref={rail.ref} className="scroller">
+            {children}
+          </div>
+          <RailArrow side="left" show={rail.canLeft} onClick={() => rail.scroll(-1)} />
+          <RailArrow side="right" show={rail.canRight} onClick={() => rail.scroll(1)} />
+        </div>
       )}
     </section>
+  )
+}
+
+/**
+ * Sits over the rail's faded edge. Hidden until the row is hovered or the
+ * button itself is focused, so a keyboard can still reach it.
+ */
+function RailArrow({
+  side,
+  show,
+  onClick
+}: {
+  side: 'left' | 'right'
+  show: boolean
+  onClick: () => void
+}): React.JSX.Element | null {
+  if (!show) return null
+  const left = side === 'left'
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={left ? 'Geri kaydır' : 'İleri kaydır'}
+      /* Not gated behind a breakpoint: these are the only way to move a rail
+         with a mouse, so a narrow window must not take them away. */
+      className={`absolute top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-white/18 bg-ink/80 text-tx opacity-0 backdrop-blur-[14px] transition-opacity duration-200 hover:border-acc/50 hover:bg-ink focus-visible:opacity-100 group-hover/row:opacity-100 md:h-11 md:w-11 ${
+        left ? 'left-2' : 'right-2'
+      }`}
+    >
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" aria-hidden="true">
+        <path d={left ? 'm15 6-6 6 6 6' : 'm9 6 6 6-6 6'} />
+      </svg>
+    </button>
   )
 }

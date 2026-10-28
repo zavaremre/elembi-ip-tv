@@ -19,7 +19,7 @@ export async function matchTmdb(name: string, kind: MediaKind): Promise<TmdbItem
   if (queries.length === 0) return null
 
   for (const query of queries) {
-    const results = await window.akis.tmdb.search(query).catch(() => [])
+    const results = await window.elembi.tmdb.search(query).catch(() => [])
     const sameKind = results.filter((item) => item.kind === kind)
     const exact = sameKind.filter((item) =>
       variants.some((variant) => parseName(item.title).title === variant.title)
@@ -30,7 +30,7 @@ export async function matchTmdb(name: string, kind: MediaKind): Promise<TmdbItem
     const year = variants.find((variant) => variant.year)?.year
     const pick = (year && exact.find((item) => item.year === String(year))) || exact[0]
     /* The search endpoint carries no logo or runtime, so the match is detailed. */
-    return window.akis.tmdb.detail(pick.kind, pick.id).catch(() => pick)
+    return window.elembi.tmdb.detail(pick.kind, pick.id).catch(() => pick)
   }
   return null
 }

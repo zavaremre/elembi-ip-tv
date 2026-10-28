@@ -59,7 +59,7 @@ export function usePlayback(): Playback {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    window.akis.store.progress().then(setProgress).catch(() => setProgress([]))
+    window.elembi.store.progress().then(setProgress).catch(() => setProgress([]))
   }, [])
 
   const resumeFor = useCallback((key: string): number | undefined => progress.find((p) => p.key === key)?.position, [progress])
@@ -91,11 +91,11 @@ export function usePlayback(): Playback {
       resetQueue()
       try {
         if (item.kind === 'vod') {
-          const url = item.url ?? (await window.akis.iptv.vodUrl(item.id, item.containerExt))
+          const url = item.url ?? (await window.elembi.iptv.vodUrl(item.id, item.containerExt))
           const key = `vod:${item.id}`
           setTarget({ key, kind: 'vod', id: item.id, url, title: item.name, sub: item.group, image: item.cover, resumeAt: resumeFor(key) })
         } else {
-          const info = await window.akis.iptv.seriesInfo(item.id)
+          const info = await window.elembi.iptv.seriesInfo(item.id)
           const episode = info.seasons[0]?.episodes[0]
           if (!episode) {
             setError('Bu dizinin bölüm listesi sağlayıcıdan gelmedi')
@@ -208,7 +208,7 @@ export function usePlayback(): Playback {
   const saveProgress = useCallback(
     (seconds: number, duration: number): void => {
       if (!target || target.kind === 'live') return
-      window.akis.store
+      window.elembi.store
         .saveProgress({
           key: target.key,
           kind: target.kind,

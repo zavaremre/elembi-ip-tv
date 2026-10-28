@@ -64,31 +64,31 @@ function dedupe(items: TmdbItem[]): TmdbItem[] {
 export function useHomeData(): HomeData {
   const [nonce, setNonce] = useState(0)
 
-  const trending = useAsync(() => window.akis.tmdb.trending(), [nonce])
+  const trending = useAsync(() => window.elembi.tmdb.trending(), [nonce])
   const movies = useAsync(async () => {
     const pages = await Promise.all(
-      Array.from({ length: POPULAR_PAGES }, (_, i) => window.akis.tmdb.popularMovies(i + 1))
+      Array.from({ length: POPULAR_PAGES }, (_, i) => window.elembi.tmdb.popularMovies(i + 1))
     )
     return dedupe(pages.flat())
   }, [nonce])
   const series = useAsync(async () => {
     const pages = await Promise.all(
-      Array.from({ length: POPULAR_PAGES }, (_, i) => window.akis.tmdb.popularTv(i + 1))
+      Array.from({ length: POPULAR_PAGES }, (_, i) => window.elembi.tmdb.popularTv(i + 1))
     )
     return dedupe(pages.flat())
   }, [nonce])
-  const genres = useAsync(() => window.akis.tmdb.genres(), [nonce])
-  const topRated = useAsync(() => window.akis.tmdb.topRated('movie'), [nonce])
-  const nowPlaying = useAsync(() => window.akis.tmdb.nowPlaying(), [nonce])
-  const airing = useAsync(() => window.akis.tmdb.airingToday(), [nonce])
+  const genres = useAsync(() => window.elembi.tmdb.genres(), [nonce])
+  const topRated = useAsync(() => window.elembi.tmdb.topRated('movie'), [nonce])
+  const nowPlaying = useAsync(() => window.elembi.tmdb.nowPlaying(), [nonce])
+  const airing = useAsync(() => window.elembi.tmdb.airingToday(), [nonce])
 
-  const channels = useAsync(() => window.akis.iptv.channels(), [nonce])
-  const matches = useAsync(() => window.akis.iptv.matches(), [nonce])
-  const vod = useAsync(() => window.akis.iptv.vod(), [nonce])
-  const providerSeries = useAsync(() => window.akis.iptv.series(), [nonce])
-  const watchProviders = useAsync(() => window.akis.tmdb.watchProviders(), [nonce])
-  const people = useAsync(() => window.akis.tmdb.trendingPeople(), [nonce])
-  const status = useAsync(() => window.akis.iptv.status(), [nonce])
+  const channels = useAsync(() => window.elembi.iptv.channels(), [nonce])
+  const matches = useAsync(() => window.elembi.iptv.matches(), [nonce])
+  const vod = useAsync(() => window.elembi.iptv.vod(), [nonce])
+  const providerSeries = useAsync(() => window.elembi.iptv.series(), [nonce])
+  const watchProviders = useAsync(() => window.elembi.tmdb.watchProviders(), [nonce])
+  const people = useAsync(() => window.elembi.tmdb.trendingPeople(), [nonce])
+  const status = useAsync(() => window.elembi.iptv.status(), [nonce])
   const teamBadges = useTeamBadges(matches.data ?? [])
 
   /* Indexed once per refresh: a per-title scan of ~11k entries would stall rendering. */
@@ -134,7 +134,7 @@ export function useHomeData(): HomeData {
     if (heroCandidates.length === 0) return
     setHeroItems(heroCandidates)
     let alive = true
-    Promise.all(heroCandidates.map((item) => window.akis.tmdb.detail(item.kind, item.id).catch(() => item))).then((full) => {
+    Promise.all(heroCandidates.map((item) => window.elembi.tmdb.detail(item.kind, item.id).catch(() => item))).then((full) => {
       if (alive) setHeroItems(full)
     })
     return () => {
@@ -159,7 +159,7 @@ export function useHomeData(): HomeData {
 
     Promise.all(
       featured.map(async (channel) => {
-        const nowNext = await window.akis.iptv.nowNext(channel.id).catch(() => null)
+        const nowNext = await window.elembi.iptv.nowNext(channel.id).catch(() => null)
         return [channel.id, nowNext] as const
       })
     ).then((pairs) => {
@@ -172,7 +172,7 @@ export function useHomeData(): HomeData {
     Promise.all(
       featured.slice(0, GUIDE_ROWS).map(async (channel) => ({
         channel,
-        entries: await window.akis.iptv.epg(channel.id, 8).catch(() => [])
+        entries: await window.elembi.iptv.epg(channel.id, 8).catch(() => [])
       }))
     ).then((rows) => {
       if (alive) setGuideRows(rows.filter((row) => row.entries.length > 0))
@@ -224,7 +224,7 @@ export function useHomeData(): HomeData {
   ].filter(Boolean) as Collection[]
 
   const reload = useCallback(() => {
-    window.akis.app
+    window.elembi.app
       .refresh()
       .then(() => setNonce((n) => n + 1))
       .catch(() => setNonce((n) => n + 1))

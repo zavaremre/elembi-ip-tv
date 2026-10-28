@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { useFavorites } from './hooks/useFavorites'
 import { AppHeader, type Section } from './components/AppHeader'
 import { DetailPage } from './components/DetailPage'
 import { Player } from './components/Player'
@@ -21,18 +22,11 @@ import { ListPage, type ListView } from './pages/ListPage'
 import { ProviderBrowser } from './pages/ProviderBrowser'
 import { ProviderMoviePage } from './pages/ProviderMoviePage'
 import { InfoPage, type InfoTab } from './pages/InfoPage'
+import { FavoritesPage } from './pages/FavoritesPage'
 import { SetupPage } from './pages/SetupPage'
 import { ProviderSeriesPage } from './pages/ProviderSeriesPage'
 import { SearchPage } from './pages/SearchPage'
-import type {
-  DiscoverFilters,
-  Genre,
-  Keyword,
-  Match,
-  MediaKind,
-  TmdbItem,
-  VodItem
-} from '@shared/types'
+import type { DiscoverFilters, Favorite, Genre, Keyword, Match, MediaKind, TmdbItem, VodItem } from '@shared/types'
 
 const COLLECTION_TITLES: Record<CollectionId, string> = {
   'top-rated': 'En Çok Oylananlar',
@@ -71,6 +65,7 @@ export function App(): React.JSX.Element {
     filters: DEFAULT_FILTERS
   })
   const { section, collection, detailRef, providerSeries, providerMovie, providerScope, filters } = stack.view
+  const { replace: stackReplace } = stack
   /* Titles the provider does not carry are hidden by default. */
   const [providerOnly, setProviderOnly] = useState(true)
   const [paletteOpen, setPaletteOpen] = useState(false)
@@ -81,7 +76,7 @@ export function App(): React.JSX.Element {
   const [setupNonce, setSetupNonce] = useState(0)
   const [infoTab, setInfoTab] = useState<InfoTab>('about')
 
-  const appConfig = useAsync(() => window.akis.app.config(), [setupNonce])
+  const appConfig = useAsync(() => window.elembi.app.config(), [setupNonce])
   const collectionList = useCollectionList(collection)
   const detail = useTmdbDetail(detailRef)
   /* Derived during render: no effect needed to keep the match in sync. */
@@ -123,7 +118,37 @@ export function App(): React.JSX.Element {
     toTop()
   }
 
+  const favorites = useFavorites()
+
+  /*
+   * A favourite row carries only what draws a card, so opening one goes back
+   * through the same doors as the card it was saved from: a TMDB id opens the
+   * TMDB page, a provider id opens the provider's.
+   */
+  const openFavorite = (row: Favorite): void => {
+    if (row.kind === 'tmdb-movie' || row.kind === 'tmdb-tv') {
+      go({ detailRef: { kind: row.kind === 'tmdb-tv' ? 'tv' : 'movie', id: row.id }, providerSeries: null, providerMovie: null, providerScope: null })
+      return
+    }
+    const item = (row.kind === 'series' ? data.providerSeries.data : data.vod.data)?.find((x) => x.id === row.id)
+    if (item) openVod(item)
+  }
+
   const openDetail = (item: TmdbItem): void => go({ detailRef: { kind: item.kind, id: item.id }, providerSeries: null, providerMovie: null, providerScope: null })
+
+  /*
+   * Swaps the provider film page for the TMDB detail once the title has been
+   * recognised. replace, not go: the provider page was a step on the way to
+   * this one, so back belongs to whatever the film was clicked from.
+   */
+  const handoverToTmdb = useCallback(
+    (item: TmdbItem): void => {
+      stackReplace({ detailRef: { kind: item.kind, id: item.id }, providerMovie: null })
+    },
+    /* stack itself is a fresh object every render, so depending on it would make
+       this callback change every render and re-fire the handover effect. */
+    [stackReplace]
+  )
 
   /**
    * Nothing plays straight from a card. A series opens its episode list and a
@@ -190,7 +215,15 @@ export function App(): React.JSX.Element {
       return
     }
     const section: Section =
-      target === 'sports' ? 'sports' : target === 'live' ? 'live' : target === 'provider-series' ? 'series' : 'movies'
+      target === 'favorites'
+        ? 'favorites'
+        : target === 'sports'
+          ? 'sports'
+          : target === 'live'
+            ? 'live'
+            : target === 'provider-series'
+              ? 'series'
+              : 'movies'
     go({ section, collection: null, detailRef: null, providerSeries: null, providerMovie: null, providerScope: null })
   }
 
@@ -281,6 +314,7 @@ export function App(): React.JSX.Element {
 
         {detailRef ? (
           <DetailPage
+            favorites={favorites}
             detail={detail.data}
             loading={detail.loading}
             error={detail.error}
@@ -310,6 +344,10 @@ export function App(): React.JSX.Element {
               setPaletteOpen(true)
             }}
           />
+        ) : section === 'favorites' && !providerSeries && !providerMovie ? (
+          /* Opening a provider favourite fills providerMovie but leaves the
+             section alone, and this branch used to swallow it. */
+          <FavoritesPage favorites={favorites} onOpen={openFavorite} />
         ) : section === 'info' ? (
           <InfoPage
             tab={infoTab}
@@ -329,6 +367,7 @@ export function App(): React.JSX.Element {
           />
         ) : providerSeries ? (
           <ProviderSeriesPage
+            favorites={favorites}
             item={providerSeries}
             onPlayEpisodes={playback.playEpisodeList}
             progress={playback.progress}
@@ -337,10 +376,11 @@ export function App(): React.JSX.Element {
           />
         ) : providerMovie ? (
           <ProviderMoviePage
+            favorites={favorites}
             item={providerMovie}
             progress={playback.progress}
             onPlay={() => void playback.playVod(providerMovie)}
-            onOpenTmdb={openDetail}
+            onResolved={handoverToTmdb}
             onBack={back}
           />
         ) : browser ? (
@@ -380,6 +420,8 @@ export function App(): React.JSX.Element {
           />
         ) : (
           <Home
+            onOpenFavorite={openFavorite}
+            favorites={favorites}
             data={data}
             reminders={reminders}
             progress={playback.progress}
@@ -458,6 +500,7 @@ export function App(): React.JSX.Element {
         onPlayChannel={playback.playChannel}
         onPlayVod={openVod}
         onOpenTmdb={openDetail}
+        onOpenPerson={(person) => openPerson(person, 'movie')}
         onSeeAll={(query) =>
           go({ section: 'search', collection: null, detailRef: null, providerSeries: null, providerMovie: null, providerScope: null, filters: { ...DEFAULT_FILTERS, query } })
         }

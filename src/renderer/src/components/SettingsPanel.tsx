@@ -19,8 +19,8 @@ function Field({ label, value }: { label: string; value: string }): React.JSX.El
 
 /** Provider and TMDB status, read from the main process. Credentials stay in .env. */
 export function SettingsPanel({ onRefresh, onEditProvider, onOpenInfo }: SettingsPanelProps): React.JSX.Element {
-  const status = useAsync<ProviderStatus>(() => window.akis.iptv.status(), [])
-  const config = useAsync<AppConfig>(() => window.akis.app.config(), [])
+  const status = useAsync<ProviderStatus>(() => window.elembi.iptv.status(), [])
+  const config = useAsync<AppConfig>(() => window.elembi.app.config(), [])
 
   return (
     <div className="shell px-[var(--pad)] py-8">

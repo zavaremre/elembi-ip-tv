@@ -303,7 +303,7 @@ export async function startHls(
   retiring = retire()
 
   const id = randomBytes(8).toString('hex')
-  const dir = join(tmpdir(), `akis-hls-${id}`)
+  const dir = join(tmpdir(), `elembi-hls-${id}`)
   mkdirSync(dir, { recursive: true })
 
   const child = spawn(FFMPEG, hlsArgs(src, audioOrder, start, dir, subtitle), { stdio: ['ignore', 'ignore', 'pipe'] })

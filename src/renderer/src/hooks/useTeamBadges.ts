@@ -9,7 +9,7 @@ export function useTeamBadges(matches: Match[]): Map<string, string> {
   useEffect(() => {
     if (!names) return
     let alive = true
-    window.akis.teams
+    window.elembi.teams
       .badges(names.split('|'))
       .then((result) => {
         if (!alive) return

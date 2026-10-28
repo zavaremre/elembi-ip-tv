@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { favoriteKey, type Favorites } from '@/hooks/useFavorites'
+import { FavoriteButton } from './FavoriteButton'
 import { Art } from './Art'
 import { NoiseOverlay } from './fx/NoiseOverlay'
 import { PersonCard } from './PersonCard'
@@ -21,6 +23,7 @@ interface DetailPageProps {
   loading: boolean
   error: string | null
   match: ProviderMatchState
+  favorites: Favorites
   onPlay: (match: VodItem) => void
   onBack: () => void
   onOpenItem: (item: TmdbItem) => void
@@ -48,6 +51,7 @@ export function DetailPage({
   loading,
   error,
   match,
+  favorites,
   onPlay,
   onBack,
   onOpenItem,
@@ -95,8 +99,8 @@ export function DetailPage({
 
   return (
     <main className="pb-24">
-      <section className="relative h-[clamp(320px,46vh,460px)] -mt-[66px] overflow-hidden">
-        <Art src={backdrop(detail.backdrop, 'w1280')} alt={detail.title} shape="fill" flat />
+      <section className="relative h-[clamp(583px,85vh,839px)] -mt-[66px] overflow-hidden">
+        <Art src={backdrop(detail.backdrop, 'original')} alt={detail.title} shape="fill" anchor="top" flat />
         <div className="absolute inset-0 bg-[linear-gradient(0deg,var(--color-ink)_2%,rgba(8,8,12,.5)_46%,rgba(8,8,12,.75)_100%)]" />
         <NoiseOverlay />
         <button
@@ -116,7 +120,6 @@ export function DetailPage({
           <Art
             src={poster(detail.poster, 'w500')}
             alt={detail.title}
-           
             shape="poster"
             className="shadow-[0_24px_54px_-20px_rgba(0,0,0,.95)]"
           />
@@ -190,6 +193,19 @@ export function DetailPage({
                 Sağlayıcı listesinde eşleşme bulunamadı
               </span>
             )}
+
+            <FavoriteButton
+              variant="bar"
+              active={favorites.has(favoriteKey(detail.kind === 'tv' ? 'tmdb-tv' : 'tmdb-movie', detail.id))}
+              onToggle={() =>
+                favorites.toggle({
+                  kind: detail.kind === 'tv' ? 'tmdb-tv' : 'tmdb-movie',
+                  id: detail.id,
+                  title: detail.title,
+                  image: poster(detail.poster, 'w500')
+                })
+              }
+            />
 
             {detail.trailerKey ? (
               <button
@@ -284,7 +300,6 @@ export function DetailPage({
                 key={item.id}
                 title={item.title}
                 image={poster(item.poster)}
-               
                 rating={item.rating}
                 meta={item.year}
                 onOpen={() => onOpenItem(item)}
@@ -300,7 +315,6 @@ export function DetailPage({
                 key={item.id}
                 title={item.title}
                 image={poster(item.poster)}
-               
                 rating={item.rating}
                 meta={item.year}
                 onOpen={() => onOpenItem(item)}

@@ -21,6 +21,7 @@
   --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 
+  --radius-window: 8px;
   --radius-card: 14px;
   --radius-panel: 20px;
 
@@ -59,7 +60,9 @@
   }
   body {
     margin: 0;
-    background: var(--color-ink);
+    /* The window is transparent so #root can round its own corners; a ground
+       painted here would square them off again. */
+    background: transparent;
     color: var(--color-tx);
     font-family: var(--font-sans);
     font-size: 15px;
@@ -71,6 +74,13 @@
   #root {
     display: flex;
     flex-direction: column;
+    background: var(--color-ink);
+    border-radius: var(--radius-window);
+    overflow: hidden;
+  }
+  /* Against the screen's own edges a rounded corner is a notch of desktop. */
+  :root[data-window-full='true'] #root {
+    border-radius: 0;
   }
   h1,
   h2,
@@ -187,6 +197,104 @@
     margin-inline: auto;
   }
 
+  /*
+   * Anything fixed to the viewport escapes #root's clip and paints over the
+   * window's own rounded corners. Full-bleed overlays carry the same radius.
+   */
+  .win-clip {
+    border-radius: var(--radius-window);
+    overflow: hidden;
+  }
+  :root[data-window-full='true'] .win-clip {
+    border-radius: 0;
+  }
+
+  /* ═══ HEADER VEIL ═══ */
+  /*
+   * A blur that fades downward. backdrop-filter takes no gradient, and masking
+   * one blurred layer only fades how much of it shows — the edge stays as hard
+   * as the blur behind it. Stacked backdrop-filters compound instead: each
+   * sibling samples what the one before it already blurred, so four bands cut
+   * to different depths read as one blur weakening towards the bottom.
+   */
+  .veil {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    /* The header's own height, plus the tail the fade needs to finish in. */
+    height: calc(66px + 44px);
+    pointer-events: none;
+    /* Under the header, which owns the drag region, and over the page. */
+    z-index: 59;
+  }
+  /*
+   * The radius goes on the layers, not on this wrapper. Clipping an ancestor of
+   * a backdrop-filter makes it a backdrop root: the children then sample the
+   * wrapper, which is empty, and the blur vanishes. On the layer itself it only
+   * shapes that layer's own backdrop.
+   */
+  .veil > span {
+    border-top-left-radius: var(--radius-window);
+    border-top-right-radius: var(--radius-window);
+  }
+  :root[data-window-full='true'] .veil > span {
+    border-radius: 0;
+  }
+  .veil > span {
+    position: absolute;
+    inset: 0;
+  }
+  /*
+   * Masked like the rest, and that matters most here: unmasked, the weakest
+   * band ended flat against the veil's own edge and drew the very line the
+   * fade exists to remove. Blur only — a saturate on one band shifts colour
+   * where it stops, which is another edge.
+   */
+  .veil-b1 {
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 34%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0%, #000 34%, transparent 100%);
+  }
+  .veil-b2 {
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 58%, transparent 88%);
+    mask-image: linear-gradient(to bottom, #000 0%, #000 58%, transparent 88%);
+  }
+  .veil-b3 {
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 34%, transparent 66%);
+    mask-image: linear-gradient(to bottom, #000 0%, #000 34%, transparent 66%);
+  }
+  .veil-b4 {
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 14%, transparent 44%);
+    mask-image: linear-gradient(to bottom, #000 0%, #000 14%, transparent 44%);
+  }
+  /* The ground fades on the same curve; a flat tint would re-draw the hard edge.
+     The transition used to sit on the header, which no longer carries a colour. */
+  .veil-tint {
+    transition: background 0.3s ease;
+    background: linear-gradient(
+      to bottom,
+      rgb(8 8 12 / 0.46) 0%,
+      rgb(8 8 12 / 0.3) 52%,
+      rgb(8 8 12 / 0) 100%
+    );
+  }
+  .veil.is-scrolled .veil-tint {
+    background: linear-gradient(
+      to bottom,
+      rgb(8 8 12 / 0.92) 0%,
+      rgb(8 8 12 / 0.74) 52%,
+      rgb(8 8 12 / 0) 100%
+    );
+  }
+
   /* ═══ HORIZONTAL RAIL ═══ */
   .scroller {
     display: flex;
@@ -194,6 +302,9 @@
     overflow-x: auto;
     padding: 4px var(--pad) 6px;
     scroll-snap-type: x proximity;
+    /* Snap targets land against the padding, not the scroll-port edge, so the
+       rail rests at scrollLeft 0 instead of one padding in. */
+    scroll-padding-inline: var(--pad);
     scrollbar-width: none;
     -webkit-mask: linear-gradient(90deg, transparent 0, #000 var(--pad), #000 calc(100% - var(--pad)), transparent 100%);
     mask: linear-gradient(90deg, transparent 0, #000 var(--pad), #000 calc(100% - var(--pad)), transparent 100%);

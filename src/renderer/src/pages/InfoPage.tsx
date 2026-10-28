@@ -67,9 +67,9 @@ const FFMPEG_HINT: Record<string, string> = {
 function About({ dataDir, platform }: { dataDir: string; platform: string }): React.JSX.Element {
   return (
     <>
-      <H>Akış nedir</H>
+      <H>Elembi nedir</H>
       <P>
-        Akış, kendi IPTV aboneliğinizi masaüstünde izlemek için yazılmış bir oynatıcıdır. Aboneliğinizin
+        Elembi, kendi IPTV aboneliğinizi masaüstünde izlemek için yazılmış bir oynatıcıdır. Aboneliğinizin
         kanal, film ve dizi listesini alır, üzerine TMDB'den afiş, özet, oyuncu ve anahtar kelime
         bilgisi ekler. Kendi içinde hiçbir yayın veya içerik barındırmaz; ne izleyeceğinizi tamamen
         sizin girdiğiniz abonelik belirler.
@@ -168,7 +168,7 @@ function Privacy({ dataDir }: { dataDir: string }): React.JSX.Element {
     <>
       <H>Özet</H>
       <P>
-        Akış'ın arkasında bir sunucu yok. Hesap açmanız istenmez, kullanım verisi toplanmaz,
+        Elembi'nin arkasında bir sunucu yok. Hesap açmanız istenmez, kullanım verisi toplanmaz,
         uygulamada hiçbir analitik veya izleme kodu bulunmaz. Verdiğiniz bilgiler yalnızca
         bilgisayarınızda durur ve yalnızca sizin seçtiğiniz servislere gider.
       </P>
@@ -215,7 +215,7 @@ function Privacy({ dataDir }: { dataDir: string }): React.JSX.Element {
       <H>Üçüncü taraflar</H>
       <P>
         TMDB ve TheSportsDB'ye giden istekler o servislerin kendi gizlilik koşullarına tabidir.
-        Sağlayıcınızın verilerinizi nasıl işlediği de onunla aranızdaki ilişkiye bağlıdır; Akış bu
+        Sağlayıcınızın verilerinizi nasıl işlediği de onunla aranızdaki ilişkiye bağlıdır; Elembi bu
         konuda aracı değildir.
       </P>
     </>
@@ -227,14 +227,14 @@ function Terms(): React.JSX.Element {
     <>
       <H>Ne sunuyor, ne sunmuyor</H>
       <P>
-        Akış bir oynatıcıdır. İçinde hiçbir yayın, film veya dizi barındırmaz; herhangi bir abonelik
+        Elembi bir oynatıcıdır. İçinde hiçbir yayın, film veya dizi barındırmaz; herhangi bir abonelik
         satmaz veya sağlamaz. Yalnızca sizin girdiğiniz aboneliğe bağlanır ve o aboneliğin verdiğini
         gösterir.
       </P>
       <H>Sorumluluk</H>
       <P>
         Kullandığınız aboneliğin ve eriştiğiniz içeriğin bulunduğunuz yerdeki mevzuata uygun olması
-        sizin sorumluluğunuzdadır. Uygulamayı kullanarak gösterdiğiniz içeriğin kaynağından Akış
+        sizin sorumluluğunuzdadır. Uygulamayı kullanarak gösterdiğiniz içeriğin kaynağından Elembi
         sorumlu değildir ve bu konuda hiçbir denetim yapmaz.
       </P>
       <H>Garanti verilmez</H>
@@ -251,7 +251,7 @@ function Terms(): React.JSX.Element {
       </P>
       <H>Kaynak kod</H>
       <P>
-        Akış açık kaynaktır. Kodu inceleyebilir, değiştirebilir ve kendiniz derleyebilirsiniz.
+        Elembi açık kaynaktır. Kodu inceleyebilir, değiştirebilir ve kendiniz derleyebilirsiniz.
         Dağıtım koşulları depodaki lisans dosyasında belirtilir.
       </P>
     </>

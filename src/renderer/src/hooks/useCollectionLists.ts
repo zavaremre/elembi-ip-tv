@@ -4,9 +4,9 @@ import type { TmdbItem } from '@shared/types'
 export type CollectionId = 'top-rated' | 'now-playing' | 'airing-today' | 'provider-vod'
 
 const LOADERS: Record<Exclude<CollectionId, 'provider-vod'>, () => Promise<TmdbItem[]>> = {
-  'top-rated': () => window.akis.tmdb.topRated('movie'),
-  'now-playing': () => window.akis.tmdb.nowPlaying(),
-  'airing-today': () => window.akis.tmdb.airingToday()
+  'top-rated': () => window.elembi.tmdb.topRated('movie'),
+  'now-playing': () => window.elembi.tmdb.nowPlaying(),
+  'airing-today': () => window.elembi.tmdb.airingToday()
 }
 
 /** Fetches the list behind a showcase collection when it is opened. */

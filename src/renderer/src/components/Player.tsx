@@ -6,6 +6,8 @@ import { PlayerLoading } from './PlayerLoading'
 import { PlayerSeekBar } from './PlayerSeekBar'
 import { SubtitleOverlay } from './SubtitleOverlay'
 import { PlayerSettingsMenu } from './PlayerSettingsMenu'
+import { WindowControls } from './WindowControls'
+import { useMiniWindow } from '@/hooks/useMiniWindow'
 import { usePlayerControls } from '@/hooks/usePlayerControls'
 import { useAudioDelay } from '@/hooks/useAudioDelay'
 import { usePlayerEngine } from '@/hooks/usePlayerEngine'
@@ -119,6 +121,7 @@ export function Player({
     setMenu((current) => (current === next ? null : next))
   const isLive = target.kind === 'live'
   const full = mode === 'full'
+  const mini = useMiniWindow(!full, containerRef)
 
   useEffect(() => {
     if (!menu) return
@@ -139,7 +142,7 @@ export function Player({
     engine.timeline?.offset ?? 0
   )
   const subtitleStyle = useSubtitleStyle()
-  const controls = usePlayerControls(videoRef, containerRef, {
+  const controls = usePlayerControls(videoRef, {
     isLive,
     enabled: full,
     resumeAt: target.resumeAt,
@@ -160,11 +163,19 @@ export function Player({
   /* nodrag on the whole overlay: the window drag region behind it would otherwise
      swallow every click that lands inside the title bar band. */
   const chrome = full
-    ? 'nodrag fixed inset-0 z-80 bg-black'
-    : 'nodrag fixed right-5 bottom-5 z-80 w-[252px] overflow-hidden rounded-[20px] border border-white/15 bg-ink2/70 shadow-[0_26px_60px_-20px_rgba(0,0,0,.9)] backdrop-blur-[22px] backdrop-saturate-150'
+    ? 'win-clip nodrag fixed inset-0 z-80 bg-black'
+    : `group/mini nodrag fixed z-80 overflow-hidden rounded-[20px] border border-white/15 bg-ink2/70 shadow-[0_26px_60px_-20px_rgba(0,0,0,.9)] backdrop-blur-[22px] backdrop-saturate-150 ${
+        mini.dragging ? 'cursor-grabbing select-none' : 'cursor-grab'
+      }`
 
   return (
-    <div ref={containerRef} className={chrome} onPointerMove={full ? controls.wake : undefined}>
+    <div
+      ref={containerRef}
+      className={chrome}
+      style={full ? undefined : mini.style}
+      onPointerDown={full ? undefined : mini.onDragStart}
+      onPointerMove={full ? controls.wake : undefined}
+    >
       <video
         ref={videoRef}
         className={full ? 'h-full w-full bg-black object-contain' : 'aspect-video w-full object-cover'}
@@ -270,7 +281,16 @@ export function Player({
          * that band back. app-region is not inherited, so a child can opt back in.
          * Only outside real full screen, where there is no band to grab.
          */
-        <div className="drag absolute inset-x-0 top-0 z-30 h-[52px]" aria-hidden="true" />
+        <div className="drag absolute inset-x-0 top-0 z-30 flex h-[52px] items-center justify-end pr-2">
+          {/*
+            * The overlay covers the header, and with it the only way to close or
+            * minimise a frameless window. The player's own buttons sit lower and
+            * act on the video, not the window.
+            */}
+          <span className="relative z-10 flex items-center">
+            <WindowControls />
+          </span>
+        </div>
       ) : null}
 
       {full ? (
@@ -285,6 +305,18 @@ export function Player({
               controls.fullscreen ? 'top-6' : 'top-[76px]'
             } ${controls.controlsVisible ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
           >
+            {controls.fullscreen ? (
+              /*
+                * Full screen hides the drag band that normally carries these, so
+                * the window would have no close or minimise at all. Here they
+                * ride the player's own controls and fade out with them.
+                */
+              <>
+                <WindowControls />
+                <span className="mx-1 h-6 w-px bg-white/20" aria-hidden="true" />
+              </>
+            ) : null}
+
             <button
               type="button"
               onClick={() => onMode('mini')}
@@ -437,7 +469,7 @@ export function Player({
                     externalPlayer={externalPlayer}
                     onExternal={() => {
                       setMenu(null)
-                      void window.akis.app.openInPlayer(target.url)
+                      void window.elembi.app.openInPlayer(target.url)
                     }}
                   />
                 ) : null}
@@ -498,7 +530,7 @@ export function Player({
               ) : null}
 
               {engine.mode === 'native' ? (
-                <IconButton label={`${externalPlayer} ile aç`} onClick={() => void window.akis.app.openInPlayer(target.url)}>
+                <IconButton label={`${externalPlayer} ile aç`} onClick={() => void window.elembi.app.openInPlayer(target.url)}>
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
                     <path d="M15 3h6v6M21 3l-9 9" />
                     <path d="M19 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5" />
@@ -536,6 +568,23 @@ export function Player({
         </>
       ) : (
         <div className="flex items-center gap-2.5 px-3 py-2.5">
+          {/*
+            * Top-left, because the panel opens in the bottom-right corner and a
+            * grip in the opposite corner would sit against the screen edge with
+            * no room to pull. Resizing holds the bottom-right corner still.
+            */}
+          <span
+            data-nodrag
+            onPointerDown={mini.onResizeStart}
+            role="separator"
+            aria-label="Mini oynatıcıyı boyutlandır"
+            className="absolute top-0 left-0 z-10 grid h-6 w-6 cursor-nwse-resize place-items-center text-tx3 opacity-0 transition-opacity hover:text-tx group-hover/mini:opacity-100"
+          >
+            <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+              <path d="M10.5 1.5h-9v9" strokeLinecap="round" />
+              <path d="M7 1.5h-5.5V7" strokeLinecap="round" opacity=".5" />
+            </svg>
+          </span>
           <div className="min-w-0 flex-1">
             <div className="truncate text-[12.5px] font-bold">{target.title}</div>
             {target.sub ? <div className="mono truncate text-[10.5px] text-tx3">{target.sub}</div> : null}

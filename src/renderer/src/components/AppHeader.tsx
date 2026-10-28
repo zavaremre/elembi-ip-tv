@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { WindowControls } from './WindowControls'
 
-export type Section = 'home' | 'search' | 'movies' | 'series' | 'live' | 'sports' | 'settings' | 'info'
+export type Section = 'home' | 'search' | 'movies' | 'series' | 'live' | 'sports' | 'favorites' | 'settings' | 'info'
 
 interface AppHeaderProps {
   section: Section
@@ -19,7 +20,8 @@ const NAV: { id: Section; label: string }[] = [
   { id: 'movies', label: 'Filmler' },
   { id: 'series', label: 'Diziler' },
   { id: 'live', label: 'Canlı TV' },
-  { id: 'sports', label: 'Spor' }
+  { id: 'sports', label: 'Spor' },
+  { id: 'favorites', label: 'Favorilerim' }
 ]
 
 /** Glass header with the React Bits PillNav indicator; doubles as the window drag region. */
@@ -37,7 +39,6 @@ export function AppHeader({
   const [pill, setPill] = useState({ left: 0, width: 0 })
   const navRef = useRef<HTMLElement>(null)
   const hovered = useRef<Section | null>(null)
-  const isMac = window.akis.app.platform === 'darwin'
 
   useEffect(() => {
     const scroller = document.getElementById('page')
@@ -62,14 +63,38 @@ export function AppHeader({
   }, [section])
 
   return (
-    <header
-      className={`drag sticky top-0 z-60 flex h-[66px] shrink-0 items-center gap-4 px-[var(--pad)] backdrop-blur-[26px] backdrop-saturate-[1.7] transition-colors lg:gap-9 ${
-        scrolled ? 'border-b border-line bg-ink/85' : 'border-b border-transparent bg-ink/40'
-      } ${isMac ? 'pl-[86px]' : ''}`}
+    <>
+      {/*
+        * Outside the header, not inside it: -webkit-app-region is not inherited,
+        * so a child covering the header carves a no-drag hole across the whole
+        * band and the window stops being draggable. Fixed behind the header
+        * instead, where it blurs the page without touching the drag region.
+        */}
+      <span className={`veil ${scrolled ? 'is-scrolled' : ''}`} aria-hidden="true">
+        <span className="veil-tint" />
+        <span className="veil-b1" />
+        <span className="veil-b2" />
+        <span className="veil-b3" />
+        <span className="veil-b4" />
+      </span>
+
+      <header
+      /* The system no longer zooms on a double-click, since there is no title bar
+         to double-click; the drag band has to answer for it. */
+      onDoubleClick={(e) => {
+        if ((e.target as HTMLElement).closest('button, a, input, [role="group"]')) return
+        void window.elembi.win.toggleMaximize()
+      }}
+      /* No right padding: the window controls belong against the window's own
+         edge, outside the centred container the rest of the header sits in.
+         No background or blur either — the veil below carries both, so they can
+         fade out instead of ending on a line. */
+      className="drag sticky top-0 z-60 flex h-[66px] shrink-0 items-center gap-2 pr-2 pl-[var(--pad)]"
     >
+
       {/* drag must be repeated here: -webkit-app-region does not inherit, so this
           wrapper would otherwise carve the draggable band out of the header. */}
-      <div className="drag shell flex items-center gap-4 lg:gap-9">
+      <div className="drag shell relative z-10 flex min-w-0 flex-1 items-center gap-4 lg:gap-9">
       {canGoBack ? (
         <button
           type="button"
@@ -87,7 +112,7 @@ export function AppHeader({
         <span className="relative h-[26px] w-[26px] rounded-[8px] bg-linear-to-br from-acc to-[#6B4BFF] shadow-[0_0_18px_rgba(0,216,255,.45)]">
           <span className="absolute top-[7px] left-[9px] border-y-[6px] border-l-[8px] border-y-transparent border-l-ink" />
         </span>
-        <b className="gtext font-disp text-[19px] font-black tracking-[-0.03em]">AKIŞ</b>
+        <b className="gtext font-disp text-[19px] font-black tracking-[-0.03em]">ELEMBİ</b>
       </div>
 
       <nav ref={navRef} className="nodrag relative hidden gap-0.5 text-[14px] font-semibold md:flex" onMouseLeave={() => { hovered.current = null; place(null) }}>
@@ -160,12 +185,14 @@ export function AppHeader({
             aria-label={providerOk ? 'Sağlayıcı bağlı' : 'Sağlayıcı bağlı değil'}
           />
         </button>
-
-        <span className="grid h-9 w-9 place-items-center rounded-[11px] bg-linear-to-br from-[#FF2D7E] to-[#FFB03A] text-[14px] font-extrabold text-[#1A0A12]">
-          EZ
-        </span>
         </div>
       </div>
-    </header>
+
+      {/* Outside the container on purpose: window controls track the window. */}
+      <span className="relative z-10 flex items-center">
+        <WindowControls />
+      </span>
+      </header>
+    </>
   )
 }

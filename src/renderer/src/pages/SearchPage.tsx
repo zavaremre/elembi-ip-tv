@@ -3,7 +3,7 @@ import { FilterBar } from '@/components/FilterBar'
 import { PosterCard } from '@/components/PosterCard'
 import { useDiscover } from '@/hooks/useDiscover'
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll'
-import { useKeywordSuggestions } from '@/hooks/useKeywordSuggestions'
+import { useSearchSuggestions } from '@/hooks/useSearchSuggestions'
 import { poster } from '@/lib/img'
 import type { DiscoverFilters, Genre, Keyword, TmdbItem } from '@shared/types'
 
@@ -32,7 +32,7 @@ export function SearchPage({
   onOpenItem
 }: SearchPageProps): React.JSX.Element {
   const [text, setText] = useState(filters.query)
-  const suggestions = useKeywordSuggestions(text)
+  const suggestions = useSearchSuggestions(text)
   const discover = useDiscover(filters)
   const sentinelRef = useInfiniteScroll({
     onMore: discover.loadMore,
@@ -47,6 +47,12 @@ export function SearchPage({
   }, [text])
 
   const visible = providerOnly ? discover.items.filter(isPlayable) : discover.items
+
+  /* The name rides along in the filter so the chip can say who, not an id. */
+  const filterByPerson = (person: { id: number; name: string }): void => {
+    onChange({ person: { id: person.id, name: person.name }, query: '', page: 1 })
+    setText('')
+  }
 
   const addKeyword = (keyword: Keyword): void => {
     if (filters.keywordIds.includes(keyword.id)) return
@@ -81,10 +87,10 @@ export function SearchPage({
         </div>
       </label>
 
-      {suggestions.length > 0 ? (
+      {suggestions.keywords.length > 0 ? (
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <span className="mono text-[10px] tracking-[0.12em] text-tx3 uppercase">Konu olarak ara</span>
-          {suggestions.map((keyword) => (
+          {suggestions.keywords.map((keyword) => (
             <button
               key={keyword.id}
               type="button"
@@ -92,6 +98,30 @@ export function SearchPage({
               className="rounded-full border border-acc/35 bg-acc/10 px-3 py-1 text-[12.5px] text-acc hover:bg-acc/20"
             >
               {keyword.name}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
+      {suggestions.people.length > 0 && !filters.person ? (
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="mono text-[10px] tracking-[0.12em] text-tx3 uppercase">Oyuncu olarak ara</span>
+          {suggestions.people.map((person) => (
+            <button
+              key={person.id}
+              type="button"
+              onClick={() => filterByPerson(person)}
+              title={person.known || undefined}
+              className="flex items-center gap-2 rounded-full border border-line bg-white/6 py-1 pr-3 pl-1 text-[12.5px] hover:border-acc/45"
+            >
+              {person.profile ? (
+                <img src={person.profile} alt="" loading="lazy" className="h-6 w-6 rounded-full object-cover" />
+              ) : (
+                <span className="grid h-6 w-6 place-items-center rounded-full bg-surf2 text-[10px] text-tx3">
+                  {person.name.slice(0, 1)}
+                </span>
+              )}
+              {person.name}
             </button>
           ))}
         </div>
@@ -177,7 +207,6 @@ export function SearchPage({
                 key={`${item.kind}-${item.id}`}
                 title={item.title}
                 image={poster(item.poster)}
-               
                 rating={item.rating}
                 meta={item.year}
                 layout="grid"

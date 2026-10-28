@@ -1,7 +1,7 @@
-import type { AkisApi } from './index'
+import type { ElembiApi } from './index'
 
 declare global {
   interface Window {
-    akis: AkisApi
+    elembi: ElembiApi
   }
 }

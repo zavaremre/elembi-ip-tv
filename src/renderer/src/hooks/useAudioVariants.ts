@@ -44,7 +44,7 @@ export function useAudioVariants(items: VodItem[]): Map<number, AudioVariant> {
         /* Mount-scoped only; a request already sent stays valid. */
         if (!mounted.current) return
         const chunk = pending.slice(i, i + CHUNK)
-        const result = await window.akis.iptv.audioInfo(chunk).catch(() => null)
+        const result = await window.elembi.iptv.audioInfo(chunk).catch(() => null)
         if (!result || !mounted.current) continue
         setVariants((current) => {
           const next = new Map(current)

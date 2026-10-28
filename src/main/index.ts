@@ -10,6 +10,7 @@ import { teamBadges } from './teams'
 import { available as ffmpegAvailable, probe, startHls, stopHls } from './transcode'
 import { posters } from './artwork'
 import { captureShots } from './devshots'
+import { migrateUserData } from './migrate'
 import { resolveProviderLink } from './resolve'
 import { audioInfo } from './vodinfo'
 import { liveUrl, seriesUrl, vodUrl, xtream } from './xtream'
@@ -17,6 +18,7 @@ import type {
   AppConfig,
   ArtworkRequest,
   DiscoverFilters,
+  Favorite,
   MediaKind,
   SubtitleSync,
   SubtitleTrackInfo
@@ -31,15 +33,26 @@ function createWindow(): BrowserWindow {
     minWidth: 1100,
     minHeight: 700,
     show: false,
-    backgroundColor: '#08080C',
-    titleBarStyle: 'hiddenInset',
-    trafficLightPosition: { x: 16, y: 24 },
+    /*
+     * No system window at all: the app draws its own controls in the header, so
+     * the frame, its shadow and its rounded corners would only be chrome around
+     * chrome. Frameless windows stay resizable from the edges on every platform.
+     *
+     * Transparent because the corner radius is the app's: a system window only
+     * offers its own rounding, which cannot be set to 4px. #root paints the
+     * ground and clips it instead, so the window itself must not paint one.
+     */
+    frame: false,
+    hasShadow: false,
+    roundedCorners: false,
+    transparent: true,
+    backgroundColor: '#00000000',
     webPreferences: {
       preload: join(import.meta.dirname, '../preload/index.mjs'),
       sandbox: false,
       /* A throttled window stops repainting, and capturePage then returns the
          last frame it drew — which made every screenshot identical. */
-      backgroundThrottling: process.env.AKIS_SHOTS !== '1',
+      backgroundThrottling: process.env.ELEMBI_SHOTS !== '1',
       contextIsolation: true,
       nodeIntegration: false
     }
@@ -60,7 +73,7 @@ function createWindow(): BrowserWindow {
   })
 
   /* Screenshots for the README; inert unless the environment asks for them. */
-  if (process.env.AKIS_SHOTS === '1') {
+  if (process.env.ELEMBI_SHOTS === '1') {
     win.webContents.once('did-finish-load', () => void captureShots(win))
   }
 
@@ -102,6 +115,52 @@ function registerIpc(): void {
     })
   }
 
+  /*
+   * Window controls need the window the request came from, which the helper
+   * above deliberately drops. There is one window, but resolving it from the
+   * sender keeps that from being load-bearing.
+   */
+  const onWindow = (ch: string, fn: (win: BrowserWindow) => unknown): void => {
+    ipcMain.handle(ch, async (e) => {
+      try {
+        const win = BrowserWindow.fromWebContents(e.sender)
+        if (!win) throw new Error('Pencere bulunamadı')
+        return { ok: true, data: await fn(win) }
+      } catch (err) {
+        return { ok: false, error: err instanceof Error ? err.message : String(err) }
+      }
+    })
+  }
+
+  /* Window */
+  onWindow('win:minimize', (win) => {
+    win.minimize()
+    return true
+  })
+  /*
+   * Three macOS behaviours, measured on a frameless window of this app's own
+   * shape: setFullScreen does nothing at all — native full screen needs a frame
+   * — and maximize stops at the work area, 2560x1331 at y=30, with the menu bar
+   * still showing. setSimpleFullScreen is the one that covers the screen,
+   * 2560x1440 at the origin, which is what this button is asking for.
+   */
+  onWindow('win:toggleMaximize', (win) => {
+    if (process.platform === 'darwin') {
+      win.setSimpleFullScreen(!win.isSimpleFullScreen())
+      return win.isSimpleFullScreen()
+    }
+    if (win.isMaximized()) win.unmaximize()
+    else win.maximize()
+    return win.isMaximized()
+  })
+  onWindow('win:close', (win) => {
+    win.close()
+    return true
+  })
+  onWindow('win:isMaximized', (win) =>
+    process.platform === 'darwin' ? win.isSimpleFullScreen() : win.isMaximized()
+  )
+
   /* TMDB */
   on('tmdb:trending', () => tmdb.trending())
   on('tmdb:popularMovies', (page?: number) => tmdb.popularMovies(page))
@@ -115,6 +174,7 @@ function registerIpc(): void {
   on('tmdb:trendingPeople', () => tmdb.trendingPeople())
   on('tmdb:watchProviders', () => tmdb.watchProviders())
   on('tmdb:search', (q: string) => tmdb.search(q))
+  on('tmdb:searchPeople', (q: string) => tmdb.searchPeople(q))
   on('tmdb:detail', (kind: MediaKind, id: number) => tmdb.detail(kind, id))
   on('tmdb:full', (kind: MediaKind, id: number) => tmdb.full(kind, id))
   on('tmdb:searchRich', (q: string) => tmdb.searchRich(q))
@@ -164,7 +224,7 @@ function registerIpc(): void {
   on('store:progress', () => store.progress())
   on('store:saveProgress', (p: Parameters<typeof store.saveProgress>[0]) => store.saveProgress(p))
   on('store:favorites', () => store.favorites())
-  on('store:toggleFavorite', (id: number) => store.toggleFavorite(id))
+  on('store:toggleFavorite', (row: Omit<Favorite, 'added'>) => store.toggleFavorite(row))
 
   /* settings */
   on('provider:resolve', (link: string) => resolveProviderLink(link))
@@ -220,6 +280,8 @@ if (!app.requestSingleInstanceLock()) {
   })
 
   app.whenReady().then(() => {
+    /* Before anything reads config: the folder may have just been renamed. */
+    migrateUserData()
     registerIpc()
     createWindow()
     app.on('activate', () => {

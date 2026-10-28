@@ -17,7 +17,7 @@ export function TrailerModal({ youtubeKey, title, onClose }: TrailerModalProps):
   }, [onClose])
 
   return (
-    <div className="fixed inset-0 z-90 grid place-items-center bg-ink/85 p-6 backdrop-blur-[6px]" onClick={onClose}>
+    <div className="win-clip fixed inset-0 z-90 grid place-items-center bg-ink/85 p-6 backdrop-blur-[6px]" onClick={onClose}>
       <div
         className="w-full max-w-[1100px] overflow-hidden rounded-[18px] border border-white/12 bg-black shadow-[0_40px_90px_-30px_rgba(0,0,0,.95)]"
         onClick={(e) => e.stopPropagation()}

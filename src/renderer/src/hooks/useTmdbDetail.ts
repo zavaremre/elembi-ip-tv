@@ -10,6 +10,6 @@ export interface DetailRef {
 export function useTmdbDetail(ref: DetailRef | null): AsyncState<TmdbDetail | null> {
   return useAsync(async () => {
     if (!ref) return null
-    return window.akis.tmdb.full(ref.kind, ref.id)
+    return window.elembi.tmdb.full(ref.kind, ref.id)
   }, [ref?.kind, ref?.id])
 }

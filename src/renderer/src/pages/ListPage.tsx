@@ -73,7 +73,6 @@ export function ListPage({
                   key={item.id}
                   title={item.title}
                   image={poster(item.poster)}
-                 
                   rating={item.rating}
                   meta={item.year}
                   layout="grid"
@@ -88,7 +87,6 @@ export function ListPage({
                   key={`${item.kind}-${item.id}`}
                   title={item.name}
                   image={artworkFor(`${item.kind}-${item.id}`, item.cover)}
-                 
                   rating={item.rating}
                   meta={item.group}
                   audio={item.audio}

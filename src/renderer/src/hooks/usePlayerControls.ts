@@ -36,7 +36,6 @@ const SEEK_BIG = 10
 /** Playback state, keyboard shortcuts and auto-hiding controls. */
 export function usePlayerControls(
   videoRef: React.RefObject<HTMLVideoElement | null>,
-  containerRef: React.RefObject<HTMLElement | null>,
   options: {
     isLive: boolean
     enabled: boolean
@@ -136,12 +135,18 @@ export function usePlayerControls(
     [videoRef, wake]
   )
 
+  /*
+   * The window's own full screen, not the document's. The app window is
+   * frameless, and a frameless window has no native full screen to hand the
+   * document — requestFullscreen there resolves to nothing visible. The player
+   * already fills the window, so filling the screen is the window's job.
+   */
   const toggleFullscreen = useCallback((): void => {
-    const container = containerRef.current
-    if (!container) return
-    if (document.fullscreenElement) void document.exitFullscreen()
-    else void container.requestFullscreen()
-  }, [containerRef])
+    window.elembi.win
+      .toggleMaximize()
+      .then(setFullscreen)
+      .catch(() => undefined)
+  }, [])
 
   const togglePip = useCallback((): void => {
     const video = videoRef.current
@@ -150,10 +155,21 @@ export function usePlayerControls(
     else void video.requestPictureInPicture?.()
   }, [videoRef])
 
+  /* Read back rather than assumed: the window can also be zoomed from outside. */
   useEffect(() => {
-    const onChange = (): void => setFullscreen(Boolean(document.fullscreenElement))
-    document.addEventListener('fullscreenchange', onChange)
-    return () => document.removeEventListener('fullscreenchange', onChange)
+    let alive = true
+    const read = (): void => {
+      window.elembi.win
+        .isMaximized()
+        .then((value) => alive && setFullscreen(value))
+        .catch(() => undefined)
+    }
+    read()
+    window.addEventListener('resize', read)
+    return () => {
+      alive = false
+      window.removeEventListener('resize', read)
+    }
   }, [])
 
   /* YouTube-style shortcuts, active only while the player is in full view. */

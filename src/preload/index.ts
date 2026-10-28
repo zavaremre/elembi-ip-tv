@@ -7,11 +7,13 @@ import type {
   DiscoverFilters,
   DiscoverResult,
   EpgEntry,
+  Favorite,
   Genre,
   Match,
   MediaKind,
   MediaProbe,
   NowNext,
+  PersonHit,
   Progress,
   ProviderStatus,
   SearchResult,
@@ -48,6 +50,7 @@ const api = {
     trendingPeople: () => call<TrendingPerson[]>('tmdb:trendingPeople'),
     watchProviders: () => call<WatchProvider[]>('tmdb:watchProviders'),
     search: (q: string) => call<TmdbItem[]>('tmdb:search', q),
+    searchPeople: (q: string) => call<PersonHit[]>('tmdb:searchPeople', q),
     detail: (kind: MediaKind, id: number) => call<TmdbItem>('tmdb:detail', kind, id),
     full: (kind: MediaKind, id: number) => call<TmdbDetail>('tmdb:full', kind, id),
     searchRich: (q: string) => call<SearchResult>('tmdb:searchRich', q),
@@ -89,8 +92,8 @@ const api = {
   store: {
     progress: () => call<Progress[]>('store:progress'),
     saveProgress: (p: Omit<Progress, 'updated'>) => call<Progress[]>('store:saveProgress', p),
-    favorites: () => call<number[]>('store:favorites'),
-    toggleFavorite: (id: number) => call<number[]>('store:toggleFavorite', id)
+    favorites: () => call<Favorite[]>('store:favorites'),
+    toggleFavorite: (row: Omit<Favorite, 'added'>) => call<Favorite[]>('store:toggleFavorite', row)
   },
   app: {
     config: () => call<AppConfig>('app:config'),
@@ -103,9 +106,17 @@ const api = {
     refresh: () => call<boolean>('app:refresh'),
     openInPlayer: (url: string) => call<boolean>('app:openInPlayer', url),
     platform: process.platform
+  },
+  /* The window has no system frame, so its controls live in the header. */
+  win: {
+    minimize: () => call<boolean>('win:minimize'),
+    /** Resolves to the state it ended up in. */
+    toggleMaximize: () => call<boolean>('win:toggleMaximize'),
+    close: () => call<boolean>('win:close'),
+    isMaximized: () => call<boolean>('win:isMaximized')
   }
 }
 
-contextBridge.exposeInMainWorld('akis', api)
+contextBridge.exposeInMainWorld('elembi', api)
 
-export type AkisApi = typeof api
+export type ElembiApi = typeof api

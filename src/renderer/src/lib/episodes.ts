@@ -53,8 +53,8 @@ export async function fetchSeasonEpisodes(
   providerSeriesId: number | null
 ): Promise<{ episodes: PlayableEpisode[]; providerCount: number; name: string }> {
   const [season, providerInfo] = await Promise.all([
-    window.akis.tmdb.season(tvId, seasonNumber),
-    providerSeriesId !== null ? window.akis.iptv.seriesInfo(providerSeriesId).catch(() => null) : Promise.resolve(null)
+    window.elembi.tmdb.season(tvId, seasonNumber),
+    providerSeriesId !== null ? window.elembi.iptv.seriesInfo(providerSeriesId).catch(() => null) : Promise.resolve(null)
   ])
 
   const providerSeason = providerInfo?.seasons.find((s) => s.season === seasonNumber) ?? null

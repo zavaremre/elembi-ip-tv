@@ -66,7 +66,9 @@ export function SeasonEpisodes({
         </span>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-4" style={{ scrollbarWidth: 'none' }}>
+      {/* Wraps instead of scrolling: a hidden scrollbar on a rail a mouse cannot
+          push sideways left these unreachable on Linux and Windows. */}
+      <div className="flex flex-wrap gap-2 pb-4">
         {seasons.map((season) => (
           <button
             key={season.number}
@@ -103,7 +105,6 @@ export function SeasonEpisodes({
                     <Art
                       src={backdrop(episode.still, 'w300') ?? episode.providerStill}
                       alt={episode.name}
-                     
                       shape="still"
                       className="rounded-[10px]"
                     />

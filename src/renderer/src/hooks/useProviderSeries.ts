@@ -30,7 +30,7 @@ export function useProviderSeries(item: VodItem | null): AsyncState<ProviderSeri
   return useAsync(async () => {
     if (!item) return null
     const [info, tmdb] = await Promise.all([
-      window.akis.iptv.seriesInfo(item.id),
+      window.elembi.iptv.seriesInfo(item.id),
       matchTmdb(item.name, 'tv')
     ])
 

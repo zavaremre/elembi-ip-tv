@@ -1,3 +1,6 @@
+import { useEffect } from 'react'
+import { FavoriteButton } from '@/components/FavoriteButton'
+import { favoriteKey, type Favorites } from '@/hooks/useFavorites'
 import { Art } from '@/components/Art'
 import { NoiseOverlay } from '@/components/fx/NoiseOverlay'
 import { useProviderMovie } from '@/hooks/useProviderMovie'
@@ -9,7 +12,9 @@ interface ProviderMoviePageProps {
   item: VodItem
   progress: Progress[]
   onPlay: () => void
-  onOpenTmdb: (item: TmdbItem) => void
+  favorites: Favorites
+  /** Hands the page over to the TMDB detail as soon as the title is recognised. */
+  onResolved: (item: TmdbItem) => void
   onBack: () => void
 }
 
@@ -18,27 +23,38 @@ function Skeleton({ className = '' }: { className?: string }): React.JSX.Element
 }
 
 /**
- * A film in the provider catalogue. Reached by clicking the film anywhere, so
- * nothing starts playing until it is asked for — the same way a series opens its
- * episode list first. TMDB dresses the page when it recognises the title; the
- * provider is what actually plays, so a miss costs only the artwork.
+ * A film in the provider catalogue, shown only while TMDB is being asked about
+ * it and afterwards only if TMDB does not know it.
+ *
+ * The title has to be looked up by name, so the match is not in hand at the
+ * moment the card is clicked — this page does the asking. When it comes back
+ * the view is handed to the TMDB detail page, which is the one worth reading;
+ * it used to stop here and offer a second button to go there, which made every
+ * recognised film cost two clicks. A miss leaves this page in place, since the
+ * provider is what actually plays and nothing else can show the film at all.
  */
 export function ProviderMoviePage({
   item,
   progress,
   onPlay,
-  onOpenTmdb,
+  favorites,
+  onResolved,
   onBack
 }: ProviderMoviePageProps): React.JSX.Element {
   const view = useProviderMovie(item)
   const tmdb = view.data
+
+  /* An effect, not a render-time call: handing over is a navigation. */
+  useEffect(() => {
+    if (tmdb) onResolved(tmdb)
+  }, [tmdb, onResolved])
   const watched = progress.find((row) => row.key === `vod:${item.id}`)
   const ratio = watched && watched.duration > 0 ? watched.position / watched.duration : 0
 
   return (
     <main className="pb-24">
-      <section className="relative h-[clamp(260px,34vh,360px)] -mt-[66px] overflow-hidden">
-        <Art src={backdrop(tmdb?.backdrop, 'w1280')} alt={item.name} shape="fill" flat />
+      <section className="relative h-[clamp(474px,62vh,656px)] -mt-[66px] overflow-hidden">
+        <Art src={backdrop(tmdb?.backdrop, 'original')} alt={item.name} shape="fill" anchor="top" flat />
         <div className="absolute inset-0 bg-[linear-gradient(0deg,var(--color-ink)_2%,rgba(8,8,12,.5)_48%,rgba(8,8,12,.78)_100%)]" />
         <NoiseOverlay />
         <button
@@ -60,7 +76,6 @@ export function ProviderMoviePage({
                swapping to the poster afterwards reads as a flicker. */
             src={view.loading ? null : (poster(tmdb?.poster, 'w500') ?? item.cover)}
             alt={item.name}
-           
             shape="poster"
             className="shadow-[0_24px_54px_-20px_rgba(0,0,0,.95)]"
           />
@@ -117,15 +132,19 @@ export function ProviderMoviePage({
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
               {ratio > 0 && ratio < 0.95 ? 'Devam et' : 'Oynat'}
             </button>
-            {tmdb ? (
-              <button
-                type="button"
-                onClick={() => onOpenTmdb(tmdb)}
-                className="flex h-11 items-center rounded-[12px] border border-line bg-white/8 px-5 text-[13.5px] font-bold hover:border-acc/40"
-              >
-                TMDB detayı
-              </button>
-            ) : null}
+
+            <FavoriteButton
+              variant="bar"
+              active={favorites.has(favoriteKey('vod', item.id))}
+              onToggle={() =>
+                favorites.toggle({
+                  kind: 'vod',
+                  id: item.id,
+                  title: item.name,
+                  image: poster(tmdb?.poster, 'w500') ?? item.cover
+                })
+              }
+            />
             {ratio > 0 && ratio < 0.95 ? (
               <span className="mono flex items-center gap-2 text-[11px] text-tx3">
                 <span className="block h-[3px] w-24 overflow-hidden rounded-full bg-white/15">

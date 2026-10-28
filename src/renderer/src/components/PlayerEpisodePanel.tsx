@@ -42,7 +42,7 @@ export function PlayerEpisodePanel({
       </div>
 
       {seasons.length > 1 ? (
-        <div className="flex gap-1.5 overflow-x-auto border-b border-line px-3.5 py-2.5" style={{ scrollbarWidth: 'none' }}>
+        <div className="flex flex-wrap gap-1.5 border-b border-line px-3.5 py-2.5">
           {seasons.map((option) => (
             <button
               key={option.number}

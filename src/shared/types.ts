@@ -84,6 +84,19 @@ export interface VodItem {
   containerExt?: string
 }
 
+/** What a favourite has to carry to be drawn without asking anyone again. */
+export type FavoriteKind = 'tmdb-movie' | 'tmdb-tv' | 'vod' | 'series'
+
+export interface Favorite {
+  /** "<kind>:<id>" — a TMDB film and a provider film share id numbers. */
+  key: string
+  kind: FavoriteKind
+  id: number
+  title: string
+  image: string | null
+  added: number
+}
+
 export interface Progress {
   key: string
   kind: 'live' | 'vod' | 'series'
@@ -102,7 +115,7 @@ export interface AppConfig {
   xtream: { host: string; user: string; pass: string; output: string }
   tmdb: { lang: string; region: string; hasToken: boolean }
   externalPlayer: string
-  favorites: number[]
+  favorites: Favorite[]
   /** Where settings and caches live; differs on every platform. */
   dataDir: string
   platform: string
@@ -206,9 +219,19 @@ export interface WatchOptions {
   free: WatchProvider[]
 }
 
+/** A person a search text matched, offered as a way into their work. */
+export interface PersonHit {
+  id: number
+  name: string
+  profile: string | null
+  /** Titles they are known for: two actors share a name often enough to matter. */
+  known: string
+}
+
 export interface SearchResult {
   titles: TmdbItem[]
   keywords: Keyword[]
+  people: PersonHit[]
 }
 
 /* ── discover / filtering ─────────────────────── */

@@ -1,11 +1,11 @@
 import { app } from 'electron'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import type { Progress, SubtitleSync } from '../shared/types'
+import type { Favorite, Progress, SubtitleSync } from '../shared/types'
 
 interface Shape {
   progress: Progress[]
-  favorites: number[]
+  favorites: Favorite[]
   /**
    * Subtitle offset per title, for files loaded from disk. Worth keeping rather
    * than making the viewer find the same value again on every episode.
@@ -24,6 +24,15 @@ function read(): Shape {
   state.progress ??= []
   state.favorites ??= []
   state.subtitleSync ??= {}
+  /*
+   * Favourites were a flat list of ids, which cannot tell a TMDB film from a
+   * provider one of the same number. Nothing ever wrote to it, but a file from
+   * a build that did would arrive here, and dropping rows silently is worse
+   * than losing an ordering.
+   */
+  state.favorites = state.favorites.filter(
+    (row): row is Favorite => typeof row === 'object' && row !== null && typeof row.key === 'string'
+  )
   return state
 }
 
@@ -58,15 +67,16 @@ export const store = {
     else s.subtitleSync[key] = { delay: sync.delay }
     write()
   },
-  favorites(): number[] {
-    return read().favorites
+  /** Newest first: the shelf reads as what you just added. */
+  favorites(): Favorite[] {
+    return [...read().favorites].sort((a, b) => b.added - a.added)
   },
-  toggleFavorite(id: number): number[] {
+  toggleFavorite(row: Omit<Favorite, 'added'>): Favorite[] {
     const s = read()
-    const i = s.favorites.indexOf(id)
+    const i = s.favorites.findIndex((x) => x.key === row.key)
     if (i >= 0) s.favorites.splice(i, 1)
-    else s.favorites.push(id)
+    else s.favorites.push({ ...row, added: Date.now() })
     write()
-    return s.favorites
+    return this.favorites()
   }
 }
