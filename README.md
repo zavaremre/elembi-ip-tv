@@ -1,4 +1,4 @@
-# Akış
+# Elembi IPTV
 
 A desktop player for your own IPTV subscription. It reads the channel, film and
 series catalogue from an Xtream Codes panel and dresses it with TMDB's artwork,
@@ -9,6 +9,32 @@ server behind it — what you can watch is decided entirely by the subscription
 you enter. The interface is in Turkish.
 
 ![Home](docs/screenshots/01-home.jpg)
+
+## Download
+
+| | |
+| --- | --- |
+| **macOS** (Apple Silicon) | [elembi-mac-arm64.dmg](https://github.com/zavaremre/ip-tv-desktop/releases/latest/download/elembi-mac-arm64.dmg) |
+| **macOS** (Intel) | [elembi-mac-x64.dmg](https://github.com/zavaremre/ip-tv-desktop/releases/latest/download/elembi-mac-x64.dmg) |
+| **Windows** | [elembi-win-x64.exe](https://github.com/zavaremre/ip-tv-desktop/releases/latest/download/elembi-win-x64.exe) |
+| **Linux** (AppImage) | [elembi-linux-x64.AppImage](https://github.com/zavaremre/ip-tv-desktop/releases/latest/download/elembi-linux-x64.AppImage) |
+| **Linux** (Debian/Ubuntu) | [elembi-linux-x64.deb](https://github.com/zavaremre/ip-tv-desktop/releases/latest/download/elembi-linux-x64.deb) |
+
+Every build is produced by GitHub Actions on that platform's own runner; see
+[`.github/workflows/release.yml`](.github/workflows/release.yml). All releases
+are listed [here](https://github.com/zavaremre/ip-tv-desktop/releases).
+
+**The builds are not code-signed**, because signing needs an Apple Developer
+account and a Windows certificate. Your system will say so, in its own words:
+
+- **macOS** refuses to open it on a double-click. Right-click the app, choose
+  **Open**, then **Open** again in the dialog. Once per install. If macOS calls
+  it "damaged", the quarantine flag is the reason:
+  `xattr -dr com.apple.quarantine "/Applications/Elembi IPTV.app"`
+- **Windows** shows a SmartScreen warning. **More info** → **Run anyway**.
+- **Linux**: mark the AppImage executable first — `chmod +x elembi-*.AppImage`.
+
+**ffmpeg is required** and is not bundled; see below.
 
 ## What you need
 
@@ -31,18 +57,13 @@ apt install ffmpeg       # Debian/Ubuntu
 
 ## Getting started
 
-```bash
-npm install
-npm run dev
-```
-
 The first run asks for the subscription. One field: paste whatever address the
 provider gave you. The username and password live inside that address, so you
 are not asked for them separately — and when the link carries nothing itself,
 the playlist behind it is opened and read (only the opening; the playlist for
 the provider this was built against is 14 MB).
 
-![Setup](docs/screenshots/15-setup.jpg)
+![Setup](docs/screenshots/16-setup.jpg)
 
 Nothing is saved until the panel has answered, so a subscription that cannot
 connect never gets stored — and the reason it failed is more use here than on an
@@ -54,12 +75,12 @@ empty home screen.
 
 The provider splits a single service across several categories — Netflix alone
 arrives as five, counting its animation and German-language shelves. Cards are
-grouped by the service they resolve to, so Netflix is one card with 903 titles.
-Logos come from TMDB's list for your region and from the channel icons the
-provider already serves; the brand colour behind each one is read out of the
-logo itself rather than from a palette written into the code.
+grouped by the service they resolve to, so Netflix is one card with 900 titles.
+Each card wears that service's own written logo, taken from the service's own
+site; recognising which service a category belongs to still happens against
+TMDB's list for your region and the provider's own channel icons.
 
-![Platforms, fixtures and live channels](docs/screenshots/03-platforms.jpg)
+![Platforms](docs/screenshots/02-platforms.jpg)
 
 ### Only what actually plays
 
@@ -76,15 +97,37 @@ of names: the provider's own prefixes only reached 61% of series, and reading th
 rest from their category, their category's name and the catalogue's own make-up
 takes that to 100% without inventing a code the data has never seen.
 
+### What the subscription just gained
+
+A row of what the provider added lately. TMDB's own release lists were tried
+first and measured: of 46 titles in `now_playing` only 3 were in this catalogue,
+and those were re-releases of a 2006 and a 2019 film. The provider's own
+timestamp is both denser and the truthful answer to the question. Films and
+series are drawn from each catalogue separately — a series' stamp moves with
+every episode, so merging by date alone gave a row of 17 series and 3 films.
+
+![Home rows](docs/screenshots/03-home-rows.jpg)
+
+### Favourites
+
+A heart on every card and every detail page. The list is stored next to your
+settings and carries enough to draw the card on its own, so it stays whole when
+the provider is unreachable.
+
+![Favourites](docs/screenshots/11-favorites.jpg)
+
 ### Detail pages worth opening
 
 TMDB credits, keywords that lead into a filtered search, alternative titles,
 certification, trailer, and the season list merged with the episodes the provider
 can actually play. A film's series is listed too — kept to the parts the provider
 has, because naming a sequel that cannot be opened is worse than not mentioning
-it. Clicking a cast member shows their own work.
+it. Clicking a cast member shows their own work; typing a name into search
+offers the person rather than films with that word in the title.
 
 ![Detail](docs/screenshots/09-detail.jpg)
+
+![Cast](docs/screenshots/10-detail-cast.jpg)
 
 ### Live TV and fixtures
 
@@ -154,7 +197,7 @@ TheSportsDB. Two things are worth saying plainly: the Xtream protocol sends your
 username and password in the address of every request, and TMDB learns which
 titles you open. The full text is in the app under **Settings → Privacy**.
 
-![Privacy](docs/screenshots/14-privacy.jpg)
+![Privacy](docs/screenshots/15-privacy.jpg)
 
 ## Development
 
@@ -163,6 +206,8 @@ titles you open. The full text is in the app under **Settings → Privacy**.
 | `npm run dev` | electron-vite dev server and the app |
 | `npm run build` | production bundle into `out/` |
 | `npm run typecheck` | `tsc` over the node and web projects |
+| `npm run pack` | an unpacked app in `dist/`, for trying the real bundle |
+| `npm run dist` | installers for the current platform |
 
 Credentials never reach the renderer bundle: every provider and TMDB request is
 made in the main process and exposed over IPC through `src/preload`. Settings
@@ -170,16 +215,16 @@ live in `<userData>/config.json`, which takes precedence over a `.env` file if
 you prefer to keep one.
 
 Screenshots in this README are captured from the running app by
-`src/main/devshots.ts`, which is inert unless `AKIS_SHOTS=1` is set:
+`src/main/devshots.ts`, which is inert unless `ELEMBI_SHOTS=1` is set:
 
 ```bash
-AKIS_SHOTS=1 npm run dev
+ELEMBI_SHOTS=1 npm run dev
 ```
 
 ## Known limits
 
-- **Tested on macOS only.** Electron runs on Windows and Linux and nothing in the
-  code is deliberately macOS-only, but it has not been tried there.
+- **Built and used on macOS.** The Windows and Linux packages are produced by CI
+  and have had less use.
 - **Xtream Codes is required.** A provider that offers nothing but a flat M3U
   will give a channel list and no category structure, season lists or audio
   information.

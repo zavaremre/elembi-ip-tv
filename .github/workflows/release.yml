@@ -1,0 +1,40 @@
+name: Release
+
+# Builds on a tag, because that is the thing a download link points at.
+on:
+  push:
+    tags: ['v*']
+  # Lets a build be tried without cutting a release.
+  workflow_dispatch:
+
+jobs:
+  build:
+    # Each platform is packaged on its own runner. Cross-building from one
+    # machine needs wine for Windows and Docker for Linux; building natively
+    # needs neither, and the result is the one the platform actually produces.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run typecheck
+
+      # --publish always creates or updates the release for this tag and
+      # attaches the artifacts. GITHUB_TOKEN is issued to every run, so no
+      # secret has to be configured for this to work.
+      - run: npx electron-builder --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
