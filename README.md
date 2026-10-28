@@ -17,8 +17,8 @@ you enter. The interface is in Turkish.
 | **macOS** (Apple Silicon) | [elembi-mac-arm64.dmg](https://github.com/zavaremre/ip-tv-desktop/releases/latest/download/elembi-mac-arm64.dmg) |
 | **macOS** (Intel) | [elembi-mac-x64.dmg](https://github.com/zavaremre/ip-tv-desktop/releases/latest/download/elembi-mac-x64.dmg) |
 | **Windows** | [elembi-win-x64.exe](https://github.com/zavaremre/ip-tv-desktop/releases/latest/download/elembi-win-x64.exe) |
-| **Linux** (AppImage) | [elembi-linux-x64.AppImage](https://github.com/zavaremre/ip-tv-desktop/releases/latest/download/elembi-linux-x64.AppImage) |
-| **Linux** (Debian/Ubuntu) | [elembi-linux-x64.deb](https://github.com/zavaremre/ip-tv-desktop/releases/latest/download/elembi-linux-x64.deb) |
+| **Linux** (AppImage) | [elembi-linux-x86_64.AppImage](https://github.com/zavaremre/ip-tv-desktop/releases/latest/download/elembi-linux-x86_64.AppImage) |
+| **Linux** (Debian/Ubuntu) | [elembi-linux-amd64.deb](https://github.com/zavaremre/ip-tv-desktop/releases/latest/download/elembi-linux-amd64.deb) |
 
 Every build is produced by GitHub Actions on that platform's own runner; see
 [`.github/workflows/release.yml`](.github/workflows/release.yml). All releases

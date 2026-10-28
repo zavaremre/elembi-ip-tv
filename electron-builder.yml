@@ -59,3 +59,6 @@ publish:
   provider: github
   owner: zavaremre
   repo: ip-tv-desktop
+  # Published, not drafted. A draft is not what /releases/latest points at, so
+  # the README's download links would answer 404 until someone pressed publish.
+  releaseType: release
