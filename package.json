@@ -3,6 +3,7 @@
   "productName": "Elembi IPTV",
   "version": "0.1.0",
   "description": "Elembi IPTV — Electron IPTV istemcisi (TMDB + Xtream)",
+  "author": "Emre Zavar",
   "main": "./out/main/index.js",
   "private": true,
   "type": "module",

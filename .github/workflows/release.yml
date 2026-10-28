@@ -32,6 +32,11 @@ jobs:
 
       - run: npm run typecheck
 
+      # electron-builder packages out/, which only exists after this runs. A
+      # local build had it lying around from development; a clean checkout does
+      # not, and the asar came out without an entry point.
+      - run: npm run build
+
       # --publish always creates or updates the release for this tag and
       # attaches the artifacts. GITHUB_TOKEN is issued to every run, so no
       # secret has to be configured for this to work.
