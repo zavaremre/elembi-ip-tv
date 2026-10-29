@@ -26,9 +26,15 @@ mac:
     - target: zip
       arch: [arm64, x64]
   category: public.app-category.entertainment
-  # Unsigned: there is no Developer ID certificate. Gatekeeper will ask the user
-  # to allow it by hand, which the README explains.
-  identity: null
+  # Ad-hoc signed, not unsigned. There is no Developer ID certificate, but
+  # skipping signing altogether leaves Electron's own linker signature on a
+  # bundle whose Info.plist and resources have since been replaced — macOS
+  # reads that as tampering and refuses with "is damaged", which no amount of
+  # right-click-Open gets past. "-" is codesign's ad-hoc identity: the bundle
+  # verifies, and the user meets the ordinary unidentified-developer prompt.
+  identity: "-"
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
 
 win:
   target:

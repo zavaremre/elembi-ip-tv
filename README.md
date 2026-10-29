@@ -27,9 +27,11 @@ are listed [here](https://github.com/zavaremre/elembi-ip-tv/releases).
 **The builds are not code-signed**, because signing needs an Apple Developer
 account and a Windows certificate. Your system will say so, in its own words:
 
-- **macOS** refuses to open it on a double-click. Right-click the app, choose
-  **Open**, then **Open** again in the dialog. Once per install. If macOS calls
-  it "damaged", the quarantine flag is the reason:
+- **macOS** refuses to open it on a double-click: "the developer cannot be
+  verified". Right-click the app, choose **Open**, then **Open** again in the
+  dialog. Once per install. If it instead says the app **is damaged**, macOS is
+  reporting a broken signature rather than a missing one — that was a packaging
+  bug fixed in 0.1.3; on an older download, clear the quarantine flag with
   `xattr -dr com.apple.quarantine "/Applications/Elembi IPTV.app"`
 - **Windows** shows a SmartScreen warning. **More info** → **Run anyway**.
 - **Linux**: mark the AppImage executable first — `chmod +x elembi-*.AppImage`.
