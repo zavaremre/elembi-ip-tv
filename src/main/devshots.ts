@@ -46,12 +46,37 @@ const SCROLL = `(function (y) {
   return 'scroll:' + y
 })`
 
+/**
+ * Blanks anything that identifies the subscription before a shot is taken.
+ *
+ * The settings page prints the panel's address and the username, and that shot
+ * went into a public repository once. Masking here rather than remembering not
+ * to capture the page: the next person to add a step should not have to know.
+ */
+const MASK = `(function () {
+  const SECRET = /^https?:\\/\\//
+  const labels = ['sunucu', 'kullanıcı', 'veri klasörü']
+  let hidden = 0
+  for (const el of document.querySelectorAll('div, span, td')) {
+    const text = (el.textContent || '').trim()
+    if (el.children.length > 0 || !text) continue
+    const label = (el.previousElementSibling?.textContent || '').trim().toLowerCase()
+    if (SECRET.test(text) || labels.includes(label)) {
+      el.textContent = '••••••••••••'
+      hidden++
+    }
+  }
+  return 'maskelendi:' + hidden
+})`
+
 interface Step {
   name: string
   /** Controls to click in order before the shot is taken. */
   path?: [string, number?][]
   /** How far down the page to scroll, for rows below the fold. */
   scroll?: number
+  /** Blanks the subscription's address and username before capturing. */
+  mask?: boolean
   settle?: number
 }
 
@@ -68,8 +93,8 @@ const STEPS: Step[] = [
   { name: '09-detail', path: [['Detayı aç']], settle: 7000 },
   { name: '10-detail-cast', path: [['Detayı aç']], scroll: 1100, settle: 7000 },
   { name: '11-favorites', path: [['Favorilerim']], settle: 2600 },
-  { name: '12-settings', path: [['Ayarlar ve sağlayıcı']], settle: 1800 },
-  { name: '13-about', path: [['Ayarlar ve sağlayıcı'], ['Hakkında']], settle: 1600 },
+  { name: '12-settings', path: [['Ayarlar ve sağlayıcı']], settle: 1800, mask: true },
+  { name: '13-about', path: [['Ayarlar ve sağlayıcı'], ['Hakkında']], settle: 1600, mask: true },
   { name: '14-help', path: [['Ayarlar ve sağlayıcı'], ['Yardım']], settle: 1600 },
   { name: '15-privacy', path: [['Ayarlar ve sağlayıcı'], ['Gizlilik politikası']], settle: 1600 },
   { name: '16-setup', path: [['Ayarlar ve sağlayıcı'], ['Aboneliği değiştir']], settle: 1800 }
@@ -92,6 +117,11 @@ export async function captureShots(win: BrowserWindow): Promise<void> {
         .catch(() => 'hata')
       process.stdout.write(`  ${step.name}: ${label} → ${said}\n`)
       await wait(1500)
+    }
+
+    if (step.mask) {
+      const said = await win.webContents.executeJavaScript(`${MASK}()`).catch(() => 'hata')
+      process.stdout.write(`  ${step.name}: ${said}\n`)
     }
 
     if (step.scroll) {
