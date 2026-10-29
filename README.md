@@ -14,15 +14,15 @@ you enter. The interface is in Turkish.
 
 | | |
 | --- | --- |
-| **macOS** (Apple Silicon) | [elembi-mac-arm64.dmg](https://github.com/zavaremre/ip-tv-desktop/releases/latest/download/elembi-mac-arm64.dmg) |
-| **macOS** (Intel) | [elembi-mac-x64.dmg](https://github.com/zavaremre/ip-tv-desktop/releases/latest/download/elembi-mac-x64.dmg) |
-| **Windows** | [elembi-win-x64.exe](https://github.com/zavaremre/ip-tv-desktop/releases/latest/download/elembi-win-x64.exe) |
-| **Linux** (AppImage) | [elembi-linux-x86_64.AppImage](https://github.com/zavaremre/ip-tv-desktop/releases/latest/download/elembi-linux-x86_64.AppImage) |
-| **Linux** (Debian/Ubuntu) | [elembi-linux-amd64.deb](https://github.com/zavaremre/ip-tv-desktop/releases/latest/download/elembi-linux-amd64.deb) |
+| **macOS** (Apple Silicon) | [elembi-mac-arm64.dmg](https://github.com/zavaremre/elembi-ip-tv/releases/latest/download/elembi-mac-arm64.dmg) |
+| **macOS** (Intel) | [elembi-mac-x64.dmg](https://github.com/zavaremre/elembi-ip-tv/releases/latest/download/elembi-mac-x64.dmg) |
+| **Windows** | [elembi-win-x64.exe](https://github.com/zavaremre/elembi-ip-tv/releases/latest/download/elembi-win-x64.exe) |
+| **Linux** (AppImage) | [elembi-linux-x86_64.AppImage](https://github.com/zavaremre/elembi-ip-tv/releases/latest/download/elembi-linux-x86_64.AppImage) |
+| **Linux** (Debian/Ubuntu) | [elembi-linux-amd64.deb](https://github.com/zavaremre/elembi-ip-tv/releases/latest/download/elembi-linux-amd64.deb) |
 
 Every build is produced by GitHub Actions on that platform's own runner; see
 [`.github/workflows/release.yml`](.github/workflows/release.yml). All releases
-are listed [here](https://github.com/zavaremre/ip-tv-desktop/releases).
+are listed [here](https://github.com/zavaremre/elembi-ip-tv/releases).
 
 **The builds are not code-signed**, because signing needs an Apple Developer
 account and a Windows certificate. Your system will say so, in its own words:
