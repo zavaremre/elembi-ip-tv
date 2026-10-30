@@ -1,5 +1,7 @@
 import { Art } from './Art'
 import { FavoriteButton } from './FavoriteButton'
+import { useT, type Key } from '@/i18n'
+import { score } from '@/lib/fmt'
 
 type FlagTone = 'new' | 'live' | 'rec'
 
@@ -25,7 +27,7 @@ interface PosterCardProps {
 }
 
 /** The provider rarely states this, so the badge appears only when it does. */
-const AUDIO_BADGE: Record<'dub' | 'sub', string> = { dub: 'DUBLAJ', sub: 'ALTYAZI' }
+const AUDIO_BADGE: Record<'dub' | 'sub', Key> = { dub: 'badge.dub', sub: 'badge.sub' }
 
 const FLAG_TONE: Record<FlagTone, string> = {
   new: 'text-acc border-acc/45 bg-ink/60',
@@ -48,6 +50,7 @@ export function PosterCard({
   onToggleFavorite,
   onOpen
 }: PosterCardProps): React.JSX.Element {
+  const t = useT()
   return (
     /*
      * A div holding two buttons, not one button holding another: the heart has
@@ -84,14 +87,14 @@ export function PosterCard({
                 audio === 'dub' ? 'border-score/45 bg-ink/70 text-score' : 'border-acc/45 bg-ink/70 text-acc'
               }`}
             >
-              {AUDIO_BADGE[audio]}
+              {t(AUDIO_BADGE[audio])}
             </span>
           ) : null}
         </Art>
 
         <div className="mt-2.5 truncate text-[13.5px] font-bold">{title}</div>
         <div className="mono mt-0.5 flex items-center gap-1.5 text-[11px] text-tx3">
-          {rating ? <span className="text-gold">★ {rating.toFixed(1).replace('.', ',')}</span> : null}
+          {rating ? <span className="text-gold">★ {score(rating, t)}</span> : null}
           {meta ? <span className="truncate">{meta}</span> : null}
         </div>
       </button>

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useT } from '@/i18n'
 import type { PlaybackTarget } from '@/components/Player'
 import type { EpisodeTarget } from '@/lib/episodes'
 
@@ -57,6 +58,7 @@ export function usePlayback(): Playback {
   const [mode, setMode] = useState<'full' | 'mini'>('full')
   const [progress, setProgress] = useState<Progress[]>([])
   const [error, setError] = useState<string | null>(null)
+  const t = useT()
 
   useEffect(() => {
     window.elembi.store.progress().then(setProgress).catch(() => setProgress([]))
@@ -98,7 +100,7 @@ export function usePlayback(): Playback {
           const info = await window.elembi.iptv.seriesInfo(item.id)
           const episode = info.seasons[0]?.episodes[0]
           if (!episode) {
-            setError('Bu dizinin bölüm listesi sağlayıcıdan gelmedi')
+            setError(t('err.noEpisodeList'))
             return
           }
           const key = `series:${episode.id}`
@@ -108,17 +110,17 @@ export function usePlayback(): Playback {
             id: episode.id,
             url: episode.url,
             title: item.name,
-            sub: `${info.seasons[0].season}. sezon ${episode.num}. bölüm`,
+            sub: t('episode.seasonEpisode', { season: info.seasons[0].season, episode: episode.num }),
             image: episode.still ?? item.cover,
             resumeAt: resumeFor(key)
           })
         }
         setMode('full')
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Oynatma başlatılamadı')
+        setError(e instanceof Error ? e.message : t('err.playback'))
       }
     },
-    [resumeFor]
+    [resumeFor, t]
   )
 
   const toTarget = useCallback(

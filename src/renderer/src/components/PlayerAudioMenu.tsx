@@ -1,4 +1,5 @@
 import { subtitleTrackLabel } from '@/lib/fmt'
+import { useT } from '@/i18n'
 import type { PlayerEngine } from '@/hooks/usePlayerEngine'
 import type { AudioDelay } from '@/hooks/useAudioDelay'
 import type { SubtitleStyleState } from '@/hooks/useSubtitleStyle'
@@ -65,24 +66,25 @@ export function PlayerAudioMenu({
   onExternal,
   externalPlayer
 }: PlayerAudioMenuProps): React.JSX.Element {
+  const t = useT()
   return (
     <div className="absolute right-0 bottom-12 z-20 max-h-[56vh] w-[268px] overflow-y-auto rounded-[14px] border border-white/14 bg-ink2/95 shadow-[0_26px_60px_-20px_rgba(0,0,0,.9)] backdrop-blur-[20px]">
-      <Section title={engine.mode === 'remux' ? 'Ses · yerel olarak çözülüyor' : 'Ses'}>
+      <Section title={engine.mode === 'remux' ? t('audio.local') : t('audio.title')}>
         {engine.audioTracks.length > 1 ? (
           engine.audioTracks.map((track) => (
             <Option key={track.id} label={track.label} active={engine.audioTrack === track.id} onClick={() => engine.setAudioTrack(track.id)} />
           ))
         ) : engine.mode === 'hls' ? (
-          <div className="px-3 py-1.5 text-[11.5px] leading-snug text-tx3">Bu yayın tek ses parçası veriyor</div>
+          <div className="px-3 py-1.5 text-[11.5px] leading-snug text-tx3">{t('audio.singleStream')}</div>
         ) : (
           <>
-            <div className="px-3 py-1.5 text-[11.5px] leading-snug text-tx3">Bu dosya tek ses parçası taşıyor.</div>
-            <Option label={`${externalPlayer} ile aç`} active={false} onClick={onExternal} />
+            <div className="px-3 py-1.5 text-[11.5px] leading-snug text-tx3">{t('audio.single')}</div>
+            <Option label={t('player.openExternal', { player: externalPlayer })} active={false} onClick={onExternal} />
           </>
         )}
         {!audioDelay.available ? (
           <div className="mt-1 border-t border-line px-3 pt-2 text-[10.5px] leading-snug text-tx3">
-            Ses gecikmesi bu kaynakta ayarlanamıyor; yalnızca yerel olarak çözülen akışlarda kullanılabilir.
+            {t('audio.delayUnavailable')}
           </div>
         ) : (
           <>
@@ -97,18 +99,18 @@ export function PlayerAudioMenu({
           </button>
           {audioDelay.ms > 0 ? (
             <button type="button" onClick={audioDelay.reset} className="mono ml-auto text-[10.5px] text-acc">
-              sıfırla
+              {t('style.reset')}
             </button>
           ) : null}
         </div>
         <div className="px-3 pt-1 pb-1 text-[10.5px] leading-snug text-tx3">
-          Ses görüntüden önce geliyorsa artırın; dudaklar eşleşene kadar 50 ms adımlarla deneyin.
+          {t('audio.delayNote')}
         </div>
           </>
         )}
       </Section>
 
-      <Section title="Altyazı">
+      <Section title={t('audio.subtitle')}>
         {/*
           * Offered first: these come out of the file and travel inside the
           * stream, so the player times them against the picture itself. Nothing
@@ -117,24 +119,27 @@ export function PlayerAudioMenu({
         {engine.embedded.length > 0 ? (
           <>
             <div className="px-3 pb-1 text-[10.5px] leading-snug text-score">
-              Dosyanın içinde altyazı var — senkronu kusursuz, ayar gerekmez
+              {t('audio.embedded')}
             </div>
             <Option
-              label="Kapalı"
+              label={t('audio.off')}
               active={engine.embeddedTrack === null}
               onClick={() => engine.setEmbeddedTrack(null)}
             />
             {engine.embedded.map((track) => (
               <Option
                 key={track.order}
-                label={subtitleTrackLabel(track)}
+                label={(() => {
+                  const label = subtitleTrackLabel(track)
+                  return label.key ? t(label.key) : label.fallback || t('track.subtitleLabel')
+                })()}
                 active={engine.embeddedTrack === track.order}
                 onClick={() => engine.setEmbeddedTrack(track.order)}
               />
             ))}
             {engine.embedded.length > 1 ? (
               <div className="px-3 pt-0.5 pb-1 text-[10px] leading-snug text-tx3">
-                Dil değiştirmek akışı yeniden başlatır, birkaç saniye sürer.
+                {t('audio.switchNote')}
               </div>
             ) : null}
             <div className="mt-1 mb-1 border-t border-line" />
@@ -143,7 +148,7 @@ export function PlayerAudioMenu({
 
         {engine.subtitleTracks.length > 0 ? (
           <>
-            <Option label="Yayındaki altyazı kapalı" active={engine.subtitleTrack === -1} onClick={() => engine.setSubtitleTrack(-1)} />
+            <Option label={t('audio.subtitleOff')} active={engine.subtitleTrack === -1} onClick={() => engine.setSubtitleTrack(-1)} />
             {engine.subtitleTracks.map((track) => (
               <Option
                 key={track.id}
@@ -168,22 +173,22 @@ export function PlayerAudioMenu({
             </div>
             {subs.remembered ? (
               <div className="px-3 pb-1 text-[10.5px] leading-snug text-tx3">
-                Bu başlık için ayarladığın zamanlama hatırlandı
+                {t('audio.syncRemembered')}
               </div>
             ) : null}
             {subs.delay !== 0 ? (
-              <Option label="Zamanlamayı sıfırla" active={false} onClick={subs.resetSync} />
+              <Option label={t('audio.syncReset')} active={false} onClick={subs.resetSync} />
             ) : null}
-            <Option label="Altyazıyı kaldır" active={false} onClick={subs.clear} />
+            <Option label={t('audio.subtitleRemove')} active={false} onClick={subs.clear} />
           </>
         ) : null}
 
-        <Option label={subs.busy ? 'çalışıyor…' : 'Dosyadan yükle…'} active={false} onClick={subs.loadLocal} />
+        <Option label={subs.busy ? t('audio.working') : t('audio.subtitleLoad')} active={false} onClick={subs.loadLocal} />
 
         {subs.error ? <div className="px-3 py-1.5 text-[11.5px] leading-snug text-live">{subs.error}</div> : null}
       </Section>
 
-      <Section title="Altyazı görünümü">
+      <Section title={t('audio.subtitleStyle')}>
         <Row label="Boyut">
           {[0.75, 1, 1.25, 1.5, 2].map((scale) => (
             <Chip
@@ -222,16 +227,16 @@ export function PlayerAudioMenu({
               key={edge}
               active={subtitleStyle.style.edge === edge}
               onClick={() => subtitleStyle.set({ edge })}
-              label={edge === 'shadow' ? 'gölge' : edge === 'outline' ? 'çizgi' : 'düz'}
+              label={edge === 'shadow' ? t('style.shadow') : edge === 'outline' ? t('style.outline') : t('style.flat')}
             />
           ))}
         </Row>
         <Row label="Konum">
-          <Chip active={false} onClick={() => subtitleStyle.set({ bottom: Math.max(2, subtitleStyle.style.bottom - 3) })} label="aşağı" />
+          <Chip active={false} onClick={() => subtitleStyle.set({ bottom: Math.max(2, subtitleStyle.style.bottom - 3) })} label={t('style.down')} />
           <span className="mono w-10 text-center text-[11px]">{subtitleStyle.style.bottom}%</span>
-          <Chip active={false} onClick={() => subtitleStyle.set({ bottom: Math.min(45, subtitleStyle.style.bottom + 3) })} label="yukarı" />
+          <Chip active={false} onClick={() => subtitleStyle.set({ bottom: Math.min(45, subtitleStyle.style.bottom + 3) })} label={t('style.up')} />
         </Row>
-        <Option label="Görünümü sıfırla" active={false} onClick={subtitleStyle.reset} />
+        <Option label={t('audio.styleReset')} active={false} onClick={subtitleStyle.reset} />
       </Section>
     </div>
   )

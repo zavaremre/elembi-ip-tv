@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useT } from '@/i18n'
 import { NextEpisodeCard } from './NextEpisodeCard'
 import { PlayerAudioMenu } from './PlayerAudioMenu'
 import { PlayerEpisodePanel } from './PlayerEpisodePanel'
@@ -121,6 +122,7 @@ export function Player({
     setMenu((current) => (current === next ? null : next))
   const isLive = target.kind === 'live'
   const full = mode === 'full'
+  const t = useT()
   const mini = useMiniWindow(!full, containerRef)
 
   useEffect(() => {
@@ -237,7 +239,7 @@ export function Player({
       {engine.error ? (
         <div className="absolute inset-0 z-20 grid place-items-center bg-ink/88 p-6 text-center">
           <div>
-            <p className="font-disp text-[17px] font-extrabold">Yayın açılamadı</p>
+            <p className="font-disp text-[17px] font-extrabold">{t('player.failed')}</p>
             <p className="mt-2 max-w-[46ch] text-[13px] text-tx2">{engine.error}</p>
             <div className="mt-4 flex justify-center gap-2">
               <button type="button" onClick={engine.retry} className="rounded-[10px] bg-tx px-4 py-2 text-[13px] font-bold text-ink">
@@ -268,9 +270,9 @@ export function Player({
       {full && showStats ? (
         <div className="mono absolute top-14 left-3 z-10 rounded-[10px] border border-line bg-ink/75 px-3 py-2 text-[11px] text-tx2 backdrop-blur-sm">
           <div>kalite {engine.stats.level}</div>
-          <div>bit hızı {Math.round(engine.stats.bitrate / 1000)} kbps</div>
+          <div>{t('player.bitrate', { n: Math.round(engine.stats.bitrate / 1000) })}</div>
           <div>tampon {engine.stats.buffer.toFixed(1)} sn</div>
-          <div>düşen kare {engine.stats.dropped}</div>
+          <div>{t('player.dropped', { n: engine.stats.dropped })}</div>
         </div>
       ) : null}
 
@@ -320,8 +322,8 @@ export function Player({
             <button
               type="button"
               onClick={() => onMode('mini')}
-              aria-label="Mini oynatıcıya al"
-              title="Mini oynatıcıya al"
+              aria-label={t('player.mini')}
+              title={t('player.mini')}
               className="grid h-10 w-10 place-items-center rounded-full border border-white/18 bg-ink/55 text-tx backdrop-blur-[14px] hover:border-acc/50 hover:bg-ink/80"
             >
               {/* Same picture-in-picture glyph as the control bar, so the two agree. */}
@@ -333,8 +335,8 @@ export function Player({
             <button
               type="button"
               onClick={onClose}
-              aria-label="Oynatıcıyı kapat"
-              title="Oynatıcıyı kapat"
+              aria-label={t('player.close')}
+              title={t('player.close')}
               className="grid h-10 w-10 place-items-center rounded-full border border-white/18 bg-ink/55 text-tx backdrop-blur-[14px] hover:border-live/60 hover:bg-live/25"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
@@ -359,7 +361,7 @@ export function Player({
           {menu ? (
             <button
               type="button"
-              aria-label="Menüyü kapat"
+              aria-label={t('player.closeMenu')}
               onClick={() => setMenu(null)}
               className="absolute inset-0 z-9 cursor-default"
             />
@@ -380,7 +382,7 @@ export function Player({
             ) : null}
 
             <div className="flex items-center gap-1.5">
-              <IconButton label={controls.playing ? 'Duraklat' : 'Oynat'} onClick={controls.toggle}>
+              <IconButton label={controls.playing ? t('player.pause') : t('common.play')} onClick={controls.toggle}>
                 {controls.playing ? (
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z" /></svg>
                 ) : (
@@ -406,7 +408,7 @@ export function Player({
               ) : null}
 
               <div className="flex items-center gap-1.5">
-                <IconButton label={controls.muted ? 'Sesi aç' : 'Sesi kıs'} onClick={controls.toggleMute}>
+                <IconButton label={controls.muted ? t('player.unmute') : t('player.mute')} onClick={controls.toggleMute}>
                   {controls.muted || controls.volume === 0 ? (
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
                       <path d="M11 5 6 9H3v6h3l5 4z" />
@@ -420,7 +422,7 @@ export function Player({
                   )}
                 </IconButton>
                 <label className="w-24">
-                  <span className="sr-only">Ses düzeyi</span>
+                  <span className="sr-only">{t('player.volume')}</span>
                   <input
                     type="range"
                     min={0}
@@ -434,7 +436,7 @@ export function Player({
               </div>
 
               <span className="mono ml-2 text-[12px] text-tx2">
-                {isLive ? 'canlı yayın' : `${tc(controls.time)} / ${tc(controls.duration)}`}
+                {isLive ? t('player.live') : `${tc(controls.time)} / ${tc(controls.duration)}`}
               </span>
 
               <div className="mx-3 min-w-0 flex-1">
@@ -444,8 +446,8 @@ export function Player({
 
               {engine.audioTracks.length > 0 || engine.subtitleTracks.length > 0 ? (
                 <span className="mono mr-1 flex shrink-0 items-center gap-1.5 text-[10px] tracking-[0.06em] text-tx3 uppercase">
-                  {engine.audioTracks.length > 0 ? <span>{engine.audioTracks.length} ses</span> : null}
-                  {engine.subtitleTracks.length > 0 ? <span className="text-acc">{engine.subtitleTracks.length} altyazı</span> : null}
+                  {engine.audioTracks.length > 0 ? <span>{t('player.tracks', { n: engine.audioTracks.length })}</span> : null}
+                  {engine.subtitleTracks.length > 0 ? <span className="text-acc">{t('player.subtitleCount', { n: engine.subtitleTracks.length })}</span> : null}
                 </span>
               ) : null}
 
@@ -454,7 +456,7 @@ export function Player({
               ) : null}
 
               <div className="relative">
-                <IconButton label="Ses ve altyazı" onClick={() => toggleMenu('audio')} active={menu === 'audio'}>
+                <IconButton label={t('player.audioSubs')} onClick={() => toggleMenu('audio')} active={menu === 'audio'}>
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
                     <path d="M21 15a2 2 0 0 1-2 2H8l-4 3V6a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z" />
                     <path d="M8 10h8M8 13h5" />
@@ -496,7 +498,7 @@ export function Player({
 
               {browser ? (
                 <div className="relative">
-                  <IconButton label="Bölümler" onClick={() => toggleMenu('episodes')} active={menu === 'episodes'}>
+                  <IconButton label={t('player.episodes')} onClick={() => toggleMenu('episodes')} active={menu === 'episodes'}>
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
                       <path d="M4 6h10M4 12h10M4 18h10M18 6h2M18 12h2M18 18h2" />
                     </svg>
@@ -521,7 +523,7 @@ export function Player({
               ) : null}
 
               {next ? (
-                <IconButton label="Sıradaki bölüm" onClick={onNext}>
+                <IconButton label={t('player.nextEpisode')} onClick={onNext}>
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
                     <path d="M6 5l9 7-9 7z" fill="currentColor" stroke="none" />
                     <path d="M18 5v14" />
@@ -530,7 +532,7 @@ export function Player({
               ) : null}
 
               {engine.mode === 'native' ? (
-                <IconButton label={`${externalPlayer} ile aç`} onClick={() => void window.elembi.app.openInPlayer(target.url)}>
+                <IconButton label={t('player.openExternal', { player: externalPlayer })} onClick={() => void window.elembi.app.openInPlayer(target.url)}>
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
                     <path d="M15 3h6v6M21 3l-9 9" />
                     <path d="M19 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5" />
@@ -538,14 +540,14 @@ export function Player({
                 </IconButton>
               ) : null}
 
-              <IconButton label="Küçük pencere" onClick={controls.togglePip}>
+              <IconButton label={t('player.pip')} onClick={controls.togglePip}>
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
                   <rect x="2" y="4" width="20" height="16" rx="2.5" />
                   <rect x="12" y="11" width="8" height="6" rx="1.5" />
                 </svg>
               </IconButton>
 
-              <IconButton label={controls.fullscreen ? 'Tam ekrandan çık' : 'Tam ekran'} onClick={controls.toggleFullscreen}>
+              <IconButton label={controls.fullscreen ? t('player.exitFullscreen') : 'Tam ekran'} onClick={controls.toggleFullscreen}>
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
                   {controls.fullscreen ? <path d="M9 4H4v5M15 20h5v-5M20 9V4h-5M4 15v5h5" /> : <path d="M4 9V4h5M20 15v5h-5M15 4h5v5M9 20H4v-5" />}
                 </svg>
@@ -554,15 +556,15 @@ export function Player({
             </div>
 
             <div className="mono mt-2 flex flex-wrap gap-4 text-[10px] text-tx3">
-              <span>boşluk/k oynat</span>
-              <span>j/l 10 sn</span>
-              <span>←/→ 5 sn</span>
-              <span>↑/↓ ses</span>
-              <span>m sessiz</span>
-              <span>f tam ekran</span>
-              <span>i mini pencere</span>
-              <span>0–9 atla</span>
-              <span>esc küçült</span>
+              <span>{t('player.key.play')}</span>
+              <span>{t('key.seek10')}</span>
+              <span>{t('key.seek5')}</span>
+              <span>{t('key.volume')}</span>
+              <span>{t('key.mute')}</span>
+              <span>{t('key.fullscreen')}</span>
+              <span>{t('key.mini')}</span>
+              <span>{t('key.jump')}</span>
+              <span>{t('player.key.minimise')}</span>
             </div>
           </div>
         </>
@@ -577,7 +579,7 @@ export function Player({
             data-nodrag
             onPointerDown={mini.onResizeStart}
             role="separator"
-            aria-label="Mini oynatıcıyı boyutlandır"
+            aria-label={t('player.miniResize')}
             className="absolute top-0 left-0 z-10 grid h-6 w-6 cursor-nwse-resize place-items-center text-tx3 opacity-0 transition-opacity hover:text-tx group-hover/mini:opacity-100"
           >
             <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
@@ -594,7 +596,7 @@ export function Player({
               <path d="M4 14h6v6M20 10h-6V4" />
             </svg>
           </IconButton>
-          <IconButton label="Oynatıcıyı kapat" onClick={onClose}>
+          <IconButton label={t('player.close')} onClick={onClose}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
               <path d="M6 6l12 12M18 6L6 18" />
             </svg>

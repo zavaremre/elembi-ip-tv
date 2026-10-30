@@ -14,6 +14,8 @@ export interface Config {
   /** Requests per minute allowed to the panel; it locks out bursts. */
   XTREAM_MAX_PER_MINUTE: string
   EXTERNAL_PLAYER: string
+  /** Interface language. Empty means follow the system. */
+  UI_LANG: string
 }
 
 const DEFAULTS: Config = {
@@ -27,7 +29,14 @@ const DEFAULTS: Config = {
   XTREAM_OUTPUT: 'hls',
   XTREAM_MAX_PER_MINUTE: '60',
   /** Chromium cannot switch audio tracks in progressive files; this player can. */
-  EXTERNAL_PLAYER: 'VLC'
+  EXTERNAL_PLAYER: 'VLC',
+  /*
+   * Empty means follow the system. The renderer sets TMDB_LANG alongside this,
+   * so artwork and overviews follow the interface; that costs provider matches
+   * — measured 45 down to 33 on English titles, since the panel names its
+   * films in Turkish — which is the trade for an interface someone can read.
+   */
+  UI_LANG: ''
 }
 
 function parseEnv(text: string): Partial<Config> {

@@ -1,4 +1,5 @@
 import { wordmarkFor } from '@/lib/wordmark'
+import { useT } from '@/i18n'
 
 interface PlatformCardProps {
   name: string
@@ -28,6 +29,7 @@ const markHeight = (ratio: number): number =>
  * the point of the row.
  */
 export function PlatformCard({ name, count, logo, categories, onClick }: PlatformCardProps): React.JSX.Element {
+  const t = useT()
   const mark = wordmarkFor(categories)
   /* TMDB's artwork is square, and falls back to the full tile height. */
   const src = mark?.src ?? logo
@@ -38,7 +40,7 @@ export function PlatformCard({ name, count, logo, categories, onClick }: Platfor
       <button
         type="button"
         onClick={onClick}
-        aria-label={`${name}, ${count} içerik`}
+        aria-label={t('card.platform', { name, count })}
         className="spot group grid h-[88px] w-[158px] place-items-center overflow-hidden rounded-[12px] bg-[#101015] px-[18px] shadow-[inset_0_0_0_1px_rgba(255,255,255,.085)] transition-all duration-300 ease-[var(--ease-out2)] hover:-translate-y-[3px] hover:bg-[#16161d] hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,.16)]"
       >
         {src ? (
@@ -58,7 +60,7 @@ export function PlatformCard({ name, count, logo, categories, onClick }: Platfor
 
       <div className="mt-[9px] text-[12.5px] leading-[1.32] font-semibold">
         {name}
-        <span className="mono block text-[10.5px] font-normal text-tx3 tabular-nums">{count} içerik</span>
+        <span className="mono block text-[10.5px] font-normal text-tx3 tabular-nums">{t('common.count.items', { n: count })}</span>
       </div>
     </div>
   )

@@ -90,12 +90,20 @@ async function lookup(request: ArtworkRequest): Promise<string | null> {
  */
 export async function posters(requests: ArtworkRequest[]): Promise<Record<string, string | null>> {
   const store = read()
+  /*
+   * The language belongs in the key. TMDB returns the poster for the language
+   * asked for, so the same title has different key art in Turkish and English —
+   * cached under one key, switching the interface left the old posters on
+   * screen. Keeping both means switching back costs nothing.
+   */
+  const lang = config().TMDB_LANG.slice(0, 2)
+  const keyOf = (request: ArtworkRequest): string => `${request.key}@${lang}`
   const now = Date.now()
   const out: Record<string, string | null> = {}
   const pending: ArtworkRequest[] = []
 
   for (const request of requests) {
-    const row = store[request.key]
+    const row = store[keyOf(request)]
     const ttl = row?.poster ? HIT_TTL_MS : MISS_TTL_MS
     if (row && now - row.at < ttl) out[request.key] = row.poster
     else pending.push(request)
@@ -108,7 +116,7 @@ export async function posters(requests: ArtworkRequest[]): Promise<Record<string
       while (index < pending.length) {
         const request = pending[index++]
         const poster = await lookup(request).catch(() => null)
-        store[request.key] = { poster, at: Date.now() }
+        store[keyOf(request)] = { poster, at: Date.now() }
         out[request.key] = poster
         changed = true
       }

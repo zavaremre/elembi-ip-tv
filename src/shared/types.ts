@@ -115,7 +115,11 @@ export interface AppConfig {
   xtream: { host: string; user: string; pass: string; output: string }
   tmdb: { lang: string; region: string; hasToken: boolean }
   externalPlayer: string
+  /** 'tr' | 'en', already resolved against the system when unset. */
+  language: string
   favorites: Favorite[]
+  /** The packaged version, so the about page cannot go stale. */
+  version: string
   /** Where settings and caches live; differs on every platform. */
   dataDir: string
   platform: string

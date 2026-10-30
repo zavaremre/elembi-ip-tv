@@ -1,4 +1,5 @@
 import { parseXtreamUrl, isComplete, type XtreamCredentials } from '../shared/xtreamUrl'
+import { t } from './i18n'
 
 /**
  * Works out a subscription from the one link a provider hands over.
@@ -38,19 +39,19 @@ function fromPlaylist(text: string): XtreamCredentials | null {
 export async function resolveProviderLink(link: string): Promise<ResolveResult> {
   const direct = parseXtreamUrl(link)
   if (isComplete(direct)) return { credentials: direct, error: null }
-  if (!direct) return { credentials: null, error: 'Bu bir bağlantı adresi gibi görünmüyor.' }
+  if (!direct) return { credentials: null, error: t('resolve.notALink') }
 
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
   try {
     const res = await fetch(link, { signal: controller.signal })
     if (!res.ok) {
-      return { credentials: null, error: `Sunucu ${res.status} döndürdü. Bağlantı adresini kontrol et.` }
+      return { credentials: null, error: t('resolve.badStatus', { status: res.status }) }
     }
 
     /* Read the opening only; the body may be megabytes of playlist. */
     const reader = res.body?.getReader()
-    if (!reader) return { credentials: null, error: 'Sunucu boş yanıt verdi.' }
+    if (!reader) return { credentials: null, error: t('resolve.emptyReply') }
 
     const decoder = new TextDecoder()
     let text = ''
@@ -69,14 +70,14 @@ export async function resolveProviderLink(link: string): Promise<ResolveResult> 
     const found = fromPlaylist(text)
     if (found) return { credentials: found, error: null }
     if (!text.includes('#EXTM3U')) {
-      return { credentials: null, error: 'Adres bir oynatma listesi vermedi. Sağlayıcının verdiği M3U adresini kullan.' }
+      return { credentials: null, error: t('resolve.notPlaylist') }
     }
     return {
       credentials: null,
-      error: 'Oynatma listesinde Xtream adresi bulunamadı; bu sağlayıcı API desteklemiyor olabilir.'
+      error: t('resolve.noXtream')
     }
   } catch (e) {
-    const reason = e instanceof Error && e.name === 'AbortError' ? 'Sunucu zamanında yanıt vermedi.' : 'Sunucuya ulaşılamadı.'
+    const reason = t(e instanceof Error && e.name === 'AbortError' ? 'resolve.timeout' : 'resolve.unreachable')
     return { credentials: null, error: reason }
   } finally {
     clearTimeout(timer)

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useT } from '@/i18n'
 import type { ProviderStatus } from '@shared/types'
 
 interface ProviderToastProps {
@@ -23,6 +24,7 @@ export function ProviderToast({
   onRetry,
   onOpenSettings
 }: ProviderToastProps): React.JSX.Element | null {
+  const t = useT()
   const failed = Boolean(error) || (status !== null && !status.ok)
   const connected = !loading && !failed && counts.channels > 0
   const [dismissed, setDismissed] = useState(false)
@@ -57,16 +59,18 @@ export function ProviderToast({
 
       <div className="min-w-0">
         <div className="text-[13px] font-bold">
-          {loading ? 'Sağlayıcıya bağlanılıyor' : failed ? 'Sağlayıcıya bağlanılamadı' : 'Sağlayıcı bağlı'}
+          {loading ? t('toast.connecting') : failed ? t('toast.failed') : t('toast.connected')}
         </div>
         <div className="mono mt-0.5 truncate text-[11px] text-tx3">
           {failed
-            ? (error ?? status?.message ?? 'ulaşılamadı')
+            ? (error ?? status?.message ?? t('toast.unreachable'))
             : loading
-              ? 'kanal ve katalog alınıyor'
-              : `${nf.format(counts.channels)} kanal · ${nf.format(counts.movies)} film · ${nf.format(counts.series)} dizi${
-                  status?.user?.expires ? ` · bitiş ${status.user.expires}` : ''
-                }`}
+              ? t('toast.fetching')
+              : `${t('toast.counts', {
+                  channels: nf.format(counts.channels),
+                  movies: nf.format(counts.movies),
+                  series: nf.format(counts.series)
+                })}${status?.user?.expires ? t('toast.expires', { date: status.user.expires }) : ''}`}
         </div>
       </div>
 
@@ -79,7 +83,7 @@ export function ProviderToast({
       <button
         type="button"
         onClick={failed ? onOpenSettings : () => setDismissed(true)}
-        aria-label={failed ? 'Ayarları aç' : 'Kapat'}
+        aria-label={failed ? t('toast.openSettings') : t('win.close')}
         className="ml-auto grid h-7 w-7 shrink-0 place-items-center rounded-[8px] bg-white/10"
       >
         {failed ? (

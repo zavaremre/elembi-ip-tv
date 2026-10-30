@@ -1,4 +1,5 @@
 import { Art } from './Art'
+import { useT } from '@/i18n'
 import { left } from '@/lib/fmt'
 
 import type { Progress } from '@shared/types'
@@ -10,6 +11,7 @@ interface ContinueCardProps {
 
 /** Up-next card: how much is left, not how much was watched. */
 export function ContinueCard({ item, onPlay }: ContinueCardProps): React.JSX.Element {
+  const t = useT()
   const ratio = item.duration > 0 ? item.position / item.duration : 0
 
   return (
@@ -26,7 +28,7 @@ export function ContinueCard({ item, onPlay }: ContinueCardProps): React.JSX.Ele
       </div>
       <div className="mt-2.5 truncate text-[13.5px] font-bold">{item.title}</div>
       <div className="mono mt-1 flex gap-1.5 truncate text-[11px] text-tx3">
-        <em className="text-acc not-italic">{left(item.position, item.duration)}</em>
+        <em className="text-acc not-italic">{left(item.position, item.duration, t)}</em>
         {item.sub ? <span className="truncate">· {item.sub}</span> : null}
       </div>
     </button>

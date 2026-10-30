@@ -50,12 +50,15 @@ export function recentlyAdded(
   return [...fromFilms, ...fromSeries].sort((a, b) => (b.added ?? 0) - (a.added ?? 0)).slice(0, limit)
 }
 
-/** Relative day, which is what makes a card in this row worth reading. */
-export function addedLabel(added: number | null | undefined): string | null {
+/**
+ * Relative day as a key plus its day count, so the caller translates it. This
+ * module has no component around it and cannot reach the dictionary itself.
+ */
+export function addedLabel(added: number | null | undefined): { key: 'day.today' | 'day.yesterday' | 'day.ago'; days: number } | null {
   if (typeof added !== 'number') return null
   const days = Math.floor((Date.now() - added) / DAY_MS)
-  if (days <= 0) return 'bugün'
-  if (days === 1) return 'dün'
-  if (days < 30) return `${days} gün önce`
+  if (days <= 0) return { key: 'day.today', days }
+  if (days === 1) return { key: 'day.yesterday', days }
+  if (days < 30) return { key: 'day.ago', days }
   return null
 }

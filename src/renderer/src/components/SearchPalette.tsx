@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useT } from '@/i18n'
 import { AnimatedList } from './fx/AnimatedList'
 import { Art } from './Art'
 import { norm } from '@/lib/match'
@@ -29,7 +30,7 @@ interface SearchPaletteProps {
   initialQuery?: string
 }
 
-const PLACEHOLDERS = ['bu akşam 2 saatlik bir film', 'derbi hangi kanalda', 'kaldığım yerden devam']
+const PLACEHOLDER_KEYS = ['palette.hint1', 'palette.hint2', 'palette.hint3'] as const
 const LIMIT_PER_GROUP = 4
 
 /** ⌘K palette: provider channels and VOD are matched locally, TMDB is queried for discovery. */
@@ -46,6 +47,7 @@ export function SearchPalette({
   onSeeAll,
   initialQuery = ''
 }: SearchPaletteProps): React.JSX.Element | null {
+  const t = useT()
   const [query, setQuery] = useState('')
   const [tmdbHits, setTmdbHits] = useState<TmdbItem[]>([])
   const [peopleHits, setPeopleHits] = useState<PersonHit[]>([])
@@ -73,7 +75,7 @@ export function SearchPalette({
     let deleting = false
     let timer = 0
     const tick = (): void => {
-      const word = PLACEHOLDERS[phrase]
+      const word = t(PLACEHOLDER_KEYS[phrase])
       setTyped(word.slice(0, char))
       if (!deleting) {
         char += 1
@@ -86,7 +88,7 @@ export function SearchPalette({
         char -= 1
         if (char === 0) {
           deleting = false
-          phrase = (phrase + 1) % PLACEHOLDERS.length
+          phrase = (phrase + 1) % PLACEHOLDER_KEYS.length
         }
       }
       timer = window.setTimeout(tick, deleting ? 26 : 62)
@@ -124,7 +126,7 @@ export function SearchPalette({
       .map<PaletteHit>((c) => ({
         id: `ch-${c.id}`,
         label: c.name,
-        kindLabel: `canlı · ${c.group}`,
+        kindLabel: t('palette.live', { group: c.group }),
         image: c.logo,
         run: () => onPlayChannel(c)
       }))
@@ -134,16 +136,16 @@ export function SearchPalette({
       .map<PaletteHit>((v) => ({
         id: `${v.kind}-${v.id}`,
         label: v.name,
-        kindLabel: v.kind === 'vod' ? 'film · sağlayıcı' : 'dizi · sağlayıcı',
+        kindLabel: v.kind === 'vod' ? t('fav.kind.vod') : t('fav.kind.series'),
         image: v.cover,
         run: () => onPlayVod(v)
       }))
-    const discoveryHits = tmdbHits.map<PaletteHit>((t) => ({
-      id: `tmdb-${t.kind}-${t.id}`,
-      label: t.title,
-      kindLabel: `${t.kind === 'tv' ? 'dizi' : 'film'} · TMDB${t.year ? ` ${t.year}` : ''}`,
-      image: poster(t.poster, 'w185'),
-      run: () => onOpenTmdb(t)
+    const discoveryHits = tmdbHits.map<PaletteHit>((item) => ({
+      id: `tmdb-${item.kind}-${item.id}`,
+      label: item.title,
+      kindLabel: `${t(item.kind === 'tv' ? 'fav.kind.tv' : 'fav.kind.movie')} · TMDB${item.year ? ` ${item.year}` : ''}`,
+      image: poster(item.poster, 'w185'),
+      run: () => onOpenTmdb(item)
     }))
     /* People first: typing a name means the name, not a film with it in the title. */
     const personHits = peopleHits.map<PaletteHit>((p) => ({
@@ -182,7 +184,7 @@ export function SearchPalette({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={onKey}
-              placeholder={typed || 'Kanal, film veya dizi ara'}
+              placeholder={typed || t('palette.placeholder')}
               className="mono w-full bg-transparent text-[14px] outline-none placeholder:text-tx3"
             />
           </label>
@@ -191,7 +193,7 @@ export function SearchPalette({
         <div className="max-h-[52vh] overflow-y-auto p-2">
           {hits.length === 0 ? (
             <p className="px-2 py-6 text-center text-[13px] text-tx3">
-              {query ? 'Sonuç yok — sağlayıcıda ve TMDB’de arandı' : 'Yazmaya başla: kanal adı, film adı ya da dizi adı'}
+              {query ? t('palette.none') : t('palette.placeholder')}
             </p>
           ) : (
             <AnimatedList>
@@ -223,7 +225,7 @@ export function SearchPalette({
             }}
             className="flex w-full items-center gap-2 border-t border-line px-4 py-2.5 text-left text-[12.5px] font-bold text-acc hover:bg-acc/8"
           >
-            “{query}” için tüm sonuçlar ve filtreler
+            {t('search.allFor', { query })}
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
               <path d="m9 6 6 6-6 6" />
             </svg>
@@ -231,9 +233,9 @@ export function SearchPalette({
         ) : null}
 
         <div className="mono flex gap-4 border-t border-line bg-white/3 px-4 py-2 text-[10px] text-tx3">
-          <span>↑↓ gez</span>
-          <span>↵ aç</span>
-          <span>esc kapat</span>
+          <span>{t('palette.browse')}</span>
+          <span>{t('palette.open')}</span>
+          <span>{t('palette.close')}</span>
         </div>
       </div>
     </div>

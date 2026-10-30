@@ -1,4 +1,5 @@
 import { ChannelCard } from '@/components/ChannelCard'
+import { useT } from '@/i18n'
 import { MatchCard } from '@/components/MatchCard'
 import { PosterCard } from '@/components/PosterCard'
 import { useProviderPosters } from '@/hooks/useProviderPosters'
@@ -38,6 +39,7 @@ export function ListPage({
   onPlayChannel,
   onPlayMatch
 }: ListPageProps): React.JSX.Element {
+  const t = useT()
   /* Kept inside the branch so the discriminated union stays narrowed below. */
   const providerItems = view.kind === 'provider' ? view.items : []
   const tmdbPosters = useProviderPosters(providerItems)
@@ -58,12 +60,12 @@ export function ListPage({
       </div>
 
       {loading ? (
-        <p className="mono text-[12px] tracking-[0.12em] text-acc uppercase">yükleniyor…</p>
+        <p className="mono text-[12px] tracking-[0.12em] text-acc uppercase">{t('search.loading')}</p>
       ) : count === 0 ? (
         <p className="text-[14px] text-tx3">
           {view.kind === 'tmdb'
-            ? 'Bu listedeki başlıklardan sağlayıcı listende olan yok.'
-            : 'Bu listede gösterilecek bir şey yok.'}
+            ? t('list.emptyProvider')
+            : t('list.empty')}
         </p>
       ) : (
         <div className={gridClass}>

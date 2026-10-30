@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { WindowControls } from './WindowControls'
+import { useT, type Key } from '@/i18n'
 
 export type Section = 'home' | 'search' | 'movies' | 'series' | 'live' | 'sports' | 'favorites' | 'settings' | 'info'
 
@@ -14,14 +15,14 @@ interface AppHeaderProps {
   onBack: () => void
 }
 
-const NAV: { id: Section; label: string }[] = [
-  { id: 'home', label: 'Ana Sayfa' },
-  { id: 'search', label: 'Keşfet' },
-  { id: 'movies', label: 'Filmler' },
-  { id: 'series', label: 'Diziler' },
-  { id: 'live', label: 'Canlı TV' },
-  { id: 'sports', label: 'Spor' },
-  { id: 'favorites', label: 'Favorilerim' }
+const NAV: { id: Section; key: Key }[] = [
+  { id: 'home', key: 'nav.home' },
+  { id: 'search', key: 'nav.discover' },
+  { id: 'movies', key: 'nav.movies' },
+  { id: 'series', key: 'nav.series' },
+  { id: 'live', key: 'nav.live' },
+  { id: 'sports', key: 'nav.sports' },
+  { id: 'favorites', key: 'nav.favorites' }
 ]
 
 /** Glass header with the React Bits PillNav indicator; doubles as the window drag region. */
@@ -35,6 +36,7 @@ export function AppHeader({
   canGoBack,
   onBack
 }: AppHeaderProps): React.JSX.Element {
+  const t = useT()
   const [scrolled, setScrolled] = useState(false)
   const [pill, setPill] = useState({ left: 0, width: 0 })
   const navRef = useRef<HTMLElement>(null)
@@ -99,7 +101,7 @@ export function AppHeader({
         <button
           type="button"
           onClick={onBack}
-          aria-label="Geri"
+          aria-label={t('shell.back')}
           className="nodrag grid h-9 w-9 flex-none place-items-center rounded-[10px] border border-line bg-white/7 hover:border-acc/40"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" className="text-tx2" aria-hidden="true">
@@ -130,7 +132,7 @@ export function AppHeader({
             onMouseEnter={() => { hovered.current = item.id; place(item.id) }}
             className={`relative z-1 rounded-[9px] px-3.5 py-1.5 ${section === item.id ? 'text-tx' : 'text-tx2 hover:text-tx'}`}
           >
-            {item.label}
+            {t(item.key)}
           </button>
         ))}
       </nav>
@@ -145,14 +147,14 @@ export function AppHeader({
             <circle cx="11" cy="11" r="7" />
             <path d="M16.5 16.5 21 21" />
           </svg>
-          Ara veya sor
+          {t('shell.search')}
           <kbd className="mono rounded-[4px] bg-white/10 px-1.5 py-0.5 text-[11px] text-tx2">⌘K</kbd>
         </button>
 
         <button
           type="button"
           onClick={onRefresh}
-          aria-label="Listeleri yenile"
+          aria-label={t('shell.refresh')}
           className="grid h-9 w-9 place-items-center rounded-[10px] border border-line bg-white/7"
         >
           <svg
@@ -173,7 +175,7 @@ export function AppHeader({
         <button
           type="button"
           onClick={() => onSection('settings')}
-          aria-label="Ayarlar ve sağlayıcı durumu"
+          aria-label={t('shell.settings')}
           className="relative grid h-9 w-9 place-items-center rounded-[10px] border border-line bg-white/7"
         >
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className="text-tx2" aria-hidden="true">
@@ -182,7 +184,7 @@ export function AppHeader({
           </svg>
           <span
             className={`absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ring-2 ring-ink ${providerOk ? 'bg-score' : 'bg-live'}`}
-            aria-label={providerOk ? 'Sağlayıcı bağlı' : 'Sağlayıcı bağlı değil'}
+            aria-label={providerOk ? t('shell.providerOk') : t('shell.providerDown')}
           />
         </button>
         </div>

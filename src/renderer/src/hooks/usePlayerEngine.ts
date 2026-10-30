@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useLang, useT, type Translate } from '@/i18n'
+import { languageKey } from '@shared/i18n/languages'
 import Hls from 'hls.js'
 import { LOCAL_TRACK_ID } from './useSubtitles'
 import type { AudioTrackInfo, SubtitleTrackInfo } from '@shared/types'
@@ -67,15 +69,10 @@ export interface PlayerEngine {
 }
 
 const STATS_INTERVAL_MS = 1000
-const LANGUAGE_NAMES: Record<string, string> = {
-  tur: 'Türkçe', tr: 'Türkçe', eng: 'İngilizce', en: 'İngilizce', ger: 'Almanca', deu: 'Almanca',
-  fre: 'Fransızca', fra: 'Fransızca', ita: 'İtalyanca', spa: 'İspanyolca', rus: 'Rusça',
-  ara: 'Arapça', jpn: 'Japonca', kor: 'Korece', pol: 'Lehçe', und: 'Bilinmeyen'
-}
-
-function labelFor(track: AudioTrackInfo, index: number): string {
-  const language = track.language ? (LANGUAGE_NAMES[track.language.toLowerCase()] ?? track.language) : null
-  const parts = [language ?? `Ses ${index + 1}`, track.title, `${track.codec}${track.channels ? ` ${track.channels}ch` : ''}`]
+function labelFor(track: AudioTrackInfo, index: number, t: Translate): string {
+  const key = languageKey(track.language)
+  const language = key ? t(key) : track.language
+  const parts = [language || t('track.audio', { n: index + 1 }), track.title, `${track.codec}${track.channels ? ` ${track.channels}ch` : ''}`]
   return parts.filter(Boolean).join(' · ')
 }
 
@@ -95,7 +92,9 @@ export function usePlayerEngine(
   const [audioTrack, setAudioTrackState] = useState(0)
   const [subtitleTracks, setSubtitleTracks] = useState<TrackOption[]>([])
   const [subtitleTrack, setSubtitleTrackState] = useState(-1)
-  const [stats, setStats] = useState<EngineStats>({ level: 'otomatik', bitrate: 0, dropped: 0, buffer: 0 })
+  const t = useT()
+  const lang = useLang()
+  const [stats, setStats] = useState<EngineStats>({ level: t('quality.auto'), bitrate: 0, dropped: 0, buffer: 0 })
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [preparing, setPreparing] = useState(false)
@@ -196,17 +195,17 @@ export function usePlayerEngine(
           if (!data.fatal) return
           if (data.type === Hls.ErrorTypes.NETWORK_ERROR) hls.startLoad()
           else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError()
-          else setError('Yerel akış açılamadı')
+          else setError(t('err.localFailed'))
         })
         void video.play().catch(() => undefined)
 
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Yerel akış başlatılamadı')
+        setError(e instanceof Error ? e.message : t('err.localStart'))
       } finally {
         setPreparing(false)
       }
     },
-    [videoRef]
+    [videoRef, t]
   )
 
   useEffect(() => {
@@ -250,27 +249,27 @@ export function usePlayerEngine(
         setAudioTracks(
           hls.audioTracks.map((track, i) => ({
             id: i,
-            label: [track.name, track.lang].filter(Boolean).join(' · ') || `Ses ${i + 1}`
+            label: [track.name, track.lang].filter(Boolean).join(' · ') || t('track.audio', { n: i + 1 })
           }))
         )
         setAudioTrackState(hls.audioTrack)
         setSubtitleTracks(
           hls.subtitleTracks.map((track, i) => ({
             id: i,
-            label: [track.name, track.lang].filter(Boolean).join(' · ') || `Altyazı ${i + 1}`
+            label: [track.name, track.lang].filter(Boolean).join(' · ') || t('track.subtitle', { n: i + 1 })
           }))
         )
         setSubtitleTrackState(hls.subtitleTrack)
       })
       hls.on(Hls.Events.LEVEL_SWITCHED, (_e, data) => {
         const level = hls.levels[data.level]
-        setStats((prev) => ({ ...prev, level: level?.height ? `${level.height}p` : 'otomatik', bitrate: level?.bitrate ?? 0 }))
+        setStats((prev) => ({ ...prev, level: level?.height ? `${level.height}p` : t('quality.auto'), bitrate: level?.bitrate ?? 0 }))
       })
       hls.on(Hls.Events.ERROR, (_e, data) => {
         if (!data.fatal) return
         if (data.type === Hls.ErrorTypes.NETWORK_ERROR) hls.startLoad()
         else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError()
-        else setError('Akış açılamadı — sağlayıcı bu yayını vermiyor olabilir')
+        else setError(t('err.streamFailed'))
       })
 
       return () => {
@@ -293,7 +292,7 @@ export function usePlayerEngine(
         setMode('native')
         video.removeAttribute('crossorigin')
         if (/\.ts(\?|$)/i.test(url)) {
-          setError('MPEG-TS akışı bu oynatıcıda açılamıyor. .env dosyasında XTREAM_OUTPUT=hls yapın.')
+          setError(t('err.mpegts'))
           return
         }
         video.src = url
@@ -304,14 +303,15 @@ export function usePlayerEngine(
       if (cancelled) return
       setAudioInfo(info?.audio ?? [])
       /*
-       * Turkish by default when the file carries it and the audio is not already
-       * Turkish — picking some other language nobody asked for is worse than
-       * showing nothing, and subtitles over a Turkish dub are just in the way.
+       * The interface language by default when the file carries it and the audio
+       * is in something else — picking a language nobody asked for is worse than
+       * showing nothing, and subtitles over a dub you understand are in the way.
        */
       const usable = (info?.subtitles ?? []).filter((track) => track.text)
       setEmbedded(usable)
+      const wanted = lang === 'tr' ? 'tur' : 'eng'
       const audioLang = info?.audio[0]?.language ?? null
-      const preferred = audioLang === 'tur' ? null : (usable.find((track) => track.language === 'tur') ?? null)
+      const preferred = audioLang === wanted ? null : (usable.find((track) => track.language === wanted) ?? null)
       chosenSub.current = preferred
       setEmbeddedTrackState(preferred?.order ?? null)
 
@@ -320,16 +320,16 @@ export function usePlayerEngine(
         /* The provider sends no CORS headers, so the element must stay untapped. */
         video.removeAttribute('crossorigin')
         video.src = url
-        if (info?.audio.length === 1) setAudioTracks([{ id: 0, label: labelFor(info.audio[0], 0) }])
+        if (info?.audio.length === 1) setAudioTracks([{ id: 0, label: labelFor(info.audio[0], 0, t) }])
         return
       }
 
       setMode('remux')
       setDuration(info.duration)
-      setAudioTracks(info.audio.map((track, index) => ({ id: track.order, label: labelFor(track, index) })))
+      setAudioTracks(info.audio.map((track, index) => ({ id: track.order, label: labelFor(track, index, t) })))
       const unplayable = info.audio.filter((track) => !track.playable)
       if (unplayable.length > 0) {
-        setNotice(`${unplayable[0].codec.toUpperCase()} sesi yerel olarak AAC'ye çevriliyor`)
+        setNotice(t('err.transcoding', { codec: unplayable[0].codec.toUpperCase() }))
       }
       await openLocal(0, 0)
     }
@@ -341,7 +341,7 @@ export function usePlayerEngine(
       video.removeAttribute('src')
       video.load()
     }
-  }, [url, attempt, videoRef, openLocal, forceRemux])
+  }, [url, attempt, videoRef, openLocal, forceRemux, lang, t])
 
   useEffect(() => {
     const timer = window.setInterval(() => {

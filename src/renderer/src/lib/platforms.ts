@@ -1,4 +1,5 @@
 import { platformLogo } from './platformLogo'
+import type { Translate } from '@/i18n'
 import type { Channel, VodItem, WatchProvider } from '@shared/types'
 
 /**
@@ -10,6 +11,9 @@ import type { Channel, VodItem, WatchProvider } from '@shared/types'
  * they resolve to puts them back together, and opening the card carries every
  * category it stands for, so the whole platform is there.
  */
+/* Stands in for a category the provider left unnamed, and is filtered back
+   out below — so it has to be the same string the main process put there. */
+
 export interface Platform {
   /** Stable identity: the logo for a service, the name for anything else. */
   key: string
@@ -39,12 +43,14 @@ function display(group: string): string {
 export function buildPlatforms(
   series: VodItem[],
   providers: WatchProvider[],
-  channels: Channel[]
+  channels: Channel[],
+  t: Translate
 ): Platform[] {
+  const other = t('provider.otherGroup')
   const counts = new Map<string, number>()
   for (const item of series) {
     const group = item.group?.trim()
-    if (group && group !== 'Diğer') counts.set(group, (counts.get(group) ?? 0) + 1)
+    if (group && group !== other) counts.set(group, (counts.get(group) ?? 0) + 1)
   }
 
   const merged = new Map<string, Platform>()

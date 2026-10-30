@@ -1,4 +1,5 @@
 import { backdrop } from './img'
+import type { Translate } from '@/i18n'
 import type { Episode } from '@shared/types'
 
 export interface EpisodeTarget {
@@ -30,11 +31,11 @@ export interface EpisodeContext {
   imdbId?: string | null
 }
 
-export function toEpisodeTarget(context: EpisodeContext, episode: PlayableEpisode): EpisodeTarget {
+export function toEpisodeTarget(context: EpisodeContext, episode: PlayableEpisode, t: Translate): EpisodeTarget {
   return {
     url: episode.url ?? '',
     title: context.showTitle,
-    sub: `${context.season}. sezon ${episode.number}. bölüm · ${episode.name}`,
+    sub: `${t('episode.seasonEpisode', { season: context.season, episode: episode.number })} · ${episode.name}`,
     image: backdrop(episode.still, 'w780') ?? episode.providerStill,
     episodeId: episode.providerId ?? episodeKey(context.tvId, context.season, episode.number),
     season: context.season,

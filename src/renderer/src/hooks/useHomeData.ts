@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useT } from '@/i18n'
 import { useAsync, type AsyncState } from './useAsync'
 import { useTeamBadges } from './useTeamBadges'
 import type { GuideRow } from '@/components/MiniEpg'
@@ -62,6 +63,7 @@ function dedupe(items: TmdbItem[]): TmdbItem[] {
 
 /** Loads every rail on the home screen; each request fails on its own without blanking the page. */
 export function useHomeData(): HomeData {
+  const t = useT()
   const [nonce, setNonce] = useState(0)
 
   const trending = useAsync(() => window.elembi.tmdb.trending(), [nonce])
@@ -188,36 +190,36 @@ export function useHomeData(): HomeData {
     topRated.data?.length
       ? {
           id: 'top-rated',
-          kicker: `Koleksiyon · ${topRated.data.length} film`,
-          title: 'En Çok\nOylananlar',
-          subtitle: 'TMDB puanına göre zirve',
+          kicker: t('coll.kicker.film', { n: topRated.data.length }),
+          title: t('coll.topRated'),
+          subtitle: t('home.tagline.top'),
           image: backdrop(topRated.data[0].backdrop, 'w780')
         }
       : null,
     nowPlaying.data?.length
       ? {
           id: 'now-playing',
-          kicker: `Koleksiyon · ${nowPlaying.data.length} film`,
-          title: 'Vizyonda\nOlanlar',
-          subtitle: 'Bu dönem sinemalarda',
+          kicker: t('coll.kicker.film', { n: nowPlaying.data.length }),
+          title: t('coll.nowPlaying'),
+          subtitle: t('home.tagline.cinema'),
           image: backdrop(nowPlaying.data[0].backdrop, 'w780')
         }
       : null,
     airing.data?.length
       ? {
           id: 'airing-today',
-          kicker: `Koleksiyon · ${airing.data.length} dizi`,
-          title: 'Bugün\nYayında',
-          subtitle: 'Bugün yeni bölümü olan diziler',
+          kicker: t('coll.kicker.series', { n: airing.data.length }),
+          title: t('coll.airing'),
+          subtitle: t('home.tagline.airing'),
           image: backdrop(airing.data[0].backdrop, 'w780')
         }
       : null,
     vod.data?.length
       ? {
           id: 'provider-vod',
-          kicker: `Arşiv · ${vod.data.length} başlık`,
-          title: 'Sağlayıcı\nArşivi',
-          subtitle: 'Listende oynatılabilir her şey',
+          kicker: t('home.archiveCount', { n: vod.data.length }),
+          title: t('coll.archive'),
+          subtitle: t('home.tagline.archive'),
           image: vod.data[0]?.cover ?? null
         }
       : null

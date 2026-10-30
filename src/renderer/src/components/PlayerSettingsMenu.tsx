@@ -1,4 +1,5 @@
 import type { PlayerEngine } from '@/hooks/usePlayerEngine'
+import { useT } from '@/i18n'
 
 interface PlayerSettingsMenuProps {
   engine: PlayerEngine
@@ -12,6 +13,7 @@ interface PlayerSettingsMenuProps {
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2]
 
 function Section({ title, children }: { title: string; children: React.ReactNode }): React.JSX.Element {
+  const t = useT()
   return (
     <div className="border-b border-line py-2 last:border-b-0">
       <div className="mono px-3 pb-1.5 text-[9.5px] tracking-[0.14em] text-tx3 uppercase">{title}</div>
@@ -42,11 +44,13 @@ export function PlayerSettingsMenu({
   showStats,
   onShowStats
 }: PlayerSettingsMenuProps): React.JSX.Element {
+  const t = useT()
+
   return (
     <div className="absolute right-0 bottom-12 z-10 w-[232px] overflow-hidden rounded-[14px] border border-white/14 bg-ink2/95 shadow-[0_26px_60px_-20px_rgba(0,0,0,.9)] backdrop-blur-[20px]">
       {engine.levels.length > 1 ? (
-        <Section title="Kalite">
-          <Option label="Otomatik" active={engine.currentLevel === -1} onClick={() => engine.setLevel(-1)} />
+        <Section title={t('player.quality')}>
+          <Option label={t('player.auto')} active={engine.currentLevel === -1} onClick={() => engine.setLevel(-1)} />
           {[...engine.levels]
             .sort((a, b) => b.height - a.height)
             .map((level) => (
@@ -61,7 +65,7 @@ export function PlayerSettingsMenu({
       ) : null}
 
       {!isLive ? (
-        <Section title="Hız">
+        <Section title="{t('player.speed')}">
           <div className="flex flex-wrap gap-1 px-3 pb-1">
             {SPEEDS.map((value) => (
               <button
@@ -77,8 +81,8 @@ export function PlayerSettingsMenu({
         </Section>
       ) : null}
 
-      <Section title="Teknik">
-        <Option label={showStats ? 'Teknik bilgileri gizle' : 'Teknik bilgileri göster'} active={showStats} onClick={() => onShowStats(!showStats)} />
+      <Section title={t('player.tech')}>
+        <Option label={showStats ? t('player.statsHide') : t('player.stats')} active={showStats} onClick={() => onShowStats(!showStats)} />
       </Section>
     </div>
   )

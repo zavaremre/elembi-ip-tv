@@ -5,6 +5,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { randomBytes } from 'node:crypto'
 import type { AudioTrackInfo, MediaProbe, SubtitleTrackInfo } from '../shared/types'
+import { t } from './i18n'
+import { languageKey } from '../shared/i18n/languages'
 
 const FFMPEG = 'ffmpeg'
 const FFPROBE = 'ffprobe'
@@ -28,7 +30,7 @@ function run(command: string, args: string[], timeoutMs: number): Promise<string
     let err = ''
     const timer = setTimeout(() => {
       child.kill('SIGKILL')
-      reject(new Error(`${command} zaman aşımına uğradı`))
+      reject(new Error(t('ffmpeg.timeout', { command })))
     }, timeoutMs)
     child.stdout.on('data', (chunk: Buffer) => (out += chunk.toString()))
     child.stderr.on('data', (chunk: Buffer) => (err += chunk.toString()))
@@ -39,7 +41,7 @@ function run(command: string, args: string[], timeoutMs: number): Promise<string
     child.on('close', (code) => {
       clearTimeout(timer)
       if (code === 0) resolve(out)
-      else reject(new Error(err.trim().split('\n').pop() ?? `${command} ${code} ile çıktı`))
+      else reject(new Error(err.trim().split('\n').pop() ?? t('ffmpeg.exited', { command, code: String(code) })))
     })
   })
 }
@@ -246,23 +248,6 @@ function hlsArgs(
   ]
 }
 
-const LANGUAGE_NAMES: Record<string, string> = {
-  tur: 'Türkçe',
-  eng: 'İngilizce',
-  ger: 'Almanca',
-  deu: 'Almanca',
-  fre: 'Fransızca',
-  fra: 'Fransızca',
-  spa: 'İspanyolca',
-  ita: 'İtalyanca',
-  rus: 'Rusça',
-  ara: 'Arapça',
-  ukr: 'Ukraynaca',
-  dut: 'Felemenkçe',
-  swe: 'İsveççe',
-  fin: 'Fince'
-}
-
 function discard(dead: HlsSession | null): void {
   if (!dead) return
   try {
@@ -323,11 +308,11 @@ export async function startHls(
       return `http://127.0.0.1:${port}/hls/${id}/master.m3u8`
     }
     if (child.exitCode !== null) {
-      throw new Error(stderr.trim().split('\n').pop() ?? 'ffmpeg beklenmedik şekilde kapandı')
+      throw new Error(stderr.trim().split('\n').pop() ?? t('ffmpeg.crashed'))
     }
     await new Promise((resolve) => setTimeout(resolve, PLAYLIST_POLL_MS))
   }
-  throw new Error('HLS oturumu zamanında başlamadı')
+  throw new Error(t('ffmpeg.noPlaylist'))
 }
 
 
@@ -344,9 +329,10 @@ function labelledMaster(path: string): string {
    * release tags — "tr #turkseed" on the film this was built against — which is
    * noise to the viewer, so the title is only a fallback.
    */
+  const key = languageKey(track.language)
   const name = track.language
-    ? (LANGUAGE_NAMES[track.language] ?? track.language.toUpperCase())
-    : track.title?.trim() || 'Altyazı'
+    ? (key ? t(key) : track.language.toUpperCase())
+    : track.title?.trim() || t('track.subtitleLabel')
   return text.replace(/^#EXT-X-MEDIA:TYPE=SUBTITLES.*$/m, (line) =>
     line
       .replace(/NAME="[^"]*"/, `NAME="${name}"`)

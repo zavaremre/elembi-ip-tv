@@ -1,10 +1,11 @@
 import { useEffect } from 'react'
+import { useT } from '@/i18n'
 import { FavoriteButton } from '@/components/FavoriteButton'
 import { favoriteKey, type Favorites } from '@/hooks/useFavorites'
 import { Art } from '@/components/Art'
 import { NoiseOverlay } from '@/components/fx/NoiseOverlay'
 import { useProviderMovie } from '@/hooks/useProviderMovie'
-import { dur } from '@/lib/fmt'
+import { dur, score } from '@/lib/fmt'
 import { backdrop, logo, poster } from '@/lib/img'
 import type { Progress, TmdbItem, VodItem } from '@shared/types'
 
@@ -19,6 +20,7 @@ interface ProviderMoviePageProps {
 }
 
 function Skeleton({ className = '' }: { className?: string }): React.JSX.Element {
+  const t = useT()
   return <span className={`block animate-pulse bg-white/8 ${className}`} aria-hidden="true" />
 }
 
@@ -41,6 +43,7 @@ export function ProviderMoviePage({
   onResolved,
   onBack
 }: ProviderMoviePageProps): React.JSX.Element {
+  const t = useT()
   const view = useProviderMovie(item)
   const tmdb = view.data
 
@@ -101,14 +104,14 @@ export function ProviderMoviePage({
           <div className="mono mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-tx3">
             <span>{item.group}</span>
             {item.country ? <span>{item.country}</span> : null}
-            {item.audio ? <span className="text-acc">{item.audio === 'dub' ? 'TÜRKÇE DUBLAJ' : 'ALTYAZILI'}</span> : null}
-            {item.rating ? <span className="text-gold">★ {item.rating.toFixed(1).replace('.', ',')}</span> : null}
+            {item.audio ? <span className="text-acc">{item.audio === 'dub' ? t('provider.dubbed') : t('provider.subtitled')}</span> : null}
+            {item.rating ? <span className="text-gold">★ {score(item.rating, t)}</span> : null}
             {view.loading ? (
               <Skeleton className="h-3 w-24 rounded-full" />
             ) : tmdb ? (
               <>
                 {tmdb.year ? <span>{tmdb.year}</span> : null}
-                {dur(tmdb.runtime) ? <span>{dur(tmdb.runtime)}</span> : null}
+                {dur(tmdb.runtime, t) ? <span>{dur(tmdb.runtime, t)}</span> : null}
               </>
             ) : null}
           </div>
@@ -130,7 +133,7 @@ export function ProviderMoviePage({
               className="spec flex h-11 items-center gap-2.5 rounded-[12px] bg-tx px-5 text-[14px] font-bold text-ink"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
-              {ratio > 0 && ratio < 0.95 ? 'Devam et' : 'Oynat'}
+              {ratio > 0 && ratio < 0.95 ? t('common.resume') : t('common.play')}
             </button>
 
             <FavoriteButton
@@ -157,7 +160,7 @@ export function ProviderMoviePage({
 
           {!view.loading && !tmdb ? (
             <p className="mt-4 text-[12.5px] text-tx3">
-              TMDB bu başlığı tanımadı, bu yüzden afiş ve özet yok. Oynatma sağlayıcıdan çalışır.
+              {t('provider.unknownTitle')}
             </p>
           ) : null}
         </div>

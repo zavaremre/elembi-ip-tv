@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
+import { useT } from '@/i18n'
 import { NoiseOverlay } from './fx/NoiseOverlay'
 import { SplitText } from './fx/SplitText'
 import { StarBorder } from './fx/StarBorder'
 import { Art } from './Art'
 import { useMagnet } from '@/hooks/useFx'
-import { dur } from '@/lib/fmt'
+import { dur, score } from '@/lib/fmt'
 import { backdrop, logo } from '@/lib/img'
 import type { TmdbItem } from '@shared/types'
 
@@ -18,6 +19,7 @@ const ROTATE_MS = 7600
 
 /** Full-bleed featured stage: one slide at a time, title entering with SplitText. */
 export function Hero({ items, loading, onOpen }: HeroProps): React.JSX.Element {
+  const t = useT()
   const [index, setIndex] = useState(0)
   /* Bumped on manual navigation so the auto-rotate timer starts over. */
   const [epoch, setEpoch] = useState(0)
@@ -46,7 +48,7 @@ export function Hero({ items, loading, onOpen }: HeroProps): React.JSX.Element {
     )
   }
 
-  const meta = [item.year, item.kind === 'tv' ? `${item.seasons ?? 1}. sezon` : dur(item.runtime), item.genres.join(', ')].filter(Boolean)
+  const meta = [item.year, item.kind === 'tv' ? t('season.seasons', { n: item.seasons ?? 1 }) : dur(item.runtime, t), item.genres.join(', ')].filter(Boolean)
 
   return (
     <section className="relative h-[clamp(500px,76vh,760px)] shrink-0 -mt-[66px] overflow-hidden">
@@ -58,8 +60,8 @@ export function Hero({ items, loading, onOpen }: HeroProps): React.JSX.Element {
         <div className="shell relative h-full">
       <div className="pointer-events-auto absolute bottom-[clamp(92px,10.5vh,126px)] left-[var(--pad)] max-w-[min(620px,52vw)]">
         <div className="fadeup flex items-center gap-2.5 text-[11.5px] tracking-[0.18em] text-acc uppercase">
-          <StarBorder>Elembi Özel</StarBorder>
-          <span className="mono">{item.kind === 'tv' ? 'Dizi' : 'Film'} · haftanın öne çıkanı</span>
+          <StarBorder>{t('hero.badge')}</StarBorder>
+          <span className="mono">{item.kind === 'tv' ? t('hero.kind.tv') : t('hero.kind.movie')} · {t('hero.weekly')}</span>
         </div>
 
         {logo(item.logo) ? (
@@ -74,7 +76,7 @@ export function Hero({ items, loading, onOpen }: HeroProps): React.JSX.Element {
         )}
 
         <div className="fadeup mt-4 flex flex-wrap items-center gap-2.5 text-[13.5px] text-tx2" style={{ animationDelay: '340ms' }}>
-          {item.rating > 0 ? <span className="flex items-center gap-1.5 font-bold text-gold">★ {item.rating.toFixed(1).replace('.', ',')}</span> : null}
+          {item.rating > 0 ? <span className="flex items-center gap-1.5 font-bold text-gold">★ {score(item.rating, t)}</span> : null}
           {meta.map((m) => (
             <span key={m}>{m}</span>
           ))}
@@ -88,7 +90,7 @@ export function Hero({ items, loading, onOpen }: HeroProps): React.JSX.Element {
 
 {/*
          * One action, because there was only ever one: the second button said
-         * "Sağlayıcıda oynat" and opened the same detail page, since nothing is
+         * "{t('common.play')}" and opened the same detail page, since nothing is
          * played before the detail page has shown what the provider carries.
          */}
         <div className="fadeup mt-6 flex flex-wrap items-center gap-2.5" style={{ animationDelay: '560ms' }}>
@@ -102,7 +104,7 @@ export function Hero({ items, loading, onOpen }: HeroProps): React.JSX.Element {
               <circle cx="12" cy="12" r="9" />
               <path d="M12 11v5M12 7.6v.4" strokeLinecap="round" />
             </svg>
-            Detayı aç
+            {t('common.openDetail')}
           </button>
         </div>
       </div>
@@ -118,7 +120,7 @@ export function Hero({ items, loading, onOpen }: HeroProps): React.JSX.Element {
                 key={slide.id}
                 type="button"
                 onClick={() => goTo(i)}
-                aria-label={`${i + 1}. öne çıkan`}
+                aria-label={t('hero.nth', { n: i + 1 })}
                 aria-current={i === index}
                 className={`h-[3px] rounded-[3px] transition-all duration-300 ${i === index ? 'w-10 bg-acc shadow-[0_0_12px_var(--color-acc)]' : 'w-[18px] bg-white/25 hover:bg-white/45'}`}
               />
@@ -128,7 +130,7 @@ export function Hero({ items, loading, onOpen }: HeroProps): React.JSX.Element {
             <button
               type="button"
               onClick={() => goTo(index - 1)}
-              aria-label="Önceki öne çıkan"
+              aria-label={t('hero.prev')}
               className="grid h-8 w-8 place-items-center rounded-full border border-white/18 bg-ink/50 text-tx backdrop-blur-[14px] transition-colors hover:border-acc/50 hover:bg-ink/75"
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" aria-hidden="true">
@@ -138,7 +140,7 @@ export function Hero({ items, loading, onOpen }: HeroProps): React.JSX.Element {
             <button
               type="button"
               onClick={() => goTo(index + 1)}
-              aria-label="Sonraki öne çıkan"
+              aria-label={t('hero.next')}
               className="grid h-8 w-8 place-items-center rounded-full border border-white/18 bg-ink/50 text-tx backdrop-blur-[14px] transition-colors hover:border-acc/50 hover:bg-ink/75"
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" aria-hidden="true">

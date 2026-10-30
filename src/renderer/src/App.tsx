@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useFavorites } from './hooks/useFavorites'
+import { LanguageProvider, makeT, type Key, type Lang } from './i18n'
 import { AppHeader, type Section } from './components/AppHeader'
 import { DetailPage } from './components/DetailPage'
 import { Player } from './components/Player'
@@ -28,11 +29,12 @@ import { ProviderSeriesPage } from './pages/ProviderSeriesPage'
 import { SearchPage } from './pages/SearchPage'
 import type { DiscoverFilters, Favorite, Genre, Keyword, Match, MediaKind, TmdbItem, VodItem } from '@shared/types'
 
-const COLLECTION_TITLES: Record<CollectionId, string> = {
-  'top-rated': 'En Çok Oylananlar',
-  'now-playing': 'Vizyonda Olanlar',
-  'airing-today': 'Bugün Yayında',
-  'provider-vod': 'Sağlayıcı Arşivi'
+/* Keys, not text: this table is built once, outside any language. */
+const COLLECTION_TITLES: Record<CollectionId, Key> = {
+  'top-rated': 'row.topRated',
+  'now-playing': 'row.nowPlaying',
+  'airing-today': 'row.todayOnAir',
+  'provider-vod': 'row.providerArchive'
 }
 
 const DEFAULT_FILTERS: DiscoverFilters = {
@@ -77,6 +79,10 @@ export function App(): React.JSX.Element {
   const [infoTab, setInfoTab] = useState<InfoTab>('about')
 
   const appConfig = useAsync(() => window.elembi.app.config(), [setupNonce])
+  /* The main process resolves this against the system when nothing is stored. */
+  const lang: Lang = appConfig.data?.language === 'en' ? 'en' : 'tr'
+  /* makeT, not useT: this component renders the provider, so it is outside it. */
+  const t = makeT(lang)
   const collectionList = useCollectionList(collection)
   const detail = useTmdbDetail(detailRef)
   /* Derived during render: no effect needed to keep the match in sync. */
@@ -268,14 +274,14 @@ export function App(): React.JSX.Element {
   const listView = ((): ListView | null => {
     if (collection) {
       if (collection === 'provider-vod') {
-        return { kind: 'provider', title: COLLECTION_TITLES[collection], meta: `${data.vod.data?.length ?? 0} BAŞLIK`, items: data.vod.data ?? [] }
+        return { kind: 'provider', title: t(COLLECTION_TITLES[collection]), meta: t('row.meta.titles', { n: data.vod.data?.length ?? 0 }), items: data.vod.data ?? [] }
       }
-      return { kind: 'tmdb', title: COLLECTION_TITLES[collection], meta: 'TMDB', items: collectionList.data ?? [] }
+      return { kind: 'tmdb', title: t(COLLECTION_TITLES[collection]), meta: 'TMDB', items: collectionList.data ?? [] }
     }
     if (section === 'sports') {
       const matches = data.matches.data ?? []
-      if (matches.length > 0) return { kind: 'matches', title: 'Spor', meta: 'BUGÜN VE YARIN', items: matches }
-      return { kind: 'channels', title: 'Spor Kanalları', items: sportChannels(data.channels.data ?? []) }
+      if (matches.length > 0) return { kind: 'matches', title: t('nav.sports'), meta: t('row.meta.todayTomorrow'), items: matches }
+      return { kind: 'channels', title: t('row.sportChannels'), items: sportChannels(data.channels.data ?? []) }
     }
     return null
   })()
@@ -289,14 +295,14 @@ export function App(): React.JSX.Element {
   const browser =
     !collection && !providerSeries && !providerMovie && (section === 'live' || section === 'movies' || section === 'series')
       ? section === 'live'
-        ? { title: 'Canlı TV', dataset: { kind: 'channels' as const, items: data.channels.data ?? [] }, state: data.channels }
+        ? { title: t('row.liveTv'), dataset: { kind: 'channels' as const, items: data.channels.data ?? [] }, state: data.channels }
         : section === 'movies'
-          ? { title: 'Filmler', dataset: { kind: 'vod' as const, items: data.vod.data ?? [] }, state: data.vod }
-          : { title: 'Diziler', dataset: { kind: 'series' as const, items: data.providerSeries.data ?? [] }, state: data.providerSeries }
+          ? { title: t('page.movies'), dataset: { kind: 'vod' as const, items: data.vod.data ?? [] }, state: data.vod }
+          : { title: t('page.series'), dataset: { kind: 'series' as const, items: data.providerSeries.data ?? [] }, state: data.providerSeries }
       : null
 
   return (
-    <>
+    <LanguageProvider lang={lang}>
       <div id="page" className="scroll-y flex-1">
         <AppHeader
           section={section}
@@ -353,11 +359,32 @@ export function App(): React.JSX.Element {
             tab={infoTab}
             onTab={setInfoTab}
             onBack={() => goSection('settings')}
+            version={appConfig.data?.version ?? ''}
             dataDir={appConfig.data?.dataDir ?? ''}
             platform={appConfig.data?.platform ?? ''}
           />
         ) : section === 'settings' ? (
           <SettingsPanel
+            onLanguage={(next) => {
+              /*
+               * TMDB follows the interface. Measured cost: of 180 popular
+               * titles the provider matched 45 in Turkish and 33 in English —
+               * films take the loss, because the catalogue lists them by their
+               * Turkish release name. TMDB_LANG stays its own setting, so this
+               * can be put back without giving up an English interface.
+               */
+              void window.elembi.app
+                .setConfig({ UI_LANG: next, TMDB_LANG: next === 'en' ? 'en-US' : 'tr-TR' })
+                /*
+                 * A reload, not a state bump. Every rail, detail page and
+                 * search result already holds what TMDB said in the old
+                 * language, each behind its own deps; re-reading the config
+                 * changed the labels and left all of that Turkish. The main
+                 * process has already dropped its HTTP cache, so this comes
+                 * back in the new language.
+                 */
+                .then(() => window.location.reload())
+            }}
             onRefresh={refresh}
             onEditProvider={() => setSetupOpen(true)}
             onOpenInfo={(next) => {
@@ -514,6 +541,6 @@ export function App(): React.JSX.Element {
           </button>
         </div>
       ) : null}
-    </>
+    </LanguageProvider>
   )
 }

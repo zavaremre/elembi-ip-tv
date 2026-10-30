@@ -13,6 +13,7 @@ import { catalog, catalogIsStale, catalogSavedAt, expireCatalog } from './catalo
 import { getJson } from './http'
 import { guide, resetGuide } from './xmltv'
 import type { Channel, EpgEntry, Match, NowNext, ProviderStatus, VodItem } from '../shared/types'
+import { t } from './i18n'
 
 /* ── helpers ──────────────────────────────────── */
 
@@ -125,7 +126,7 @@ async function loadChannels(): Promise<Channel[]> {
       num: s.num,
       name: cleanChannelName(s.name),
       logo: s.stream_icon || null,
-      group: category?.name ?? 'Diğer',
+      group: category?.name ?? t('provider.otherGroup'),
       epgId: s.epg_channel_id || null,
       country: category?.country ?? countryFromName(s.name),
       url: liveUrl(s.stream_id),
@@ -148,7 +149,7 @@ async function loadVod(): Promise<VodItem[]> {
     name: cleanTitle(s.name),
     cover: s.stream_icon || null,
     rating: s.rating ? Number(s.rating) || null : null,
-    group: byCategory.get(s.category_id)?.name ?? 'Diğer',
+    group: byCategory.get(s.category_id)?.name ?? t('provider.otherGroup'),
     country: byCategory.get(s.category_id)?.country ?? countryFromName(s.name),
     audio: audioVariant(s.name, byCategory.get(s.category_id)?.name ?? ''),
     added: Number(s.added) * 1000 || 0,
@@ -171,7 +172,7 @@ async function loadSeries(): Promise<VodItem[]> {
     name: cleanTitle(s.name),
     cover: s.cover || null,
     rating: s.rating ? Number(s.rating) || null : null,
-    group: byCategory.get(s.category_id)?.name ?? 'Diğer',
+    group: byCategory.get(s.category_id)?.name ?? t('provider.otherGroup'),
     country: byCategory.get(s.category_id)?.country ?? countryFromName(s.name),
     audio: audioVariant(s.name, byCategory.get(s.category_id)?.name ?? ''),
     added: Number(s.last_modified) * 1000 || 0
@@ -187,13 +188,13 @@ export const xtream = {
   },
 
   async status(): Promise<ProviderStatus> {
-    if (!this.configured()) return { ok: false, message: 'Sağlayıcı bilgileri girilmedi (.env)' }
+    if (!this.configured()) return { ok: false, message: t('status.noCredentials') }
     try {
       const info = await getJson<{
         user_info?: { status: string; exp_date: string | null; max_connections: string; active_cons: string; auth: number }
       }>(api(), { ttl: 60_000, timeout: 12_000 })
       const user = info.user_info
-      if (!user || user.auth === 0) return { ok: false, message: 'Kimlik doğrulama başarısız — kullanıcı adı veya şifre' }
+      if (!user || user.auth === 0) return { ok: false, message: t('status.authFailed') }
 
       const [live, vod, series] = await Promise.all([
         this.channels().catch(() => []),
@@ -202,10 +203,10 @@ export const xtream = {
       ])
       return {
         ok: true,
-        message: 'Bağlandı',
+        message: t('status.connected'),
         user: {
           status: user.status,
-          expires: user.exp_date ? new Date(Number(user.exp_date) * 1000).toLocaleDateString('tr-TR') : null,
+          expires: user.exp_date ? new Date(Number(user.exp_date) * 1000).toLocaleDateString(t('locale')) : null,
           maxConnections: user.max_connections,
           activeConnections: user.active_cons
         },
@@ -213,15 +214,15 @@ export const xtream = {
         offline: catalogIsStale()
       }
     } catch (e) {
-      const reason = e instanceof Error ? e.message : 'Sağlayıcıya ulaşılamadı'
+      const reason = e instanceof Error ? e.message : t('status.unreachable')
       const saved = catalogSavedAt()
       /*
        * Still a failure — playback needs the panel. Saying so while naming the
        * saved copy explains why the catalogue is on screen anyway.
        */
       if (saved) {
-        const day = new Date(saved).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })
-        return { ok: false, offline: true, message: `Ulaşılamıyor — ${day} tarihli kayıtlı katalog, oynatma çalışmaz` }
+        const day = new Date(saved).toLocaleDateString(t('locale'), { day: 'numeric', month: 'short' })
+        return { ok: false, offline: true, message: t('status.offlineCatalog', { date: day }) }
       }
       return { ok: false, message: reason }
     }

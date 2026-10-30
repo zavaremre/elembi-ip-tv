@@ -1,4 +1,5 @@
 import { ChannelCard } from '@/components/ChannelCard'
+import { useT, type Key } from '@/i18n'
 import { PosterCard } from '@/components/PosterCard'
 import { ProviderFilterBar } from '@/components/ProviderFilterBar'
 import { useAudioVariants } from '@/hooks/useAudioVariants'
@@ -25,15 +26,15 @@ interface ProviderBrowserProps {
   categories?: string[]
 }
 
-const CHANNEL_SORTS: { value: ProviderSort; label: string }[] = [
-  { value: 'number', label: 'Kanal numarası' },
-  { value: 'name', label: 'Ada göre' }
+const CHANNEL_SORTS: { value: ProviderSort; key: Key }[] = [
+  { value: 'number', key: 'browse.byNumber' },
+  { value: 'name', key: 'browse.byName' }
 ]
 
-const VOD_SORTS: { value: ProviderSort; label: string }[] = [
-  { value: 'newest', label: 'Yeni eklenen' },
-  { value: 'rating', label: 'Puan' },
-  { value: 'name', label: 'Ada göre' }
+const VOD_SORTS: { value: ProviderSort; key: Key }[] = [
+  { value: 'newest', key: 'browse.newest' },
+  { value: 'rating', key: 'filter.sort.score' },
+  { value: 'name', key: 'browse.byName' }
 ]
 
 /** Only VodItem carries a `kind`, which makes it the discriminant. */
@@ -54,6 +55,7 @@ export function ProviderBrowser({
   onPlayVod,
   categories
 }: ProviderBrowserProps): React.JSX.Element {
+  const t = useT()
   const isChannels = dataset.kind === 'channels'
   const filter = useProviderFilter<Channel | VodItem>(
     dataset.items,
@@ -73,7 +75,7 @@ export function ProviderBrowser({
     <main className="shell px-[var(--pad)] pt-6 pb-24">
       <div className="flex items-center gap-3 pb-4">
         <h1 className="text-[clamp(26px,3.4vw,38px)] font-extrabold">{title}</h1>
-        <span className="mono pt-2 text-[11px] tracking-[0.1em] text-tx3">{dataset.items.length} KAYIT</span>
+        <span className="mono pt-2 text-[11px] tracking-[0.1em] text-tx3">{t('browse.records', { n: dataset.items.length })}</span>
       </div>
 
       <ProviderFilterBar
@@ -86,7 +88,7 @@ export function ProviderBrowser({
         sorts={isChannels ? CHANNEL_SORTS : VOD_SORTS}
         shown={filter.visible.length}
         total={filter.total}
-        searchLabel={isChannels ? 'Kanal ara' : 'Başlık ara'}
+        searchLabel={isChannels ? t('browse.searchChannel') : t('browse.searchTitle')}
         onCountry={filter.setCountry}
         onCategory={filter.setCategory}
         onQuery={filter.setQuery}
@@ -97,9 +99,9 @@ export function ProviderBrowser({
       {error ? (
         <p className="mt-6 text-[13px] text-live">{error}</p>
       ) : loading ? (
-        <p className="mono mt-6 text-[12px] tracking-[0.12em] text-acc uppercase">yükleniyor…</p>
+        <p className="mono mt-6 text-[12px] tracking-[0.12em] text-acc uppercase">{t('search.loading')}</p>
       ) : filter.total === 0 ? (
-        <p className="mt-6 text-[14px] text-tx3">Bu filtrelerle kayıt yok.</p>
+        <p className="mt-6 text-[14px] text-tx3">{t('browse.none')}</p>
       ) : (
         <>
           <div
@@ -133,7 +135,7 @@ export function ProviderBrowser({
 
           <div ref={sentinelRef} className="h-px" aria-hidden="true" />
           <p className="mono mt-6 text-center text-[11px] text-tx3">
-            {hasMore ? `${filter.total - filter.visible.length} kayıt daha yükleniyor…` : 'listenin sonu'}
+            {hasMore ? t('browse.loadingMore', { n: filter.total - filter.visible.length }) : t('browse.end')}
           </p>
         </>
       )}

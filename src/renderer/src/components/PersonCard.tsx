@@ -1,4 +1,5 @@
 import { Art } from './Art'
+import { useT } from '@/i18n'
 import { poster } from '@/lib/img'
 
 interface PersonCardProps {
@@ -16,11 +17,12 @@ interface PersonCardProps {
  * keyboard.
  */
 export function PersonCard({ id, name, profile, note, onOpen }: PersonCardProps): React.JSX.Element {
+  const t = useT()
   return (
     <button
       type="button"
       onClick={onOpen}
-      aria-label={`${name} yapımları`}
+      aria-label={t('card.personWorks', { name })}
       className="spot w-[clamp(104px,8vw,128px)] text-left"
     >
       <Art src={poster(profile, 'w185')} alt={name} shape="poster" className="lift-sm" />

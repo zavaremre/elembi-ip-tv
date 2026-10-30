@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useT } from '@/i18n'
 import { ChannelCard } from '@/components/ChannelCard'
 import { ChannelLogoLoop } from '@/components/ChannelLogoLoop'
 import { ContinueCard } from '@/components/ContinueCard'
@@ -71,6 +72,7 @@ export function Home({
   onOpenFavorite,
   onSeeAll
 }: HomeProps): React.JSX.Element {
+  const t = useT()
   /*
    * Read from the catalogue rather than from a list of platform names: these are
    * the provider's own series categories, so one it adds — or renames — appears
@@ -78,8 +80,8 @@ export function Home({
    * they are, and singletons are left out as noise.
    */
   const platforms = useMemo(
-    () => buildPlatforms(data.providerSeries.data ?? [], data.watchProviders.data ?? [], data.channels.data ?? []),
-    [data.providerSeries.data, data.watchProviders.data, data.channels.data]
+    () => buildPlatforms(data.providerSeries.data ?? [], data.watchProviders.data ?? [], data.channels.data ?? [], t),
+    [data.providerSeries.data, data.watchProviders.data, data.channels.data, t]
   )
 
   const railVod = (data.vod.data ?? []).slice(0, PROVIDER_RAIL_COUNT)
@@ -109,7 +111,7 @@ export function Home({
       <main className="shell relative z-4 -mt-10 pb-24">
 
         {platforms.length > 0 ? (
-          <Row title="Platformlar" meta={`${platforms.length} KATEGORİ`} tagline="Sağlayıcıda ne varsa">
+          <Row title={t('home.platforms')} meta={t('home.platforms.meta', { n: platforms.length })} tagline={t('home.platforms.tagline')}>
             {platforms.map((entry) => (
               <PlatformCard
                 key={entry.key}
@@ -125,10 +127,10 @@ export function Home({
 
         {favorites.rows.length > 0 ? (
           <Row
-            title="Favorilerim"
-            meta={`${favorites.rows.length} BAŞLIK`}
-            tagline="Kalbe dokunduklarınız"
-            action="Tümünü gör"
+            title={t('fav.title')}
+            meta={t('common.count.titles', { n: favorites.rows.length })}
+            tagline={t('fav.tagline')}
+            action={t('common.seeAll')}
             onAction={() => onSeeAll('favorites')}
           >
             {favorites.rows.slice(0, 18).map((row) => (
@@ -147,16 +149,19 @@ export function Home({
         {/* Hidden rather than shown near-empty: a catalogue that gained nothing
             has nothing to say here. */}
         {fresh.length >= 4 ? (
-          <Row title="Yeni Eklenenler" meta="SAĞLAYICI" tagline="Son 30 günde kataloğa girenler">
+          <Row title={t('home.fresh')} meta={t('home.fresh.provider')} tagline={t('home.fresh.tagline')}>
             {fresh.map((item) => (
               <PosterCard
                 key={`${item.kind}-${item.id}`}
                 title={item.name}
                 image={artworkFor(`${item.kind === 'series' ? 'series' : 'vod'}-${item.id}`, item.cover)}
                 rating={item.rating}
-                meta={addedLabel(item.added)}
+                meta={(() => {
+                  const label = addedLabel(item.added)
+                  return label ? t(label.key, { n: label.days }) : null
+                })()}
                 audio={item.audio}
-                flag={item.kind === 'series' ? { text: 'DİZİ', tone: 'new' } : undefined}
+                flag={item.kind === 'series' ? { text: t('row.badge.series'), tone: 'new' } : undefined}
                 {...favOf(item.kind === 'series' ? 'series' : 'vod', item.id, item.name, artworkFor(`${item.kind === 'series' ? 'series' : 'vod'}-${item.id}`, item.cover))}
                 onOpen={() => onPlayVod(item)}
               />
@@ -165,12 +170,12 @@ export function Home({
         ) : null}
 
         <Row
-          title="Popüler Filmler"
-          meta={data.movies.data ? `SAĞLAYICIDA ${data.movies.data.length}` : undefined}
+          title={t('row.popularMovies')}
+          meta={data.movies.data ? t('detail.inProvider', { n: data.movies.data.length }) : undefined}
           loading={data.movies.loading || data.vod.loading}
           error={data.movies.error}
-          empty={data.movies.data?.length === 0 ? 'Bu haftanın popüler filmlerinden sağlayıcı listende olan yok.' : undefined}
-          action="Tümünü gör"
+          empty={data.movies.data?.length === 0 ? t('row.empty.movies') : undefined}
+          action={t('common.seeAll')}
           onAction={() => onSeeAll('popular-movies')}
         >
           {(data.movies.data ?? []).map((item) => (
@@ -179,7 +184,7 @@ export function Home({
               title={item.title}
               image={poster(item.poster)}
               rating={item.rating}
-              meta={[item.year, dur(item.runtime)].filter(Boolean).join(' · ')}
+              meta={[item.year, dur(item.runtime, t)].filter(Boolean).join(' · ')}
               {...favOf(item.kind === 'tv' ? 'tmdb-tv' : 'tmdb-movie', item.id, item.title, poster(item.poster))}
               onOpen={() => onOpenTmdb(item)}
             />
@@ -187,14 +192,14 @@ export function Home({
         </Row>
 
         <Row
-          title="Popüler Diziler"
-          meta={data.series.data ? `SAĞLAYICIDA ${data.series.data.length}` : undefined}
-          tagline="TMDB popülerlik sırasına göre"
+          title={t('row.popularSeries')}
+          meta={data.series.data ? t('detail.inProvider', { n: data.series.data.length }) : undefined}
+          tagline={t('row.tagline.popular')}
 
           loading={data.series.loading || data.providerSeries.loading}
           error={data.series.error}
-          empty={data.series.data?.length === 0 ? 'Popüler dizilerden sağlayıcı listende olan yok.' : undefined}
-          action="Tümünü gör"
+          empty={data.series.data?.length === 0 ? t('row.empty.series') : undefined}
+          action={t('common.seeAll')}
           onAction={() => onSeeAll('popular-series')}
         >
           {(data.series.data ?? []).map((item) => (
@@ -212,8 +217,8 @@ export function Home({
 
         {(data.people.data ?? []).length > 0 ? (
           <Row
-            title="Haftanın Oyuncuları"
-            tagline="Bu hafta öne çıkan yapımlardan"
+            title={t('row.people')}
+            tagline={t('row.tagline.week')}
             loading={data.people.loading}
           >
             {(data.people.data ?? []).map((person) => (
@@ -231,12 +236,12 @@ export function Home({
         ) : null}
 
         <Row
-          title="Bugünkü Maçlar"
-          meta="SAĞLAYICI EPG"
+          title={t('row.matches')}
+          meta={t('row.meta.epg')}
           loading={data.matches.loading}
           error={data.matches.error}
-          empty={data.matches.data?.length === 0 ? 'Bugün için spor kanallarının yayın akışında karşılaşma bulunamadı' : undefined}
-          action="Tümünü gör"
+          empty={data.matches.data?.length === 0 ? t('row.empty.matches') : undefined}
+          action={t('common.seeAll')}
           onAction={() => onSeeAll('sports')}
         >
           {(data.matches.data ?? []).map((match) => (
@@ -252,12 +257,12 @@ export function Home({
         </Row>
 
         <Row
-          title="Şimdi Canlı"
+          title={t('row.liveNow')}
           meta={data.channels.data ? `${data.channels.data.length} KANAL` : undefined}
           loading={data.channels.loading}
           error={data.channels.error}
           skeleton="still"
-          action="Tümünü gör"
+          action={t('common.seeAll')}
           onAction={() => onSeeAll('live')}
         >
           {data.featured.map((channel) => (
@@ -273,14 +278,14 @@ export function Home({
         {data.channels.data && data.channels.data.length > 0 ? (
           <section className="mb-7 lg:mb-10">
             <div className="flex items-center gap-3 px-[var(--pad)] pb-3.5">
-              <h2 className="text-[19px] font-extrabold lg:text-[25px]">Kanal Şeridi</h2>
-              <span className="mono pt-1 text-[11px] tracking-[0.08em] text-tx3">ÜZERİNE GELİNCE DURUR</span>
+              <h2 className="text-[19px] font-extrabold lg:text-[25px]">{t('row.channelStrip')}</h2>
+              <span className="mono pt-1 text-[11px] tracking-[0.08em] text-tx3">{t('row.meta.hoverStops')}</span>
               <button
                 type="button"
                 onClick={() => onSeeAll('live')}
                 className="ml-auto flex items-center gap-1.5 text-[13px] font-bold text-tx3 hover:text-acc"
               >
-                Tümünü gör
+                {t('common.seeAll')}
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
                   <path d="m9 6 6 6-6 6" />
                 </svg>
@@ -291,7 +296,7 @@ export function Home({
         ) : null}
 
         {progress.length > 0 ? (
-          <Row title="İzlemeye Devam Et" tagline="Kaldığın yerden" skeleton="still">
+          <Row title={t('row.continue')} tagline={t('row.tagline.continue')} skeleton="still">
             {progress.map((item) => (
               <ContinueCard key={item.key} item={item} onPlay={() => onPlayProgress(item)} />
             ))}
@@ -301,14 +306,14 @@ export function Home({
         {data.guideRows.length > 0 ? (
           <section className="mb-7 lg:mb-10">
             <div className="flex items-center gap-3 px-[var(--pad)] pb-3.5">
-              <h2 className="text-[19px] font-extrabold lg:text-[25px]">Bu Akşam Kılavuzda</h2>
+              <h2 className="text-[19px] font-extrabold lg:text-[25px]">{t('row.tonightGuide')}</h2>
               <span className="mono pt-1 text-[11px] tracking-[0.08em] text-tx3">EPG</span>
               <button
                 type="button"
                 onClick={() => onSeeAll('live')}
                 className="ml-auto flex items-center gap-1.5 text-[13px] font-bold text-tx3 hover:text-acc"
               >
-                Tümünü gör
+                {t('common.seeAll')}
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
                   <path d="m9 6 6 6-6 6" />
                 </svg>
@@ -319,7 +324,7 @@ export function Home({
         ) : null}
 
         {data.collections.length > 0 ? (
-          <Row title="Koleksiyonlar" tagline="Gerçek TMDB listelerinden derlendi">
+          <Row title={t('row.collections')} tagline={t('row.tagline.collections')}>
             {data.collections.map((collection) => (
               <ShowcaseCard key={collection.id} collection={collection} onOpen={() => onOpenCollection(collection.id)} />
             ))}
@@ -327,11 +332,11 @@ export function Home({
         ) : null}
 
         <Row
-          title="Sağlayıcı Filmleri"
-          meta={data.vod.data ? `${data.vod.data.length} BAŞLIK` : undefined}
+          title={t('row.providerMovies')}
+          meta={data.vod.data ? t('row.meta.titles', { n: data.vod.data.length }) : undefined}
           loading={data.vod.loading}
           error={data.vod.error}
-          action="Tümünü gör"
+          action={t('common.seeAll')}
           onAction={() => onSeeAll('provider-movies')}
         >
           {railVod.map((item) => (
@@ -349,11 +354,11 @@ export function Home({
         </Row>
 
         <Row
-          title="Sağlayıcı Dizileri"
-          meta={data.providerSeries.data ? `${data.providerSeries.data.length} DİZİ` : undefined}
+          title={t('row.providerSeries')}
+          meta={data.providerSeries.data ? t('row.meta.series', { n: data.providerSeries.data.length }) : undefined}
           loading={data.providerSeries.loading}
           error={data.providerSeries.error}
-          action="Tümünü gör"
+          action={t('common.seeAll')}
           onAction={() => onSeeAll('provider-series')}
         >
           {railSeries.map((item) => (
@@ -371,11 +376,11 @@ export function Home({
         </Row>
 
         <Row
-          title="Türlere Göre"
-          meta="TMDB"
+          title={t('row.genres')}
+          meta={t('row.meta.tmdb')}
           loading={data.genres.loading}
           error={data.genres.error}
-          action="Tümünü gör"
+          action={t('common.seeAll')}
           onAction={() => onSeeAll('genres')}
         >
           {(data.genres.data ?? []).filter((genre) => genre.kind === 'movie').slice(0, 12).map((genre) => (

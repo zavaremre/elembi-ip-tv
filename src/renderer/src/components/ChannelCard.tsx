@@ -1,4 +1,5 @@
 import { Art } from './Art'
+import { useT } from '@/i18n'
 import { clock } from '@/lib/fmt'
 
 import type { CardLayout } from './PosterCard'
@@ -13,6 +14,7 @@ interface ChannelCardProps {
 
 /** Live channel card: what is on now, how far in, and what follows. */
 export function ChannelCard({ channel, guide, layout = 'rail', onPlay }: ChannelCardProps): React.JSX.Element {
+  const t = useT()
   const now = guide?.now ?? null
   const next = guide?.next ?? null
 
@@ -35,7 +37,7 @@ export function ChannelCard({ channel, guide, layout = 'rail', onPlay }: Channel
         </span>
       </Art>
 
-      <div className="mt-2.5 truncate text-[13.5px] font-bold">{now?.title ?? 'Yayın akışı bilinmiyor'}</div>
+      <div className="mt-2.5 truncate text-[13.5px] font-bold">{now?.title ?? t('card.noGuide')}</div>
       <div className="mt-2 h-[3px] overflow-hidden rounded-[3px] bg-white/15">
         <i className="block h-full bg-acc shadow-[0_0_10px_var(--color-acc)]" style={{ width: `${Math.round((guide?.progress ?? 0) * 100)}%` }} />
       </div>
@@ -47,7 +49,7 @@ export function ChannelCard({ channel, guide, layout = 'rail', onPlay }: Channel
         ) : null}
         {next ? (
           <span className="truncate text-tx2">
-            Sıradaki {next.title} · {clock(next.start)}
+            {t('channel.next', { title: next.title })} · {clock(next.start)}
           </span>
         ) : null}
       </div>

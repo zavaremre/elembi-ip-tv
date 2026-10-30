@@ -1,3 +1,5 @@
+import { useT } from '@/i18n'
+
 interface FavoriteButtonProps {
   active: boolean
   onToggle: () => void
@@ -10,7 +12,8 @@ interface FavoriteButtonProps {
  * card already is one and nesting them makes both unreachable from a keyboard.
  */
 export function FavoriteButton({ active, onToggle, variant = 'card' }: FavoriteButtonProps): React.JSX.Element {
-  const label = active ? 'Favorilerden çıkar' : 'Favorilere ekle'
+  const t = useT()
+  const label = active ? t('fav.remove') : t('fav.add')
 
   const chrome =
     variant === 'card'

@@ -1,4 +1,5 @@
 import type { Facet, ProviderSort } from '@/hooks/useProviderFilter'
+import { useT, type Key } from '@/i18n'
 
 interface ProviderFilterBarProps {
   countries: Facet[]
@@ -7,7 +8,7 @@ interface ProviderFilterBarProps {
   category: string
   query: string
   sort: ProviderSort
-  sorts: { value: ProviderSort; label: string }[]
+  sorts: { value: ProviderSort; key: Key }[]
   shown: number
   total: number
   searchLabel: string
@@ -39,6 +40,7 @@ export function ProviderFilterBar({
   onSort,
   onReset
 }: ProviderFilterBarProps): React.JSX.Element {
+  const t = useT()
   return (
     <section className="rounded-[18px] border border-line bg-surf/55 p-4 backdrop-blur-[18px]">
       <div className="flex flex-wrap items-center gap-2.5">
@@ -59,9 +61,9 @@ export function ProviderFilterBar({
         </label>
 
         <label className="flex items-center gap-1.5">
-          <span className="mono text-[10px] tracking-[0.1em] text-tx3 uppercase">Ülke</span>
+          <span className="mono text-[10px] tracking-[0.1em] text-tx3 uppercase">{t('filter.country')}</span>
           <select value={country} onChange={(e) => onCountry(e.target.value)} className={selectClass}>
-            <option value="">Tümü</option>
+            <option value="">{t('filter.all')}</option>
             {countries.map((c) => (
               <option key={c.value} value={c.value}>
                 {c.value} ({c.count})
@@ -71,9 +73,9 @@ export function ProviderFilterBar({
         </label>
 
         <label className="flex min-w-0 items-center gap-1.5">
-          <span className="mono text-[10px] tracking-[0.1em] text-tx3 uppercase">Kategori</span>
+          <span className="mono text-[10px] tracking-[0.1em] text-tx3 uppercase">{t('browse.category')}</span>
           <select value={category} onChange={(e) => onCategory(e.target.value)} className={selectClass}>
-            <option value="">Tümü</option>
+            <option value="">{t('filter.all')}</option>
             {categories.map((c) => (
               <option key={c.value} value={c.value}>
                 {c.value} ({c.count})
@@ -83,24 +85,24 @@ export function ProviderFilterBar({
         </label>
 
         <label className="flex items-center gap-1.5">
-          <span className="mono text-[10px] tracking-[0.1em] text-tx3 uppercase">Sırala</span>
+          <span className="mono text-[10px] tracking-[0.1em] text-tx3 uppercase">{t('filter.sort')}</span>
           <select value={sort} onChange={(e) => onSort(e.target.value as ProviderSort)} className={selectClass}>
             {sorts.map((s) => (
               <option key={s.value} value={s.value}>
-                {s.label}
+                {t(s.key)}
               </option>
             ))}
           </select>
         </label>
 
         <button type="button" onClick={onReset} className="ml-auto h-9 rounded-[9px] border border-line px-3.5 text-[12.5px] font-bold text-tx3 hover:text-acc">
-          Temizle
+          {t('browse.clear')}
         </button>
       </div>
 
       <div className="mono mt-3 text-[11px] text-tx3">
-        {shown} / {total} gösteriliyor
-        {country ? ` · ülke ${country}` : ''}
+        {t('browse.showing', { shown, total })}
+        {country ? ` ${t('filter.countryOf', { country })}` : ''}
         {category ? ` · ${category}` : ''}
       </div>
     </section>

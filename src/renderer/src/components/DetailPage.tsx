@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useT } from '@/i18n'
 import { favoriteKey, type Favorites } from '@/hooks/useFavorites'
 import { FavoriteButton } from './FavoriteButton'
 import { Art } from './Art'
@@ -10,7 +11,7 @@ import { Row } from './Row'
 import { ShinyText } from './fx/ShinyText'
 import { TrailerModal } from './TrailerModal'
 import { WatchOptionsPanel } from './WatchOptionsPanel'
-import { dur } from '@/lib/fmt'
+import { dur, score } from '@/lib/fmt'
 import { backdrop, logo, poster } from '@/lib/img'
 import type { EpisodeSource } from '@/hooks/usePlayback'
 import type { EpisodeTarget } from '@/lib/episodes'
@@ -37,6 +38,7 @@ interface DetailPageProps {
 }
 
 function Fact({ label, value }: { label: string; value: string }): React.JSX.Element {
+  const t = useT()
   return (
     <div>
       <div className="mono text-[10px] tracking-[0.12em] text-tx3 uppercase">{label}</div>
@@ -62,6 +64,7 @@ export function DetailPage({
   isPlayable,
   onManualSearch
 }: DetailPageProps): React.JSX.Element {
+  const t = useT()
   const [trailerOpen, setTrailerOpen] = useState(false)
   /*
    * The series this film belongs to, kept to what the provider actually has —
@@ -76,7 +79,7 @@ export function DetailPage({
   if (loading || !detail) {
     return (
       <main className="px-[var(--pad)] py-10">
-        {error ? <p className="text-[14px] text-live">{error}</p> : <p className="mono text-[12px] tracking-[0.12em] text-acc uppercase">yükleniyor…</p>}
+        {error ? <p className="text-[14px] text-live">{error}</p> : <p className="mono text-[12px] tracking-[0.12em] text-acc uppercase">{t('search.loading')}</p>}
       </main>
     )
   }
@@ -85,16 +88,16 @@ export function DetailPage({
 
   const similar = detail.similar.filter(isPlayable)
   const recommendations = detail.recommendations.filter(isPlayable)
-  const runtime = detail.kind === 'tv' ? dur(detail.episodeRuntime) : dur(detail.runtime)
+  const runtime = detail.kind === 'tv' ? dur(detail.episodeRuntime, t) : dur(detail.runtime, t)
   const facts = [
-    detail.year ? { label: 'Yıl', value: detail.year } : null,
-    runtime ? { label: detail.kind === 'tv' ? 'Bölüm süresi' : 'Süre', value: runtime } : null,
-    detail.kind === 'tv' && detail.seasons ? { label: 'Sezon', value: `${detail.seasons}` } : null,
-    detail.certification ? { label: 'Yaş', value: detail.certification } : null,
-    detail.countries.length ? { label: 'Ülke', value: detail.countries.join(', ') } : null,
-    detail.networks.length ? { label: detail.kind === 'tv' ? 'Kanal' : 'Yapım', value: detail.networks.join(', ') } : null,
-    detail.directors.length ? { label: detail.directors[0].job === 'Director' ? 'Yönetmen' : 'Yapımcı', value: detail.directors.map((d) => d.name).join(', ') } : null,
-    detail.status ? { label: 'Durum', value: detail.status } : null
+    detail.year ? { label: t('detail.year'), value: detail.year } : null,
+    runtime ? { label: detail.kind === 'tv' ? t('detail.episodeRuntime') : t('detail.runtime'), value: runtime } : null,
+    detail.kind === 'tv' && detail.seasons ? { label: t('detail.seasonsLabel'), value: `${detail.seasons}` } : null,
+    detail.certification ? { label: t('detail.age'), value: detail.certification } : null,
+    detail.countries.length ? { label: t('detail.country'), value: detail.countries.join(', ') } : null,
+    detail.networks.length ? { label: detail.kind === 'tv' ? t('detail.channel') : t('detail.production'), value: detail.networks.join(', ') } : null,
+    detail.directors.length ? { label: detail.directors[0].job === 'Director' ? t('detail.director') : t('detail.producer'), value: detail.directors.map((d) => d.name).join(', ') } : null,
+    detail.status ? { label: t('detail.status'), value: detail.status } : null
   ].filter(Boolean) as { label: string; value: string }[]
 
   return (
@@ -137,7 +140,7 @@ export function DetailPage({
           <div className="mono mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-tx3">
             {detail.originalTitle && detail.originalTitle !== detail.title ? (
               <span>
-                Özgün ad: <b className="font-medium text-tx2">{detail.originalTitle}</b>
+                {t('detail.originalName')} <b className="font-medium text-tx2">{detail.originalTitle}</b>
               </span>
             ) : null}
             {detail.originalLanguage ? <span className="uppercase">{detail.originalLanguage}</span> : null}
@@ -158,8 +161,8 @@ export function DetailPage({
           <div className="mt-4 flex flex-wrap items-center gap-2.5 text-[13.5px] text-tx2">
             {detail.rating > 0 ? (
               <span className="flex items-center gap-1.5 font-bold text-gold">
-                ★ {detail.rating.toFixed(1).replace('.', ',')}
-                <span className="mono text-[11px] font-normal text-tx3">{detail.voteCount} oy</span>
+                ★ {score(detail.rating, t)}
+                <span className="mono text-[11px] font-normal text-tx3">{t('detail.votes', { n: detail.voteCount })}</span>
               </span>
             ) : null}
             {detail.genres.map((g) => (
@@ -174,7 +177,7 @@ export function DetailPage({
 
           <div className="mt-5 flex flex-wrap items-center gap-2.5">
             {match.kind === 'searching' ? (
-              <span className="mono text-[12px] tracking-[0.1em] text-acc uppercase">sağlayıcıda aranıyor…</span>
+              <span className="mono text-[12px] tracking-[0.1em] text-acc uppercase">{t('detail.searching')}</span>
             ) : match.kind === 'found' ? (
               <button
                 type="button"
@@ -182,15 +185,15 @@ export function DetailPage({
                 className="spec flex h-[46px] items-center gap-2.5 rounded-[12px] bg-tx px-6 text-[15px] font-bold text-ink"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
-                Oynat
+                {t('common.play')}
               </button>
             ) : match.kind === 'unreleased' ? (
               <span className="rounded-[10px] border border-gold/40 bg-gold/10 px-3.5 py-2.5 text-[12.5px] text-gold">
-                Henüz yayına girmedi{match.status ? ` · ${match.status}` : ''}
+                {t('detail.notAired')}{match.status ? ` · ${match.status}` : ''}
               </span>
             ) : (
               <span className="rounded-[10px] border border-line bg-surf px-3.5 py-2.5 text-[12.5px] text-tx2">
-                Sağlayıcı listesinde eşleşme bulunamadı
+                {t('detail.noMatch')}
               </span>
             )}
 
@@ -214,12 +217,12 @@ export function DetailPage({
                 className="flex h-[46px] items-center gap-2 rounded-[12px] border border-line bg-white/10 px-5 text-[14px] font-bold hover:bg-white/17"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
-                Fragman
+                {t('detail.trailer')}
               </button>
             ) : null}
 
             {match.kind === 'found' ? (
-              <span className="mono text-[11.5px] text-tx3">sağlayıcı kaydı: {match.item.name}</span>
+              <span className="mono text-[11.5px] text-tx3">{t('detail.providerRecord', { name: match.item.name })}</span>
             ) : null}
           </div>
 
@@ -239,7 +242,7 @@ export function DetailPage({
 
           {detail.keywords.length > 0 ? (
             <div className="mt-6 border-t border-line pt-5">
-              <div className="mono text-[10px] tracking-[0.12em] text-tx3 uppercase">Anahtar kelimeler</div>
+              <div className="mono text-[10px] tracking-[0.12em] text-tx3 uppercase">{t('detail.keywords')}</div>
               <div className="mt-2.5 flex flex-wrap gap-2">
                 {detail.keywords.map((keyword) => (
                   <button
@@ -257,7 +260,7 @@ export function DetailPage({
 
           {detail.alternativeTitles.length > 0 ? (
             <div className="mono mt-5 text-[11.5px] text-tx3">
-              Diğer adlar: <span className="text-tx2">{detail.alternativeTitles.slice(0, 5).join(' · ')}</span>
+              {t('detail.otherNames')} <span className="text-tx2">{detail.alternativeTitles.slice(0, 5).join(' · ')}</span>
             </div>
           ) : null}
         </div>
@@ -265,7 +268,7 @@ export function DetailPage({
 
       <div className="shell mt-10">
         {detail.cast.length > 0 ? (
-          <Row title="Oyuncular" meta={`${detail.cast.length} KİŞİ`}>
+          <Row title={t('detail.castTitle')} meta={t('detail.cast', { n: detail.cast.length })}>
             {detail.cast.map((person) => (
                 <PersonCard
                   key={person.id}
@@ -294,7 +297,7 @@ export function DetailPage({
         ) : null}
 
         {similar.length > 0 ? (
-          <Row title="Benzer Yapımlar" meta={`SAĞLAYICIDA ${similar.length}`}>
+          <Row title={t('detail.similar')} meta={t('detail.inProvider', { n: similar.length })}>
             {similar.map((item) => (
               <PosterCard
                 key={item.id}
@@ -309,7 +312,7 @@ export function DetailPage({
         ) : null}
 
         {recommendations.length > 0 ? (
-          <Row title="Bunu İzleyenler" meta={`SAĞLAYICIDA ${recommendations.length}`}>
+          <Row title={t('detail.recommended')} meta={t('detail.inProvider', { n: recommendations.length })}>
             {recommendations.map((item) => (
               <PosterCard
                 key={item.id}

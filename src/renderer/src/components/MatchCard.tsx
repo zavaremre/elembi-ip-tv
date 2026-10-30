@@ -1,4 +1,5 @@
 import { Art } from './Art'
+import { useT, type Key } from '@/i18n'
 import { CountUp } from './fx/CountUp'
 import { clock, matchDay } from '@/lib/fmt'
 
@@ -14,11 +15,11 @@ interface MatchCardProps {
   badges: Map<string, string>
 }
 
-const TAG_LABEL: Record<FixtureTag, string> = {
-  live: 'CANLI',
-  scheduled: 'BAŞLIYOR',
-  replay: 'BANT',
-  highlights: 'ÖZET'
+const TAG_LABEL: Record<FixtureTag, Key> = {
+  live: 'match.live',
+  scheduled: 'match.starting',
+  replay: 'match.replay',
+  highlights: 'match.highlights'
 }
 
 const TAG_STYLE: Record<FixtureTag, string> = {
@@ -53,6 +54,7 @@ function Team({ name, badge }: { name: string; badge?: string }): React.JSX.Elem
 
 /** Fixture card. The tag matters: this panel's guide is full of tape-delay and highlight slots. */
 export function MatchCard({ match, onPlay, onRemind, reminded, layout = 'rail', badges }: MatchCardProps): React.JSX.Element {
+  const t = useT()
   const upcoming = match.start > Date.now()
   const onAir = match.start <= Date.now() && match.stop > Date.now()
 
@@ -70,7 +72,7 @@ export function MatchCard({ match, onPlay, onRemind, reminded, layout = 'rail', 
         <span className="truncate">{match.league}</span>
         <span className={`ml-auto flex shrink-0 items-center gap-1.5 rounded-md px-1.5 py-0.5 font-semibold tracking-[0.07em] ${TAG_STYLE[match.tag]}`}>
           {match.tag === 'live' ? <i className="pulse" /> : null}
-          {TAG_LABEL[match.tag]}
+          {t(TAG_LABEL[match.tag])}
           {match.tag === 'live' && match.minute !== null ? (
             <>
               {' '}
@@ -86,7 +88,7 @@ export function MatchCard({ match, onPlay, onRemind, reminded, layout = 'rail', 
           <span className="mono text-[19px] leading-none text-tx2">{clock(match.start)}</span>
           {/* The guide reaches into tomorrow, so the hour alone does not say when. */}
           <span className="mono text-[10px] leading-none tracking-[0.07em] text-tx3 uppercase">
-            {matchDay(match.start)}
+            {matchDay(match.start, t)}
           </span>
         </div>
         <Team name={match.away} badge={badges.get(match.away)} />
@@ -107,7 +109,7 @@ export function MatchCard({ match, onPlay, onRemind, reminded, layout = 'rail', 
               <path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8" />
               <path d="M13.7 21a2 2 0 0 1-3.4 0" />
             </svg>
-            {reminded ? 'Kurulu' : 'Hatırlat'}
+            {reminded ? 'Kurulu' : t('match.remind')}
           </button>
         ) : (
           <button
@@ -120,7 +122,7 @@ export function MatchCard({ match, onPlay, onRemind, reminded, layout = 'rail', 
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M8 5v14l11-7z" />
             </svg>
-            {onAir ? 'İzle' : 'Kanalı aç'}
+            {onAir ? t('match.watch') : t('match.openChannel')}
           </button>
         )}
       </footer>

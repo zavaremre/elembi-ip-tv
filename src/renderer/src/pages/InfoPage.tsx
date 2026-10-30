@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { NoiseOverlay } from '@/components/fx/NoiseOverlay'
+import { useT, type Translate } from '@/i18n'
 
 export type InfoTab = 'about' | 'help' | 'privacy' | 'terms'
 
@@ -7,16 +8,17 @@ interface InfoPageProps {
   tab: InfoTab
   onTab: (tab: InfoTab) => void
   onBack: () => void
-  /** Read from the running process, since both differ per platform. */
+  /** Read from the running process, since all three differ per build. */
+  version: string
   dataDir: string
   platform: string
 }
 
-const TABS: { id: InfoTab; label: string }[] = [
-  { id: 'about', label: 'Hakkında' },
-  { id: 'help', label: 'Yardım' },
-  { id: 'privacy', label: 'Gizlilik' },
-  { id: 'terms', label: 'Koşullar' }
+const TABS: { id: InfoTab; label: 'info.tab.about' | 'info.tab.help' | 'info.tab.privacy' | 'info.tab.terms' }[] = [
+  { id: 'about', label: 'info.tab.about' },
+  { id: 'help', label: 'info.tab.help' },
+  { id: 'privacy', label: 'info.tab.privacy' },
+  { id: 'terms', label: 'info.tab.terms' }
 ]
 
 function H({ children }: { children: React.ReactNode }): React.JSX.Element {
@@ -64,202 +66,142 @@ const FFMPEG_HINT: Record<string, string> = {
   linux: 'apt install ffmpeg'
 }
 
-function About({ dataDir, platform }: { dataDir: string; platform: string }): React.JSX.Element {
+/*
+ * Paragraphs that wrap a literal — a path, a port, a shell command — are kept
+ * in the dictionary as the pieces around it, since the literal itself is not
+ * translated and has to stay inside a <Code> rather than a string.
+ */
+function About({ version, dataDir, platform, t }: { version: string; dataDir: string; platform: string; t: Translate }): React.JSX.Element {
   return (
     <>
-      <H>Elembi nedir</H>
+      <H>{t('info.about.whatH')}</H>
+      <P>{t('info.about.whatP')}</P>
+      <H>{t('info.about.howH')}</H>
       <P>
-        Elembi, kendi IPTV aboneliğinizi masaüstünde izlemek için yazılmış bir oynatıcıdır. Aboneliğinizin
-        kanal, film ve dizi listesini alır, üzerine TMDB'den afiş, özet, oyuncu ve anahtar kelime
-        bilgisi ekler. Kendi içinde hiçbir yayın veya içerik barındırmaz; ne izleyeceğinizi tamamen
-        sizin girdiğiniz abonelik belirler.
+        {t('info.about.howP1')}
+        <Code>ffmpeg</Code>
+        {t('info.about.howP2')}
+        <Code>127.0.0.1</Code>
+        {t('info.about.howP3')}
       </P>
-      <H>Nasıl çalışır</H>
-      <P>
-        Tüm ağ istekleri uygulamanın ana sürecinden çıkar, arayüz doğrudan internete bağlanmaz.
-        Oynatma için dosyalar yerel bir <Code>ffmpeg</Code> oturumundan geçirilir — Chromium MKV
-        dosyalarında konumlu ileri sarma yapamadığı ve AC-3 sesi çözemediği için. Bu dönüşümün
-        çıktısı yalnızca <Code>127.0.0.1</Code> üzerinde dinleyen bir yerel sunucuyla oynatıcıya
-        verilir, dışarıya açılmaz.
-      </P>
-      <H>Teknik</H>
+      <H>{t('info.about.techH')}</H>
       <Rows
         items={[
-          ['Sürüm', '0.1.0'],
-          ['Çalışma ortamı', 'Electron 35 · React 19 · TypeScript'],
-          ['Gereken araç', 'ffmpeg (sistemde kurulu olmalı)'],
-          ['Platformlar', 'macOS, Windows ve Linux — şu ana kadar yalnızca macOS üzerinde denendi'],
-          ['Şu anki platform', platform],
-          ['Veri klasörü', dataDir]
+          [t('info.about.version'), version],
+          [t('info.about.runtime'), 'Electron 35 · React 19 · TypeScript'],
+          [t('info.about.needs'), t('info.about.needsValue')],
+          [t('info.about.platforms'), t('info.about.platformsValue')],
+          [t('info.about.current'), platform],
+          [t('info.about.dataDir'), dataDir]
         ]}
       />
-      <P>
-        Bu ürün TMDB API'sini kullanır, ancak TMDB tarafından onaylanmış veya sertifikalanmış
-        değildir. Takım armaları TheSportsDB'den gelir.
-      </P>
+      <P>{t('info.about.credit')}</P>
     </>
   )
 }
 
-function Help({ platform }: { platform: string }): React.JSX.Element {
+function Help({ platform, t }: { platform: string; t: Translate }): React.JSX.Element {
   return (
     <>
-      <H>Kurulum</H>
+      <H>{t('info.help.setupH')}</H>
+      <P>{t('info.help.setupP1')}</P>
+      <P>{t('info.help.setupP2')}</P>
+      <H>{t('info.help.ffmpegH')}</H>
       <P>
-        Sağlayıcınızın verdiği bağlantı adresini yapıştırmanız yeterli — M3U, Xtream API ya da EPG
-        adresi, hangisi elinizdeyse olur. Kullanıcı adı ve şifre bu adresin içinde olduğu için ayrıca
-        girmeniz gerekmez. Adres bunları içermiyorsa uygulama listeyi açıp içinden okur.
+        {t('info.help.ffmpegP1')}
+        <Code>{FFMPEG_HINT[platform] ?? 'ffmpeg'}</Code>
+        {t('info.help.ffmpegP2')}
       </P>
-      <P>
-        Afişlerin, özetlerin ve platform logolarının gelmesi için bir TMDB okuma anahtarı gerekir;
-        ücretsizdir. Anahtar olmadan katalog çalışır ama görseller boş kalır.
-      </P>
-      <H>ffmpeg neden gerekli</H>
-      <P>
-        Sağlayıcıların çoğu filmleri MKV olarak verir. Chromium bu dosyalarda konumlu ileri sarma
-        yapamaz ve yaygın olan AC-3 / E-AC-3 sesi hiç çözemez. ffmpeg kurulu değilse ileri sarma,
-        bu seslerin duyulması ve dosya içindeki altyazılar çalışmaz. Bu sistemde{' '}
-        <Code>{FFMPEG_HINT[platform] ?? 'ffmpeg'}</Code> ile kurulur.
-      </P>
-      <H>Sık karşılaşılanlar</H>
+      <H>{t('info.help.commonH')}</H>
       <Rows
         items={[
-          [
-            'Sağlayıcıya bağlanılamıyor',
-            'Önce adresi ve aboneliğin süresini kontrol edin. Panel, kısa sürede çok fazla istek gelirse adresinizi geçici olarak kilitleyebilir; bu durumda bir süre bekleyip tekrar denemek gerekir.'
-          ],
-          [
-            'Katalog görünüyor ama oynatmıyor',
-            'Sağlayıcıya ulaşılamadığında uygulama diskteki son kataloğu gösterir. Liste dolu görünür, oynatma çalışmaz; bağlantı dönünce kendiliğinden düzelir.'
-          ],
-          [
-            'Başka cihazda açıkken oynatmıyor',
-            'Aboneliklerin çoğu aynı anda tek bağlantıya izin verir. Diğer cihazdaki oynatıcıyı kapatın.'
-          ],
-          [
-            'Altyazı gelmiyor',
-            'Altyazılar dosyanın içinden okunur ve Türkçe varsa kendiliğinden açılır. Dosyada gömülü altyazı yoksa, oynatıcıdaki “Dosyadan yükle” ile elinizdeki bir .srt dosyasını açabilirsiniz.'
-          ],
-          [
-            'Afişler eksik',
-            'TMDB anahtarı tanımlı değil ya da başlık TMDB’de tam adıyla bulunamıyor. İkinci durumda sayfa açılır, yalnızca görsel ve özet gelmez.'
-          ]
+          [t('info.help.q1'), t('info.help.a1')],
+          [t('info.help.q2'), t('info.help.a2')],
+          [t('info.help.q3'), t('info.help.a3')],
+          [t('info.help.q4'), t('info.help.a4')],
+          [t('info.help.q5'), t('info.help.a5')]
         ]}
       />
-      <H>Oynatıcı kısayolları</H>
+      <H>{t('info.help.keysH')}</H>
       <Keys
         items={[
-          ['Boşluk / K', 'Oynat ve duraklat'],
-          ['← / →', '5 saniye geri ve ileri'],
-          ['J / L', '10 saniye geri ve ileri'],
-          ['↑ / ↓', 'Sesi azalt ve artır'],
-          ['M', 'Sesi kapat'],
-          ['F', 'Tam ekran'],
-          ['I', 'Küçük pencere'],
-          ['Esc', 'Tam ekrandan veya oynatıcıdan çık']
+          [t('info.help.key.space'), t('info.help.key.spaceWhat')],
+          ['← / →', t('info.help.key.seek5')],
+          ['J / L', t('info.help.key.seek10')],
+          ['↑ / ↓', t('info.help.key.vol')],
+          ['M', t('info.help.key.mute')],
+          ['F', t('info.help.key.fullscreen')],
+          ['I', t('info.help.key.mini')],
+          ['Esc', t('info.help.key.esc')]
         ]}
       />
     </>
   )
 }
 
-function Privacy({ dataDir }: { dataDir: string }): React.JSX.Element {
+function Privacy({ dataDir, t }: { dataDir: string; t: Translate }): React.JSX.Element {
   return (
     <>
-      <H>Özet</H>
+      <H>{t('info.privacy.summaryH')}</H>
+      <P>{t('info.privacy.summaryP')}</P>
+      <H>{t('info.privacy.storedH')}</H>
       <P>
-        Elembi'nin arkasında bir sunucu yok. Hesap açmanız istenmez, kullanım verisi toplanmaz,
-        uygulamada hiçbir analitik veya izleme kodu bulunmaz. Verdiğiniz bilgiler yalnızca
-        bilgisayarınızda durur ve yalnızca sizin seçtiğiniz servislere gider.
-      </P>
-      <H>Bilgisayarınızda ne saklanıyor</H>
-      <P>
-        Hepsi <Code>{dataDir}</Code> klasöründedir. Klasörü silmek uygulamanın bildiği her şeyi
-        siler.
+        {t('info.privacy.storedP1')}
+        <Code>{dataDir}</Code>
+        {t('info.privacy.storedP2')}
       </P>
       <Rows
         items={[
-          ['config.json', 'Abonelik adresiniz, kullanıcı adınız, şifreniz ve TMDB anahtarınız'],
-          ['state.json', 'Kaldığınız yerler, favorileriniz ve başlık başına altyazı gecikmesi'],
-          ['catalog-*.json', 'Sağlayıcınızın kanal, film ve dizi listesi'],
-          ['artwork.json · logo-colors.json', 'Bulunan afiş adresleri ve logolardan okunan renkler'],
-          ['vod-audio.json', 'Başlıkların dublaj mı altyazı mı olduğu'],
-          ['team-badges.json', 'Takım armalarının adresleri'],
-          ['xmltv-cache.json', 'Sağlayıcınızın yayın akışı (EPG) verisi']
+          ['config.json', t('info.privacy.file.config')],
+          ['state.json', t('info.privacy.file.state')],
+          ['catalog-*.json', t('info.privacy.file.catalog')],
+          ['artwork.json · logo-colors.json', t('info.privacy.file.artwork')],
+          ['vod-audio.json', t('info.privacy.file.audio')],
+          ['team-badges.json', t('info.privacy.file.badges')],
+          ['xmltv-cache.json', t('info.privacy.file.epg')]
         ]}
       />
-      <P>
-        Şifreniz bu dosyada düz metin olarak tutulur; işletim sisteminin anahtar zinciri
-        kullanılmaz. Dosya yalnızca sizin kullanıcı hesabınızın erişebildiği bir yerdedir, ama
-        bilgisayarınıza erişen biri okuyabilir.
-      </P>
-      <H>Cihazdan ne çıkıyor</H>
+      <P>{t('info.privacy.plainP')}</P>
+      <H>{t('info.privacy.leavesH')}</H>
       <Rows
         items={[
-          [
-            'Sağlayıcınız',
-            'Katalog, yayın akışı ve izlediğiniz her şey oradan gelir. Xtream protokolü gereği kullanıcı adınız ve şifreniz her istekte adresin içinde gönderilir, ayrıca hangi içeriği açtığınızı sağlayıcınız görür.'
-          ],
-          [
-            'api.themoviedb.org',
-            'Açtığınız başlıkların adları afiş ve özet bulmak için sorgulanır. Yani TMDB neye baktığınızı görür. Abonelik bilgileriniz gönderilmez.'
-          ],
-          ['image.tmdb.org', 'Afiş, arka plan ve platform logosu görselleri buradan indirilir.'],
-          ['www.thesportsdb.com', 'Maç kartlarındaki armalar için yalnızca takım adları sorgulanır.']
+          [t('info.privacy.providerKey'), t('info.privacy.providerValue')],
+          ['api.themoviedb.org', t('info.privacy.tmdbValue')],
+          ['image.tmdb.org', t('info.privacy.imagesValue')],
+          ['www.thesportsdb.com', t('info.privacy.sportsValue')]
         ]}
       />
       <P>
-        Bunların dışında hiçbir adrese bağlanılmaz. Oynatma için kurulan yerel sunucu yalnızca{' '}
-        <Code>127.0.0.1</Code> üzerinde dinler, ağınızdaki diğer cihazlara açık değildir.
+        {t('info.privacy.localP1')}
+        <Code>127.0.0.1</Code>
+        {t('info.privacy.localP2')}
       </P>
-      <H>Üçüncü taraflar</H>
-      <P>
-        TMDB ve TheSportsDB'ye giden istekler o servislerin kendi gizlilik koşullarına tabidir.
-        Sağlayıcınızın verilerinizi nasıl işlediği de onunla aranızdaki ilişkiye bağlıdır; Elembi bu
-        konuda aracı değildir.
-      </P>
+      <H>{t('info.privacy.thirdH')}</H>
+      <P>{t('info.privacy.thirdP')}</P>
     </>
   )
 }
 
-function Terms(): React.JSX.Element {
+function Terms({ t }: { t: Translate }): React.JSX.Element {
   return (
     <>
-      <H>Ne sunuyor, ne sunmuyor</H>
-      <P>
-        Elembi bir oynatıcıdır. İçinde hiçbir yayın, film veya dizi barındırmaz; herhangi bir abonelik
-        satmaz veya sağlamaz. Yalnızca sizin girdiğiniz aboneliğe bağlanır ve o aboneliğin verdiğini
-        gösterir.
-      </P>
-      <H>Sorumluluk</H>
-      <P>
-        Kullandığınız aboneliğin ve eriştiğiniz içeriğin bulunduğunuz yerdeki mevzuata uygun olması
-        sizin sorumluluğunuzdadır. Uygulamayı kullanarak gösterdiğiniz içeriğin kaynağından Elembi
-        sorumlu değildir ve bu konuda hiçbir denetim yapmaz.
-      </P>
-      <H>Garanti verilmez</H>
-      <P>
-        Uygulama olduğu gibi sunulur. Kesintisiz veya hatasız çalışacağına, her sağlayıcıyla uyumlu
-        olacağına dair bir söz verilmez. Kullanımından doğabilecek veri kaybı veya başka zararlar
-        için sorumluluk kabul edilmez.
-      </P>
-      <H>Üçüncü taraf servisler</H>
-      <P>
-        Afiş ve bilgi verisi TMDB'den, takım armaları TheSportsDB'den gelir. Bu servislerin kendi
-        kullanım koşulları geçerlidir. Bu ürün TMDB API'sini kullanır, ancak TMDB tarafından
-        onaylanmış veya sertifikalanmış değildir.
-      </P>
-      <H>Kaynak kod</H>
-      <P>
-        Elembi açık kaynaktır. Kodu inceleyebilir, değiştirebilir ve kendiniz derleyebilirsiniz.
-        Dağıtım koşulları depodaki lisans dosyasında belirtilir.
-      </P>
+      <H>{t('info.terms.scopeH')}</H>
+      <P>{t('info.terms.scopeP')}</P>
+      <H>{t('info.terms.liabilityH')}</H>
+      <P>{t('info.terms.liabilityP')}</P>
+      <H>{t('info.terms.warrantyH')}</H>
+      <P>{t('info.terms.warrantyP')}</P>
+      <H>{t('info.terms.thirdH')}</H>
+      <P>{t('info.terms.thirdP')}</P>
+      <H>{t('info.terms.sourceH')}</H>
+      <P>{t('info.terms.sourceP')}</P>
     </>
   )
 }
 
 /** About, help, privacy and terms; reached from Settings rather than the header. */
-export function InfoPage({ tab, onTab, onBack, dataDir, platform }: InfoPageProps): React.JSX.Element {
+export function InfoPage({ tab, onTab, onBack, version, dataDir, platform }: InfoPageProps): React.JSX.Element {
+  const t = useT()
   const [hovered, setHovered] = useState<InfoTab | null>(null)
 
   return (
@@ -278,7 +220,7 @@ export function InfoPage({ tab, onTab, onBack, dataDir, platform }: InfoPageProp
           <button
             type="button"
             onClick={onBack}
-            aria-label="Ayarlara dön"
+            aria-label={t('info.back')}
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] border border-line text-tx3 hover:border-acc/40 hover:text-tx"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
@@ -286,7 +228,7 @@ export function InfoPage({ tab, onTab, onBack, dataDir, platform }: InfoPageProp
             </svg>
           </button>
 
-          <nav className="flex flex-wrap gap-1.5" aria-label="Bilgi sayfaları">
+          <nav className="flex flex-wrap gap-1.5" aria-label={t('info.nav')}>
             {TABS.map((item) => (
               <button
                 key={item.id}
@@ -301,7 +243,7 @@ export function InfoPage({ tab, onTab, onBack, dataDir, platform }: InfoPageProp
                     : `border-line text-tx2 ${hovered === item.id ? 'bg-white/8 text-tx' : ''}`
                 }`}
               >
-                {item.label}
+                {t(item.label)}
               </button>
             ))}
           </nav>
@@ -310,18 +252,18 @@ export function InfoPage({ tab, onTab, onBack, dataDir, platform }: InfoPageProp
 
       <div className="relative mx-auto max-w-[760px] px-[var(--pad)] pt-7">
         <h1 className="text-[clamp(22px,3vw,30px)] leading-[1.1] font-black tracking-[-0.03em]">
-          {TABS.find((item) => item.id === tab)?.label}
+          {t(TABS.find((item) => item.id === tab)?.label ?? 'info.tab.about')}
         </h1>
 
         <article className="mt-6">
           {tab === 'about' ? (
-            <About dataDir={dataDir} platform={platform} />
+            <About version={version} dataDir={dataDir} platform={platform} t={t} />
           ) : tab === 'help' ? (
-            <Help platform={platform} />
+            <Help platform={platform} t={t} />
           ) : tab === 'privacy' ? (
-            <Privacy dataDir={dataDir} />
+            <Privacy dataDir={dataDir} t={t} />
           ) : (
-            <Terms />
+            <Terms t={t} />
           )}
         </article>
       </div>

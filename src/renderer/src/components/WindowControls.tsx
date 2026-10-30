@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useT } from '@/i18n'
 
 /**
  * Minimise, maximise and close for a window with no system frame.
@@ -9,6 +10,7 @@ import { useEffect, useState } from 'react'
  * the one event every one of those paths produces.
  */
 export function WindowControls(): React.JSX.Element {
+  const t = useT()
   const [maximized, setMaximized] = useState(false)
 
   useEffect(() => {
@@ -39,8 +41,8 @@ export function WindowControls(): React.JSX.Element {
   const button = 'grid h-7 w-7 place-items-center rounded-[7px] text-tx3 transition-colors hover:bg-white/10 hover:text-tx'
 
   return (
-    <div className="nodrag flex items-center gap-1" role="group" aria-label="Pencere">
-      <button type="button" onClick={() => void window.elembi.win.minimize()} aria-label="Küçült" title="Küçült" className={button}>
+    <div className="nodrag flex items-center gap-1" role="group" aria-label={t('win.group')}>
+      <button type="button" onClick={() => void window.elembi.win.minimize()} aria-label={t('win.minimize')} title={t('win.minimize')} className={button}>
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
           <path d="M2.5 6h7" strokeLinecap="round" />
         </svg>
@@ -49,8 +51,8 @@ export function WindowControls(): React.JSX.Element {
       <button
         type="button"
         onClick={() => void window.elembi.win.toggleMaximize().then(setMaximized).catch(() => undefined)}
-        aria-label={maximized ? 'Pencereye döndür' : 'Büyüt'}
-        title={maximized ? 'Pencereye döndür' : 'Büyüt'}
+        aria-label={maximized ? t('win.restore') : t('win.maximize')}
+        title={maximized ? t('win.restore') : t('win.maximize')}
         className={button}
       >
         {maximized ? (
@@ -68,8 +70,8 @@ export function WindowControls(): React.JSX.Element {
       <button
         type="button"
         onClick={() => void window.elembi.win.close()}
-        aria-label="Kapat"
-        title="Kapat"
+        aria-label={t('win.close')}
+        title={t('win.close')}
         className="grid h-7 w-7 place-items-center rounded-[7px] text-tx3 transition-colors hover:bg-live hover:text-white"
       >
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">

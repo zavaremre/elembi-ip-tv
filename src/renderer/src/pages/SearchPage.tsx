@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useT } from '@/i18n'
 import { FilterBar } from '@/components/FilterBar'
 import { PosterCard } from '@/components/PosterCard'
 import { useDiscover } from '@/hooks/useDiscover'
@@ -31,6 +32,7 @@ export function SearchPage({
   onReset,
   onOpenItem
 }: SearchPageProps): React.JSX.Element {
+  const t = useT()
   const [text, setText] = useState(filters.query)
   const suggestions = useSearchSuggestions(text)
   const discover = useDiscover(filters)
@@ -62,10 +64,10 @@ export function SearchPage({
 
   return (
     <main className="shell px-[var(--pad)] pt-6 pb-24">
-      <h1 className="text-[clamp(26px,3.4vw,38px)] font-extrabold">Keşfet</h1>
+      <h1 className="text-[clamp(26px,3.4vw,38px)] font-extrabold">{t('search.title')}</h1>
 
       <label className="mt-4 block">
-        <span className="sr-only">Film veya dizi ara</span>
+        <span className="sr-only">{t('search.srLabel')}</span>
         <div className="flex h-12 items-center gap-3 rounded-[14px] border border-line bg-surf px-4 focus-within:border-acc/50">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="shrink-0 text-tx3" aria-hidden="true">
             <circle cx="11" cy="11" r="7" />
@@ -74,11 +76,11 @@ export function SearchPage({
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Film veya dizi adı yaz, ya da aşağıdan filtrele"
+            placeholder={t('search.placeholder')}
             className="h-full flex-1 bg-transparent text-[15px] outline-none placeholder:text-tx3"
           />
           {text ? (
-            <button type="button" onClick={() => setText('')} aria-label="Aramayı temizle" className="text-tx3 hover:text-tx">
+            <button type="button" onClick={() => setText('')} aria-label={t('search.clear')} className="text-tx3 hover:text-tx">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <path d="M6 6l12 12M18 6L6 18" />
               </svg>
@@ -161,7 +163,7 @@ export function SearchPage({
 
       {filters.keywordIds.length > 0 ? (
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <span className="mono text-[10px] tracking-[0.12em] text-tx3 uppercase">Seçili konular</span>
+          <span className="mono text-[10px] tracking-[0.12em] text-tx3 uppercase">{t('search.topics')}</span>
           {filters.keywordIds.map((id) => (
             <button
               key={id}
@@ -194,10 +196,10 @@ export function SearchPage({
       {discover.error ? (
         <p className="mt-6 text-[13px] text-live">{discover.error}</p>
       ) : discover.loading ? (
-        <p className="mono mt-6 text-[12px] tracking-[0.12em] text-acc uppercase">yükleniyor…</p>
+        <p className="mono mt-6 text-[12px] tracking-[0.12em] text-acc uppercase">{t('search.loading')}</p>
       ) : visible.length === 0 ? (
         <p className="mt-6 text-[14px] text-tx3">
-          {providerOnly ? 'Bu filtrelerle sağlayıcıda eşleşen bir başlık yok.' : 'Bu filtrelerle sonuç bulunamadı.'}
+          {providerOnly ? t('search.noneProvider') : t('search.none')}
         </p>
       ) : (
         <>
@@ -217,7 +219,7 @@ export function SearchPage({
 
           <div ref={sentinelRef} className="h-px" aria-hidden="true" />
           {discover.loadingMore ? (
-            <p className="mono mt-6 text-center text-[11.5px] tracking-[0.12em] text-acc uppercase">yükleniyor…</p>
+            <p className="mono mt-6 text-center text-[11.5px] tracking-[0.12em] text-acc uppercase">{t('search.loading')}</p>
           ) : !discover.canLoadMore ? (
             <p className="mono mt-6 text-center text-[11px] text-tx3">listenin sonu</p>
           ) : null}

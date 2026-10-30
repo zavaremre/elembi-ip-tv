@@ -1,9 +1,10 @@
 import { useState } from 'react'
+import { useT } from '@/i18n'
 import { Art } from './Art'
 import { useSeasonEpisodes } from '@/hooks/useSeasonEpisodes'
 import { episodeKey, fetchSeasonEpisodes, toEpisodeTarget, type EpisodeTarget, type PlayableEpisode } from '@/lib/episodes'
 import type { EpisodeSource } from '@/hooks/usePlayback'
-import { dur } from '@/lib/fmt'
+import { dur, score } from '@/lib/fmt'
 import { backdrop, poster } from '@/lib/img'
 import type { Progress, SeasonSummary } from '@shared/types'
 
@@ -28,6 +29,7 @@ export function SeasonEpisodes({
   progress,
   onPlayEpisodes
 }: SeasonEpisodesProps): React.JSX.Element {
+  const t = useT()
   const [active, setActive] = useState(seasons[0]?.number ?? 1)
   const view = useSeasonEpisodes(tvId, active, providerSeriesId)
 
@@ -35,7 +37,7 @@ export function SeasonEpisodes({
 
   /** Only playable episodes go into the queue, so auto-advance never stalls. */
   const playable = (view.data?.episodes ?? []).filter((episode) => Boolean(episode.url))
-  const queue = playable.map((episode) => toEpisodeTarget({ tvId, showTitle, season: active, imdbId }, episode))
+  const queue = playable.map((episode) => toEpisodeTarget({ tvId, showTitle, season: active, imdbId }, episode, t))
 
   /** Lets the player browse other seasons without duplicating the merge logic. */
   const source: EpisodeSource = {
@@ -45,7 +47,7 @@ export function SeasonEpisodes({
       const loaded = await fetchSeasonEpisodes(tvId, season, providerSeriesId)
       return loaded.episodes
         .filter((episode) => Boolean(episode.url))
-        .map((episode) => toEpisodeTarget({ tvId, showTitle, season, imdbId }, episode))
+        .map((episode) => toEpisodeTarget({ tvId, showTitle, season, imdbId }, episode, t))
     }
   }
 
@@ -58,11 +60,13 @@ export function SeasonEpisodes({
   return (
     <section className="shell px-[var(--pad)]">
       <div className="flex flex-wrap items-center gap-3 pb-4">
-        <h2 className="text-[19px] font-extrabold lg:text-[25px]">Bölümler</h2>
+        <h2 className="text-[19px] font-extrabold lg:text-[25px]">{t('season.episodes')}</h2>
         <span className="mono pt-1 text-[11px] tracking-[0.08em] text-tx3">
-          {seasons.length} SEZON
-          {view.data ? ` · ${view.data.episodes.length} BÖLÜM` : ''}
-          {view.data && providerSeriesId !== null ? ` · SAĞLAYICIDA ${view.data.providerCount}` : ''}
+          {t('season.countSeasons', { n: seasons.length })}
+          {view.data ? ` ${t('season.count', { n: view.data.episodes.length })}` : ''}
+          {view.data && providerSeriesId !== null
+            ? ` ${t('season.providerCount', { n: view.data.providerCount })}`
+            : ''}
         </span>
       </div>
 
@@ -88,9 +92,9 @@ export function SeasonEpisodes({
       {view.error ? (
         <p className="text-[13px] text-live">{view.error}</p>
       ) : view.loading ? (
-        <p className="mono text-[12px] tracking-[0.12em] text-acc uppercase">bölümler yükleniyor…</p>
+        <p className="mono text-[12px] tracking-[0.12em] text-acc uppercase">{t('season.loading')}</p>
       ) : !view.data || view.data.episodes.length === 0 ? (
-        <p className="text-[13px] text-tx3">Bu sezon için bölüm bilgisi yok.</p>
+        <p className="text-[13px] text-tx3">{t('season.none')}</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {view.data.episodes.map((episode) => {
@@ -126,9 +130,9 @@ export function SeasonEpisodes({
                     <div className="flex flex-wrap items-baseline gap-2">
                       <span className="mono text-[12px] text-acc">{String(episode.number).padStart(2, '0')}</span>
                       <h3 className="truncate text-[15px] font-bold">{episode.name}</h3>
-                      {episode.rating > 0 ? <span className="mono text-[11px] text-gold">★ {episode.rating.toFixed(1).replace('.', ',')}</span> : null}
+                      {episode.rating > 0 ? <span className="mono text-[11px] text-gold">★ {score(episode.rating, t)}</span> : null}
                       <span className="mono text-[11px] text-tx3">
-                        {[episode.air, dur(episode.runtime)].filter(Boolean).join(' · ')}
+                        {[episode.air, dur(episode.runtime, t)].filter(Boolean).join(' · ')}
                       </span>
                       {ratio > 0.95 ? (
                         <span className="mono flex items-center gap-1 text-[10px] tracking-[0.08em] text-score uppercase">
@@ -152,10 +156,10 @@ export function SeasonEpisodes({
                         className="flex h-9 items-center gap-2 rounded-[10px] bg-tx px-4 text-[12.5px] font-bold text-ink"
                       >
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
-                        {ratio > 0 && ratio < 0.95 ? 'Devam et' : 'Oynat'}
+                        {ratio > 0 && ratio < 0.95 ? t('common.resume') : t('common.play')}
                       </button>
                     ) : (
-                      <span className="mono text-[10.5px] tracking-[0.08em] text-tx3 uppercase">sağlayıcıda yok</span>
+                      <span className="mono text-[10.5px] tracking-[0.08em] text-tx3 uppercase">{t('season.notInProvider')}</span>
                     )}
                   </div>
                 </div>

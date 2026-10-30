@@ -15,6 +15,7 @@ import type {
   WatchOptions,
   WatchProvider
 } from '../shared/types'
+import { t } from './i18n'
 
 const BASE = 'https://api.themoviedb.org/3'
 export const IMG = 'https://image.tmdb.org/t/p'
@@ -106,17 +107,35 @@ interface RawLogo {
   iso_639_1: string | null
 }
 
-/** Turkish artwork first: TMDB falls back to the default poster on its own. */
+/*
+ * The interface language first, then the other, then whatever is left.
+ * include_image_language only decides what TMDB sends — it returns them in its
+ * own order, so asking for Turkish first and then taking logos[0] handed an
+ * English logo to a Turkish interface. The choosing has to happen here.
+ */
+function preferredLanguages(): string[] {
+  const primary = config().TMDB_LANG.slice(0, 2)
+  return [primary, primary === 'tr' ? 'en' : 'tr']
+}
+
+function pickArtwork(list: RawLogo[] | undefined, allowNeutral: boolean): string | null {
+  if (!list?.length) return null
+  for (const lang of preferredLanguages()) {
+    const hit = list.find((item) => item.iso_639_1 === lang)
+    if (hit) return hit.file_path
+  }
+  if (!allowNeutral) return null
+  /* Language-neutral art has no text on it, so it suits either interface. */
+  return (list.find((item) => !item.iso_639_1) ?? list[0]).file_path
+}
+
+/** A poster only when it is in a language we asked for; TMDB's own default otherwise. */
 function pickPoster(posters: RawLogo[] | undefined): string | null {
-  if (!posters?.length) return null
-  const tr = posters.find((p) => p.iso_639_1 === 'tr')
-  return tr?.file_path ?? null
+  return pickArtwork(posters, false)
 }
 
 function pickLogo(logos: RawLogo[] | undefined): string | null {
-  if (!logos?.length) return null
-  const pick = logos.find((l) => l.iso_639_1 === 'tr') ?? logos.find((l) => l.iso_639_1 === 'en') ?? logos[0]
-  return pick?.file_path ?? null
+  return pickArtwork(logos, true)
 }
 
 interface RawWatchProvider {
@@ -213,6 +232,18 @@ function applyLocalFilters(items: TmdbItem[], f: DiscoverFilters): TmdbItem[] {
   else if (f.sort === 'primary_release_date.desc') sorted.sort((a, b) => Number(b.year ?? 0) - Number(a.year ?? 0))
   else if (f.sort === 'title.asc') sorted.sort((a, b) => a.title.localeCompare(b.title, 'tr'))
   return sorted
+}
+
+/*
+ * Posters and logos exist per language on TMDB. The interface language goes
+ * first so an English interface gets English key art, with the other language
+ * and the language-neutral artwork behind it rather than nothing: a title with
+ * only a Turkish logo should still show one.
+ */
+function imageLanguages(): string {
+  const primary = config().TMDB_LANG.slice(0, 2)
+  const other = primary === 'tr' ? 'en' : 'tr'
+  return `${primary},${other},null`
 }
 
 /* ── public API ───────────────────────────────── */
@@ -381,7 +412,7 @@ export const tmdb = {
         genres?: { id: number; name: string }[]
         images?: { logos?: RawLogo[]; posters?: RawLogo[] }
       }
-    >(`/${kind}/${id}`, { append_to_response: 'images', include_image_language: 'tr,en,null' }, 6 * 3600_000)
+    >(`/${kind}/${id}`, { append_to_response: 'images', include_image_language: imageLanguages() }, 6 * 3600_000)
 
     const item = toItem(r, kind, map)
     return {
@@ -402,7 +433,7 @@ export const tmdb = {
       {
         append_to_response:
           'credits,keywords,videos,images,alternative_titles,similar,recommendations,external_ids,release_dates,content_ratings,watch/providers',
-        include_image_language: 'tr,en,null'
+        include_image_language: imageLanguages()
       },
       3 * 3600_000
     )
@@ -529,7 +560,7 @@ export const tmdb = {
       air: r.air_date ?? null,
       episodes: (r.episodes ?? []).map((e) => ({
         number: e.episode_number,
-        name: e.name ?? `${e.episode_number}. Bölüm`,
+        name: e.name ?? t('season.episode', { n: e.episode_number }),
         overview: e.overview ?? '',
         still: e.still_path ?? null,
         air: e.air_date ?? null,

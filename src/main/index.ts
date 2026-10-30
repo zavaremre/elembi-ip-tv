@@ -23,6 +23,7 @@ import type {
   SubtitleSync,
   SubtitleTrackInfo
 } from '../shared/types'
+import { t, uiLang } from './i18n'
 
 const isDev = !app.isPackaged
 
@@ -61,13 +62,13 @@ function createWindow(): BrowserWindow {
   win.once('ready-to-show', () => win.show())
   win.webContents.on('context-menu', (_event, params) => {
     const template: Electron.MenuItemConstructorOptions[] = []
-    if (params.selectionText) template.push({ label: 'Kopyala', role: 'copy' })
-    if (params.isEditable) template.push({ label: 'Yapıştır', role: 'paste' })
+    if (params.selectionText) template.push({ label: t('menu.copy'), role: 'copy' })
+    if (params.isEditable) template.push({ label: t('menu.paste'), role: 'paste' })
     if (template.length > 0) template.push({ type: 'separator' })
     template.push(
-      { label: 'Yenile', click: () => win.webContents.reload() },
-      { label: 'Denetle', click: () => win.webContents.inspectElement(params.x, params.y) },
-      { label: 'Geliştirici araçları', click: () => win.webContents.toggleDevTools() }
+      { label: t('menu.reload'), click: () => win.webContents.reload() },
+      { label: t('menu.inspect'), click: () => win.webContents.inspectElement(params.x, params.y) },
+      { label: t('menu.devtools'), click: () => win.webContents.toggleDevTools() }
     )
     Menu.buildFromTemplate(template).popup({ window: win })
   })
@@ -124,7 +125,7 @@ function registerIpc(): void {
     ipcMain.handle(ch, async (e) => {
       try {
         const win = BrowserWindow.fromWebContents(e.sender)
-        if (!win) throw new Error('Pencere bulunamadı')
+        if (!win) throw new Error(t('err.noWindow'))
         return { ok: true, data: await fn(win) }
       } catch (err) {
         return { ok: false, error: err instanceof Error ? err.message : String(err) }
@@ -235,7 +236,10 @@ function registerIpc(): void {
       xtream: { host: c.XTREAM_HOST, user: c.XTREAM_USER, pass: c.XTREAM_PASS ? '•'.repeat(8) : '', output: c.XTREAM_OUTPUT },
       tmdb: { lang: c.TMDB_LANG, region: c.TMDB_REGION, hasToken: Boolean(c.TMDB_TOKEN || c.TMDB_KEY) },
       externalPlayer: c.EXTERNAL_PLAYER,
+      /* Resolved here so the renderer never has to know what the system said. */
+      language: uiLang(),
       favorites: store.favorites(),
+      version: app.getVersion(),
       dataDir: app.getPath('userData'),
       platform: process.platform
     }

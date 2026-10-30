@@ -2,6 +2,7 @@ import { dialog } from 'electron'
 import { readFile } from 'node:fs/promises'
 import { basename } from 'node:path'
 import type { SubtitleFile } from '../shared/types'
+import { t } from './i18n'
 
 /**
  * Turkish subtitle files are still commonly shipped as windows-1254, so UTF-8 is
@@ -29,8 +30,8 @@ export function srtToVtt(text: string): string {
 
 export async function openLocalSubtitle(): Promise<SubtitleFile | null> {
   const result = await dialog.showOpenDialog({
-    title: 'Altyazı dosyası seç',
-    filters: [{ name: 'Altyazı', extensions: ['srt', 'vtt'] }],
+    title: t('subs.pickTitle'),
+    filters: [{ name: t('track.subtitleLabel'), extensions: ['srt', 'vtt'] }],
     properties: ['openFile']
   })
   const path = result.filePaths[0]

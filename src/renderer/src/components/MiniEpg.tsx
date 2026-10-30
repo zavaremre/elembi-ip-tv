@@ -1,4 +1,5 @@
 import { clock } from '@/lib/fmt'
+import { useT } from '@/i18n'
 import type { Channel, EpgEntry } from '@shared/types'
 
 export interface GuideRow {
@@ -16,6 +17,7 @@ const WINDOW_MS = 3.5 * 3600_000
 
 /** Tonight's guide strip: a real time axis with the now marker, not a list of names. */
 export function MiniEpg({ rows, onPlay }: MiniEpgProps): React.JSX.Element {
+  const t = useT()
   const now = Date.now()
   const start = now - WINDOW_BEFORE_MS
   const pct = (ms: number): number => ((ms - start) / WINDOW_MS) * 100
@@ -23,7 +25,7 @@ export function MiniEpg({ rows, onPlay }: MiniEpgProps): React.JSX.Element {
   return (
     <div className="mx-[var(--pad)] overflow-hidden rounded-[22px] border border-line bg-surf/62 backdrop-blur-[22px] backdrop-saturate-[1.4]">
       <div className="flex items-center gap-3 border-b border-line px-4 py-3.5">
-        <b className="font-disp text-[15px] font-extrabold">Kılavuz</b>
+        <b className="font-disp text-[15px] font-extrabold">{t('card.guide')}</b>
         <span className="mono ml-auto flex items-center gap-1.5 text-[12.5px] text-live">
           <i className="pulse" />
           {clock(now)}

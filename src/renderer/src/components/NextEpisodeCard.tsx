@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useT } from '@/i18n'
 import { Art } from './Art'
 
 interface NextEpisodeCardProps {
@@ -12,6 +13,7 @@ interface NextEpisodeCardProps {
 
 /** Countdown to the next episode, the way a streaming app hands over. */
 export function NextEpisodeCard({ title, sub, image, seconds, onPlay, onCancel }: NextEpisodeCardProps): React.JSX.Element {
+  const t = useT()
   const [left, setLeft] = useState(seconds)
   /**
    * The ticker must not depend on the callback's identity: the player re-renders
@@ -35,15 +37,15 @@ export function NextEpisodeCard({ title, sub, image, seconds, onPlay, onCancel }
         <Art src={image ?? null} alt={title} shape="still" className="rounded-[10px]" />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="mono text-[10px] tracking-[0.14em] text-acc uppercase">Sıradaki bölüm · {left}</div>
+        <div className="mono text-[10px] tracking-[0.14em] text-acc uppercase">{t('episode.next')} · {left}</div>
         <div className="mt-1 truncate text-[13.5px] font-bold">{title}</div>
         {sub ? <div className="mono mt-0.5 truncate text-[11px] text-tx3">{sub}</div> : null}
         <div className="mt-2.5 flex gap-2">
           <button type="button" onClick={onPlay} className="h-8 rounded-[9px] bg-tx px-3.5 text-[12.5px] font-bold text-ink">
-            Şimdi oynat
+            {t('player.playNow')}
           </button>
           <button type="button" onClick={onCancel} className="h-8 rounded-[9px] border border-line bg-white/8 px-3.5 text-[12.5px] font-bold">
-            İptal
+            {t('player.cancel')}
           </button>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useT } from '@/i18n'
 import { FavoriteButton } from '@/components/FavoriteButton'
 import { favoriteKey, type Favorites } from '@/hooks/useFavorites'
 import { Art } from '@/components/Art'
@@ -7,6 +8,7 @@ import type { EpisodeSource } from '@/hooks/usePlayback'
 import type { EpisodeTarget } from '@/lib/episodes'
 import { useProviderSeries, type ProviderEpisode } from '@/hooks/useProviderSeries'
 import { backdrop, logo, poster } from '@/lib/img'
+import { score } from '@/lib/fmt'
 import type { Progress, TmdbItem, VodItem } from '@shared/types'
 
 type ProviderSeriesEpisodes = ProviderEpisode[]
@@ -26,6 +28,7 @@ function Skeleton({ className = '' }: { className?: string }): React.JSX.Element
 
 /** Season and episode list for a series in the provider catalogue. */
 export function ProviderSeriesPage({ item, progress, onPlayEpisodes, favorites, onOpenTmdb, onBack }: ProviderSeriesPageProps): React.JSX.Element {
+  const t = useT()
   const view = useProviderSeries(item)
   const [activeSeason, setActiveSeason] = useState<number | null>(null)
 
@@ -39,7 +42,7 @@ export function ProviderSeriesPage({ item, progress, onPlayEpisodes, favorites, 
     list.map((episode) => ({
       url: episode.url,
       title: item.name,
-      sub: `${seasonNumber}. sezon ${episode.num}. bölüm${episode.title ? ` · ${episode.title}` : ''}`,
+      sub: `${t('episode.seasonEpisode', { season: seasonNumber, episode: episode.num })}${episode.title ? ` · ${episode.title}` : ''}`,
       image: episode.still ?? item.cover,
       episodeId: episode.id,
       season: seasonNumber,
@@ -50,7 +53,7 @@ export function ProviderSeriesPage({ item, progress, onPlayEpisodes, favorites, 
   const source: EpisodeSource = {
     seasons: seasons.map((season) => ({
       number: season.season,
-      label: `${season.season}. Sezon`,
+      label: t('season.label', { n: season.season }),
       count: season.episodes.length
     })),
     activeSeason: current ?? 1,
@@ -62,7 +65,7 @@ export function ProviderSeriesPage({ item, progress, onPlayEpisodes, favorites, 
   const queue: EpisodeTarget[] = episodes.map((episode) => ({
     url: episode.url,
     title: item.name,
-    sub: `${current}. sezon ${episode.num}. bölüm${episode.title ? ` · ${episode.title}` : ''}`,
+    sub: `${t('episode.seasonEpisode', { season: current ?? 1, episode: episode.num })}${episode.title ? ` · ${episode.title}` : ''}`,
     image: episode.still ?? item.cover,
     episodeId: episode.id,
     season: current ?? undefined,
@@ -114,12 +117,13 @@ export function ProviderSeriesPage({ item, progress, onPlayEpisodes, favorites, 
           <div className="mono mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-tx3">
             <span>{item.group}</span>
             {item.country ? <span>{item.country}</span> : null}
-            {item.rating ? <span className="text-gold">★ {item.rating.toFixed(1).replace('.', ',')}</span> : null}
+            {item.rating ? <span className="text-gold">★ {score(item.rating, t)}</span> : null}
             {view.loading ? (
               <Skeleton className="h-3 w-28 rounded-full" />
             ) : view.data ? (
               <span>
-                {seasons.length} sezon · {view.data.episodeCount} bölüm
+                {t('season.seasons', { n: seasons.length })} ·{' '}
+                {t('season.episodeCount', { n: view.data.episodeCount })}
               </span>
             ) : null}
           </div>
@@ -142,7 +146,7 @@ export function ProviderSeriesPage({ item, progress, onPlayEpisodes, favorites, 
                 className="spec flex h-11 items-center gap-2.5 rounded-[12px] bg-tx px-5 text-[14px] font-bold text-ink"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
-                İlk bölümü oynat
+                {t('season.playFirst')}
               </button>
             ) : null}
             <FavoriteButton
@@ -164,7 +168,7 @@ export function ProviderSeriesPage({ item, progress, onPlayEpisodes, favorites, 
                 onClick={() => onOpenTmdb(tmdb)}
                 className="flex h-11 items-center rounded-[12px] border border-line bg-white/8 px-5 text-[13.5px] font-bold hover:border-acc/40"
               >
-                TMDB detayı
+                {t('detail.tmdbDetail')}
               </button>
             ) : null}
           </div>
@@ -194,7 +198,7 @@ export function ProviderSeriesPage({ item, progress, onPlayEpisodes, favorites, 
             </div>
           </>
         ) : seasons.length === 0 ? (
-          <p className="text-[14px] text-tx3">Sağlayıcı bu dizi için bölüm listesi vermiyor.</p>
+          <p className="text-[14px] text-tx3">{t('season.noList')}</p>
         ) : (
           <>
             <div className="flex flex-wrap gap-2 pb-4">
@@ -245,7 +249,7 @@ export function ProviderSeriesPage({ item, progress, onPlayEpisodes, favorites, 
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-baseline gap-2">
                           <span className="mono text-[12px] text-acc">{String(episode.num).padStart(2, '0')}</span>
-                          <h3 className="truncate text-[15px] font-bold">{episode.title || `${episode.num}. Bölüm`}</h3>
+                          <h3 className="truncate text-[15px] font-bold">{episode.title || t('season.episode', { n: episode.num })}</h3>
                           {ratio > 0.95 ? (
                             <span className="mono flex items-center gap-1 text-[10px] tracking-[0.08em] text-score uppercase">
                               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true">
@@ -256,7 +260,7 @@ export function ProviderSeriesPage({ item, progress, onPlayEpisodes, favorites, 
                           ) : null}
                         </div>
                         <div className="mono mt-1 text-[11px] text-tx3">
-                          {ratio > 0 && ratio < 0.95 ? 'kaldığın yerden devam eder' : `${current}. sezon · sağlayıcıda oynatılabilir`}
+                          {ratio > 0 && ratio < 0.95 ? t('season.resumeNote') : t('season.playable', { season: current })}
                         </div>
                       </div>
                     </button>

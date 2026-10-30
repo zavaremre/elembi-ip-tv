@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useT } from '@/i18n'
 import { WindowControls } from '@/components/WindowControls'
 import { NoiseOverlay } from '@/components/fx/NoiseOverlay'
 import { isComplete, parseXtreamUrl } from '@shared/xtreamUrl'
@@ -30,6 +31,7 @@ const INPUT =
  * keeping, and the reason is more useful here than on an empty home screen.
  */
 export function SetupPage({ initial, onSaved, onCancel }: SetupPageProps): React.JSX.Element {
+  const t = useT()
   const [link, setLink] = useState('')
   const [manual, setManual] = useState(false)
   const [host, setHost] = useState(initial.host)
@@ -57,9 +59,9 @@ export function SetupPage({ initial, onSaved, onCancel }: SetupPageProps): React
        */
       const result = await window.elembi.app
         .resolveLink(link.trim())
-        .catch(() => ({ credentials: null, error: 'Bağlantı çözümlenemedi.' }))
+        .catch(() => ({ credentials: null, error: t('setup.unresolved') }))
       if (!result.credentials) {
-        setLinkError(result.error ?? 'Bağlantı çözümlenemedi.')
+        setLinkError(result.error ?? t('setup.unresolved'))
         setProbe({ state: 'idle' })
         return
       }
@@ -78,7 +80,7 @@ export function SetupPage({ initial, onSaved, onCancel }: SetupPageProps): React
     await window.elembi.app.setConfig(patch).catch(() => false)
     const status = await window.elembi.iptv
       .status()
-      .catch((e: unknown) => ({ ok: false, message: e instanceof Error ? e.message : 'Bağlanılamadı' }))
+      .catch((e: unknown) => ({ ok: false, message: e instanceof Error ? e.message : t('setup.unreachable') }))
     setProbe({ state: 'done', status })
   }
 
@@ -104,33 +106,32 @@ export function SetupPage({ initial, onSaved, onCancel }: SetupPageProps): React
 
       <div className="relative mx-auto flex max-w-[560px] flex-col px-[var(--pad)] pt-[88px] pb-20">
         <h1 className="text-[clamp(26px,3.6vw,38px)] leading-[1.05] font-black tracking-[-0.03em]">
-          Aboneliğini bağla
+          {t('setup.title')}
         </h1>
         <p className="mt-2.5 text-[14px] leading-[1.6] text-tx2">
-          Sağlayıcının verdiği bağlantı adresini yapıştır, gerisini kendisi bulur. M3U, Xtream API ya
-          da EPG adresi — hangisi elindeyse olur.
+          {t('setup.lead')}
         </p>
 
         {manual ? (
           <div className="mt-7 grid gap-4 rounded-[14px] border border-line bg-surf/50 p-4">
             <div>
-              <Label>Sunucu</Label>
-              <input className={INPUT} value={host} onChange={(e) => setHost(e.target.value)} placeholder="http://sunucu:8080" spellCheck={false} />
+              <Label>{t('setup.host')}</Label>
+              <input className={INPUT} value={host} onChange={(e) => setHost(e.target.value)} placeholder={t('setup.hostPlaceholder')} spellCheck={false} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Kullanıcı adı</Label>
+                <Label>{t('setup.user')}</Label>
                 <input className={INPUT} value={user} onChange={(e) => setUser(e.target.value)} spellCheck={false} autoComplete="off" />
               </div>
               <div>
-                <Label>Şifre</Label>
+                <Label>{t('setup.pass')}</Label>
                 <input className={INPUT} value={pass} onChange={(e) => setPass(e.target.value)} spellCheck={false} autoComplete="off" />
               </div>
             </div>
           </div>
         ) : (
           <div className="mt-7">
-            <Label>Bağlantı adresi</Label>
+            <Label>{t('setup.linkLabel')}</Label>
             <input
               className={INPUT}
               value={link}
@@ -139,12 +140,12 @@ export function SetupPage({ initial, onSaved, onCancel }: SetupPageProps): React
                 setLinkError(null)
                 setProbe({ state: 'idle' })
               }}
-              placeholder="http://sunucu:8080/get.php?username=…&password=…"
+              placeholder={t('setup.linkPlaceholder')}
               spellCheck={false}
               autoComplete="off"
             />
             {peek?.host && !linkError ? (
-              <p className="mono mt-1.5 text-[11.5px] text-tx3">sunucu: {peek.host}</p>
+              <p className="mono mt-1.5 text-[11.5px] text-tx3">{t('setup.hostPeek', { host: peek.host })}</p>
             ) : null}
             {linkError ? <p className="mt-1.5 text-[12.5px] leading-snug text-live">{linkError}</p> : null}
           </div>
@@ -159,29 +160,28 @@ export function SetupPage({ initial, onSaved, onCancel }: SetupPageProps): React
           }}
           className="mt-3 self-start text-[12.5px] font-semibold text-tx3 hover:text-tx"
         >
-          {manual ? 'Bağlantı adresi yapıştır' : 'Sunucu ve kullanıcı bilgilerini elle gir'}
+          {manual ? t('setup.pastePlaceholder') : t('setup.manual')}
         </button>
 
         <div className="mt-5">
-          <Label>TMDB okuma anahtarı {initial.hasToken ? '· tanımlı' : '· gerekli'}</Label>
+          <Label>{t('setup.tmdbKey')} {initial.hasToken ? t('setup.defined') : t('setup.required')}</Label>
           <input
             className={INPUT}
             value={token}
             onChange={(e) => setToken(e.target.value)}
-            placeholder={initial.hasToken ? 'Değiştirmek için yeni anahtar' : 'eyJhbGciOiJIUzI1NiJ9…'}
+            placeholder={initial.hasToken ? t('setup.newKey') : 'eyJhbGciOiJIUzI1NiJ9…'}
             spellCheck={false}
             autoComplete="off"
           />
           <p className="mt-1.5 text-[12px] leading-snug text-tx3">
-            Afişler, özetler ve platform logoları TMDB'den geliyor. Anahtar olmadan katalog çalışır ama
-            görseller gelmez.{' '}
+            {t('setup.tmdbNote')}{' '}
             {/* An anchor, not a button: the main process already sends outbound
                 navigation to the system browser, so no new channel is needed. */}
             <a
               href="https://www.themoviedb.org/settings/api"
               className="text-acc underline-offset-2 hover:underline"
             >
-              Ücretsiz anahtar al
+              {t('setup.freeKey')}
             </a>
           </p>
         </div>
@@ -193,18 +193,21 @@ export function SetupPage({ initial, onSaved, onCancel }: SetupPageProps): React
             }`}
           >
             <div className="text-[13.5px] font-bold">
-              {probe.status.ok ? 'Bağlantı kuruldu' : 'Bağlanamadı'}
+              {probe.status.ok ? t('setup.connected') : t('setup.failed')}
             </div>
             <div className="mt-1 text-[12.5px] leading-snug text-tx2">{probe.status.message}</div>
             {probe.status.counts ? (
               <div className="mono mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-[11.5px] text-tx3">
-                <span>{probe.status.counts.live} kanal</span>
-                <span>{probe.status.counts.vod} film</span>
-                <span>{probe.status.counts.series} dizi</span>
-                {probe.status.user?.expires ? <span>bitiş {probe.status.user.expires}</span> : null}
+                <span>{t('setup.channels', { n: probe.status.counts.live })}</span>
+                <span>{t('setup.movies', { n: probe.status.counts.vod })}</span>
+                <span>{t('setup.series', { n: probe.status.counts.series })}</span>
+                {probe.status.user?.expires ? <span>{t('setup.expires', { date: probe.status.user.expires })}</span> : null}
                 {probe.status.user ? (
                   <span>
-                    bağlantı {probe.status.user.activeConnections}/{probe.status.user.maxConnections}
+                    {t('setup.connections', {
+                      active: probe.status.user.activeConnections,
+                      max: probe.status.user.maxConnections
+                    })}
                   </span>
                 ) : null}
               </div>
@@ -219,7 +222,7 @@ export function SetupPage({ initial, onSaved, onCancel }: SetupPageProps): React
             disabled={!ready || probe.state === 'testing'}
             className="flex h-11 items-center rounded-[12px] border border-line bg-white/10 px-5 text-[13.5px] font-bold disabled:opacity-40"
           >
-            {probe.state === 'testing' ? 'Deneniyor…' : 'Bağlantıyı dene'}
+            {probe.state === 'testing' ? t('setup.testing') : t('setup.test')}
           </button>
           <button
             type="button"
@@ -227,18 +230,18 @@ export function SetupPage({ initial, onSaved, onCancel }: SetupPageProps): React
             disabled={!connected}
             className="spec flex h-11 items-center rounded-[12px] bg-tx px-5 text-[14px] font-bold text-ink disabled:opacity-40"
           >
-            Başla
+            {t('setup.start')}
           </button>
           {onCancel ? (
             <button type="button" onClick={onCancel} className="ml-auto text-[13px] font-semibold text-tx3 hover:text-tx">
-              Vazgeç
+              {t('common.cancel')}
             </button>
           ) : null}
         </div>
 
         {!ready ? (
           <p className="mt-3 text-[12px] text-tx3">
-            {manual ? 'Sunucu, kullanıcı adı ve şifre gerekiyor.' : 'Sağlayıcının verdiği bağlantı adresini yapıştır.'}
+            {manual ? t('setup.needFields') : t('setup.linkHint')}
           </p>
         ) : null}
       </div>
