@@ -243,10 +243,10 @@ export function Player({
             <p className="mt-2 max-w-[46ch] text-[13px] text-tx2">{engine.error}</p>
             <div className="mt-4 flex justify-center gap-2">
               <button type="button" onClick={engine.retry} className="rounded-[10px] bg-tx px-4 py-2 text-[13px] font-bold text-ink">
-                Yeniden dene
+                {t('player.retry')}
               </button>
               <button type="button" onClick={onClose} className="rounded-[10px] border border-line bg-white/10 px-4 py-2 text-[13px] font-bold">
-                Kapat
+                {t('win.close')}
               </button>
             </div>
           </div>
@@ -392,13 +392,13 @@ export function Player({
 
               {!isLive ? (
                 <>
-                  <IconButton label="10 saniye geri" onClick={() => controls.nudge(-10)}>
+                  <IconButton label={t('player.back10')} onClick={() => controls.nudge(-10)}>
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
                       <path d="M11 5 6 9l5 4" />
                       <path d="M6 9h7a5 5 0 1 1 0 10H9" />
                     </svg>
                   </IconButton>
-                  <IconButton label="10 saniye ileri" onClick={() => controls.nudge(10)}>
+                  <IconButton label={t('player.forward10')} onClick={() => controls.nudge(10)}>
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
                       <path d="m13 5 5 4-5 4" />
                       <path d="M18 9h-7a5 5 0 1 0 0 10h4" />

@@ -91,7 +91,7 @@ export function SearchPage({
 
       {suggestions.keywords.length > 0 ? (
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <span className="mono text-[10px] tracking-[0.12em] text-tx3 uppercase">Konu olarak ara</span>
+          <span className="mono text-[10px] tracking-[0.12em] text-tx3 uppercase">{t('search.byKeyword')}</span>
           {suggestions.keywords.map((keyword) => (
             <button
               key={keyword.id}
@@ -107,7 +107,7 @@ export function SearchPage({
 
       {suggestions.people.length > 0 && !filters.person ? (
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <span className="mono text-[10px] tracking-[0.12em] text-tx3 uppercase">Oyuncu olarak ara</span>
+          <span className="mono text-[10px] tracking-[0.12em] text-tx3 uppercase">{t('search.byPerson')}</span>
           {suggestions.people.map((person) => (
             <button
               key={person.id}

@@ -13,7 +13,6 @@ interface ProviderToastProps {
 }
 
 const DISMISS_MS = 4500
-const nf = new Intl.NumberFormat('tr-TR')
 
 /** Connection state as a toast: visible while it matters, gone once it is fine. */
 export function ProviderToast({
@@ -25,6 +24,7 @@ export function ProviderToast({
   onOpenSettings
 }: ProviderToastProps): React.JSX.Element | null {
   const t = useT()
+  const nf = new Intl.NumberFormat(t('locale'))
   const failed = Boolean(error) || (status !== null && !status.ok)
   const connected = !loading && !failed && counts.channels > 0
   const [dismissed, setDismissed] = useState(false)
@@ -76,7 +76,7 @@ export function ProviderToast({
 
       {failed ? (
         <button type="button" onClick={onRetry} className="ml-1 h-8 shrink-0 rounded-[9px] border border-line bg-white/10 px-3 text-[12.5px] font-bold">
-          Tekrar dene
+          {t('common.retry')}
         </button>
       ) : null}
 

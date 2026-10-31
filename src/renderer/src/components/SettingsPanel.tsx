@@ -47,8 +47,8 @@ export function SettingsPanel({ onRefresh, onEditProvider, onOpenInfo, onLanguag
               <Field label={t('set.expires')} value={status.data.user?.expires ?? t('set.unlimited')} />
               <Field label={t('set.connections')} value={`${status.data.user?.activeConnections ?? '0'} / ${status.data.user?.maxConnections ?? '—'}`} />
               <Field label={t('set.liveChannels')} value={String(status.data.counts?.live ?? 0)} />
-              <Field label="Film (VOD)" value={String(status.data.counts?.vod ?? 0)} />
-              <Field label="Dizi" value={String(status.data.counts?.series ?? 0)} />
+              <Field label={t('set.vodCount')} value={String(status.data.counts?.vod ?? 0)} />
+              <Field label={t('set.seriesCount')} value={String(status.data.counts?.series ?? 0)} />
             </div>
           ) : (
             <p className="mt-3 text-[13px] text-live">{status.data?.message ?? status.error}</p>
