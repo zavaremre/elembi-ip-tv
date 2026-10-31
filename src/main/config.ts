@@ -16,6 +16,8 @@ export interface Config {
   EXTERNAL_PLAYER: string
   /** Interface language. Empty means follow the system. */
   UI_LANG: string
+  /** '0' switches off the release check, and with it the only call to GitHub. */
+  UPDATE_CHECK: string
 }
 
 const DEFAULTS: Config = {
@@ -36,7 +38,13 @@ const DEFAULTS: Config = {
    * — measured 45 down to 33 on English titles, since the panel names its
    * films in Turkish — which is the trade for an interface someone can read.
    */
-  UI_LANG: ''
+  UI_LANG: '',
+  /*
+   * On by default: a build nobody knows is stale is worse than one request a
+   * day to api.github.com, which the privacy page names. Turning it off stops
+   * the request being made at all rather than hiding the result.
+   */
+  UPDATE_CHECK: '1'
 }
 
 function parseEnv(text: string): Partial<Config> {

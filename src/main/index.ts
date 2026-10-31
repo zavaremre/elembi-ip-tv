@@ -24,6 +24,7 @@ import type {
   SubtitleTrackInfo
 } from '../shared/types'
 import { t, uiLang } from './i18n'
+import { checkForUpdate } from './update'
 
 const isDev = !app.isPackaged
 
@@ -238,6 +239,7 @@ function registerIpc(): void {
       externalPlayer: c.EXTERNAL_PLAYER,
       /* Resolved here so the renderer never has to know what the system said. */
       language: uiLang(),
+      updateCheck: config().UPDATE_CHECK !== '0',
       favorites: store.favorites(),
       version: app.getVersion(),
       dataDir: app.getPath('userData'),
@@ -250,6 +252,7 @@ function registerIpc(): void {
     xtream.resetGuideCache()
     return true
   })
+  on('app:update', () => checkForUpdate())
   /**
    * Chromium exposes no audio-track API for progressive files, so a stream with
    * several dubs can only be switched in a native player.

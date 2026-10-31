@@ -5,6 +5,8 @@ import { AppHeader, type Section } from './components/AppHeader'
 import { DetailPage } from './components/DetailPage'
 import { Player } from './components/Player'
 import { ProviderToast } from './components/ProviderToast'
+import { UpdateToast } from './components/UpdateToast'
+import { useUpdate } from './hooks/useUpdate'
 import { ReminderToast } from './components/ReminderToast'
 import { SearchPalette } from './components/SearchPalette'
 import { SettingsPanel } from './components/SettingsPanel'
@@ -83,6 +85,8 @@ export function App(): React.JSX.Element {
   const lang: Lang = appConfig.data?.language === 'en' ? 'en' : 'tr'
   /* makeT, not useT: this component renders the provider, so it is outside it. */
   const t = makeT(lang)
+  /* Waits for the config, so a check is never made while it is switched off. */
+  const { update, dismiss: dismissUpdate } = useUpdate(appConfig.data?.updateCheck ?? false)
   const collectionList = useCollectionList(collection)
   const detail = useTmdbDetail(detailRef)
   /* Derived during render: no effect needed to keep the match in sync. */
@@ -385,6 +389,13 @@ export function App(): React.JSX.Element {
                  */
                 .then(() => window.location.reload())
             }}
+            onUpdateCheck={(on) => {
+              /* Written through, then re-read, so the toast stops asking the
+                 moment it is switched off rather than at the next launch. */
+              void window.elembi.app
+                .setConfig({ UPDATE_CHECK: on ? '1' : '0' })
+                .then(() => window.location.reload())
+            }}
             onRefresh={refresh}
             onEditProvider={() => setSetupOpen(true)}
             onOpenInfo={(next) => {
@@ -488,6 +499,10 @@ export function App(): React.JSX.Element {
           onOpenSettings={() => goSection('settings')}
         />
       ) : null}
+
+      {/* Hidden while something is playing: a release is never urgent enough
+          to sit over a video. */}
+      {update && !playback.target ? <UpdateToast update={update} onDismiss={dismissUpdate} /> : null}
 
       {playback.target ? (
         <Player

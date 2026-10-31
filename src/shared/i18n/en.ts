@@ -467,6 +467,15 @@ export const en: Partial<Record<keyof typeof tr, string>> = {
   'lang.uk': 'Ukrainian',
   'lang.fi': 'Finnish',
 
+  /* ── update notice ──────────────────────────────────────────────── */
+  'update.title': 'New version: {version}',
+  'update.note': 'you install it yourself',
+  'update.download': 'Download',
+  'update.later': 'Not now',
+  'update.label': 'Updates',
+  'update.check': 'Tell me when a new version is out',
+  'update.note2':
+    'GitHub is asked once a day and nothing else is sent. Switched off, the request is never made. Nothing installs itself — the download page opens in your browser.',
   /* ── info pages ─────────────────────────────────────────────────── */
   'info.tab.about': 'About',
   'info.tab.help': 'Help',
@@ -554,6 +563,8 @@ export const en: Partial<Record<keyof typeof tr, string>> = {
     'The names of the titles you open are queried to find posters and overviews. So TMDB sees what you are looking at. None of your subscription details are sent.',
   'info.privacy.imagesValue': 'Posters, backdrops and platform logos are downloaded from here.',
   'info.privacy.sportsValue': 'Only team names are queried, for the badges on match cards.',
+  'info.privacy.githubValue':
+    'Asked once a day whether a newer version exists. Only asked: no credentials, nothing about what you watch, nothing else is sent. Switched off in Settings, the request is never made.',
   'info.privacy.localP1': 'Nothing else is contacted. The local server set up for playback listens on ',
   'info.privacy.localP2': ' only and is not open to other devices on your network.',
   'info.privacy.thirdH': 'Third parties',

@@ -469,6 +469,15 @@ export const tr = {
   'lang.uk': 'Ukraynaca',
   'lang.fi': 'Fince',
 
+  /* ── update notice ──────────────────────────────────────────────── */
+  'update.title': 'Yeni sürüm: {version}',
+  'update.note': 'indirip kurmanız gerekiyor',
+  'update.download': 'İndir',
+  'update.later': 'Şimdi değil',
+  'update.label': 'Güncelleme',
+  'update.check': 'Yeni sürüm çıktığında haber ver',
+  'update.note2':
+    'Günde bir kez GitHub’a sorulur, başka hiçbir şey gönderilmez. Kapatıldığında istek hiç yapılmaz. Kurulum kendiliğinden olmaz — indirme sayfası tarayıcıda açılır.',
   /* ── info pages ─────────────────────────────────────────────────── */
   'info.tab.about': 'Hakkında',
   'info.tab.help': 'Yardım',
@@ -557,6 +566,8 @@ export const tr = {
     'Açtığınız başlıkların adları afiş ve özet bulmak için sorgulanır. Yani TMDB neye baktığınızı görür. Abonelik bilgileriniz gönderilmez.',
   'info.privacy.imagesValue': 'Afiş, arka plan ve platform logosu görselleri buradan indirilir.',
   'info.privacy.sportsValue': 'Maç kartlarındaki armalar için yalnızca takım adları sorgulanır.',
+  'info.privacy.githubValue':
+    'Yeni bir sürüm olup olmadığı günde bir kez sorulur. Yalnızca sorulur: kimlik bilginiz, ne izlediğiniz ya da başka hiçbir şey gönderilmez. Ayarlardan kapatıldığında istek hiç yapılmaz.',
   'info.privacy.localP1': 'Bunların dışında hiçbir adrese bağlanılmaz. Oynatma için kurulan yerel sunucu yalnızca ',
   'info.privacy.localP2': ' üzerinde dinler, ağınızdaki diğer cihazlara açık değildir.',
   'info.privacy.thirdH': 'Üçüncü taraflar',

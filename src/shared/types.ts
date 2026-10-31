@@ -117,12 +117,21 @@ export interface AppConfig {
   externalPlayer: string
   /** 'tr' | 'en', already resolved against the system when unset. */
   language: string
+  /** Whether the daily release check is allowed to run. */
+  updateCheck: boolean
   favorites: Favorite[]
   /** The packaged version, so the about page cannot go stale. */
   version: string
   /** Where settings and caches live; differs on every platform. */
   dataDir: string
   platform: string
+}
+
+/** A release newer than the running build. Nothing is downloaded for it. */
+export interface UpdateInfo {
+  version: string
+  /** The release page, for the browser. */
+  url: string
 }
 
 export interface ProviderStatus {

@@ -8,6 +8,8 @@ interface SettingsPanelProps {
   onEditProvider: () => void
   onOpenInfo: (tab: 'about' | 'help' | 'privacy' | 'terms') => void
   onLanguage: (lang: Lang) => void
+  /** Switches the daily release check, and with it the only call to GitHub. */
+  onUpdateCheck: (on: boolean) => void
 }
 
 function Field({ label, value }: { label: string; value: string }): React.JSX.Element {
@@ -20,7 +22,7 @@ function Field({ label, value }: { label: string; value: string }): React.JSX.El
 }
 
 /** Provider and TMDB status, read from the main process. Credentials stay in .env. */
-export function SettingsPanel({ onRefresh, onEditProvider, onOpenInfo, onLanguage }: SettingsPanelProps): React.JSX.Element {
+export function SettingsPanel({ onRefresh, onEditProvider, onOpenInfo, onLanguage, onUpdateCheck }: SettingsPanelProps): React.JSX.Element {
   const t = useT()
   const lang = useLang()
   const status = useAsync<ProviderStatus>(() => window.elembi.iptv.status(), [])
@@ -86,6 +88,20 @@ export function SettingsPanel({ onRefresh, onEditProvider, onOpenInfo, onLanguag
             </div>
             {/* Said plainly: the two languages are not the same setting. */}
             <p className="mt-2 max-w-[48ch] text-[12px] text-tx3">{t('lang.note')}</p>
+          </div>
+
+          <div className="mt-5 border-t border-line pt-5">
+            <div className="mono text-[10px] tracking-[0.12em] text-tx3 uppercase">{t('update.label')}</div>
+            <label className="mt-2 flex cursor-pointer items-center gap-2.5 text-[13px]">
+              <input
+                type="checkbox"
+                checked={config.data?.updateCheck ?? true}
+                onChange={(e) => onUpdateCheck(e.target.checked)}
+                className="h-4 w-4 accent-[var(--color-acc)]"
+              />
+              {t('update.check')}
+            </label>
+            <p className="mt-2 max-w-[48ch] text-[12px] text-tx3">{t('update.note2')}</p>
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2.5">

@@ -24,6 +24,7 @@ import type {
   TmdbDetail,
   TmdbItem,
   TrendingPerson,
+  UpdateInfo,
   VodItem,
   WatchProvider
 } from '../shared/types'
@@ -105,6 +106,8 @@ const api = {
     setConfig: (patch: Record<string, string>) => call<boolean>('app:setConfig', patch),
     refresh: () => call<boolean>('app:refresh'),
     openInPlayer: (url: string) => call<boolean>('app:openInPlayer', url),
+    /** null when there is nothing newer, or the check is off, or it failed. */
+    update: () => call<UpdateInfo | null>('app:update'),
     platform: process.platform
   },
   /* The window has no system frame, so its controls live in the header. */

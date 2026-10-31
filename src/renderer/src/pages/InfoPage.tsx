@@ -168,7 +168,8 @@ function Privacy({ dataDir, t }: { dataDir: string; t: Translate }): React.JSX.E
           [t('info.privacy.providerKey'), t('info.privacy.providerValue')],
           ['api.themoviedb.org', t('info.privacy.tmdbValue')],
           ['image.tmdb.org', t('info.privacy.imagesValue')],
-          ['www.thesportsdb.com', t('info.privacy.sportsValue')]
+          ['www.thesportsdb.com', t('info.privacy.sportsValue')],
+          ['api.github.com', t('info.privacy.githubValue')]
         ]}
       />
       <P>
