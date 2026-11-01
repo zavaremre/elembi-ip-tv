@@ -620,9 +620,11 @@ export const en: Partial<Record<keyof typeof tr, string>> = {
   'search.byKeyword': 'Search by topic',
   'search.byPerson': 'Search by actor',
   'set.missing': 'missing',
+  'set.version': 'Version',
   'settings.credBefore': 'Credentials are read from ',
   'settings.credAfter':
     ' and never enter the interface bundle. Every request is made in the main process.',
+  'update.current': 'You are on {version}',
   'badge.live': 'LIVE',
   'episode.watched': 'watched',
   'common.dismiss': 'dismiss',

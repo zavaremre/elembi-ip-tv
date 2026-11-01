@@ -623,9 +623,11 @@ export const tr = {
   'search.byKeyword': 'Konu olarak ara',
   'search.byPerson': 'Oyuncu olarak ara',
   'set.missing': 'eksik',
+  'set.version': 'Sürüm',
   'settings.credBefore': 'Kimlik bilgileri ',
   'settings.credAfter':
     ' dosyasından okunuyor ve hiçbir zaman arayüz paketine girmiyor. Tüm istekler ana süreçte yapılır.',
+  'update.current': 'Şu anki sürüm {version}',
   'badge.live': 'CANLI',
   'episode.watched': 'izlendi',
   'common.dismiss': 'kapat',

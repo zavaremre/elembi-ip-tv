@@ -30,7 +30,12 @@ export function SettingsPanel({ onRefresh, onEditProvider, onOpenInfo, onLanguag
 
   return (
     <div className="shell px-[var(--pad)] py-8">
-      <h2 className="text-[28px] font-extrabold">{t('settings.heading')}</h2>
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <h2 className="text-[28px] font-extrabold">{t('settings.heading')}</h2>
+        <span className="mono text-[12px] text-tx3">
+          {t('set.version')} {config.data?.version ?? '—'}
+        </span>
+      </div>
       <p className="mt-2 max-w-[60ch] text-[14px] text-tx2">
         {t('settings.credBefore')}
         <code className="mono rounded-[5px] bg-acc/12 px-1.5 text-acc">.env</code>
@@ -103,7 +108,9 @@ export function SettingsPanel({ onRefresh, onEditProvider, onOpenInfo, onLanguag
               />
               {t('update.check')}
             </label>
-            <p className="mt-2 max-w-[48ch] text-[12px] text-tx3">{t('update.note2')}</p>
+            <p className="mt-2 max-w-[48ch] text-[12px] text-tx3">
+              {t('update.current', { version: config.data?.version ?? '—' })} · {t('update.note2')}
+            </p>
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2.5">
