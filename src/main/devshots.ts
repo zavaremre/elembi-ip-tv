@@ -1,6 +1,9 @@
 import { app, type BrowserWindow } from 'electron'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { makeT } from '../shared/i18n'
+import { uiLang } from './i18n'
+import type { Key } from '../shared/i18n'
 
 /**
  * Captures the real interface for the README, driven from inside the app.
@@ -53,11 +56,10 @@ const SCROLL = `(function (y) {
  * went into a public repository once. Masking here rather than remembering not
  * to capture the page: the next person to add a step should not have to know.
  */
-const MASK = `(function () {
+const MASK = `(function (labels) {
   const SECRET = /^https?:\\/\\//
-  const labels = ['sunucu', 'kullanıcı', 'veri klasörü']
   let hidden = 0
-  for (const el of document.querySelectorAll('div, span, td')) {
+  for (const el of document.querySelectorAll('div, span, td, dd')) {
     const text = (el.textContent || '').trim()
     if (el.children.length > 0 || !text) continue
     const label = (el.previousElementSibling?.textContent || '').trim().toLowerCase()
@@ -69,10 +71,42 @@ const MASK = `(function () {
   return 'maskelendi:' + hidden
 })`
 
+const HERO = `(async function (wanted) {
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+  const want = wanted.toLowerCase()
+  const hero = document.querySelector('section[class*="76vh"]')
+  if (!hero) return 'hero yok'
+  /* The title is a logo image when TMDB has one, an <h1> otherwise. */
+  const titleOf = () => {
+    const img = hero.querySelector('img[alt]')
+    const h1 = hero.querySelector('h1')
+    return ((img && img.alt) || (h1 && h1.textContent) || '').trim()
+  }
+  const count = hero.querySelectorAll('button[aria-current]').length
+  if (titleOf().toLowerCase().includes(want)) return 'hero:' + titleOf()
+  for (let i = 0; i < count; i++) {
+    /* Re-queried each time: React replaces these on every slide change. */
+    const dots = hero.querySelectorAll('button[aria-current]')
+    if (!dots[i]) break
+    dots[i].click()
+    await sleep(520)
+    if (titleOf().toLowerCase().includes(want)) return 'hero:' + titleOf()
+  }
+  const first = hero.querySelectorAll('button[aria-current]')[0]
+  if (first) {
+    first.click()
+    await sleep(520)
+  }
+  return 'hero bulunamadı:' + wanted + ' (' + titleOf() + ')'
+})`
+
 interface Step {
   name: string
-  /** Controls to click in order before the shot is taken. */
-  path?: [string, number?][]
+  /** Controls to click in order before the shot is taken, named by dictionary
+      key so the sequence works in whatever language the app is in. */
+  path?: [Key, number?][]
+  /** Pins the hero on the title whose name contains this, before capturing. */
+  hero?: string
   /** How far down the page to scroll, for rows below the fold. */
   scroll?: number
   /** Blanks the subscription's address and username before capturing. */
@@ -80,38 +114,65 @@ interface Step {
   settle?: number
 }
 
+/*
+ * The title the hero is pinned to, so the shot does not depend on where the
+ * rotation happened to be. Change this to feature something else; a title the
+ * hero is not carrying falls back to the first slide rather than failing.
+ *
+ * Not every title can be pinned in every language. The provider names this
+ * one's Turkish release "Verity: Gerçeğin Diğer Kıyısı", which the Turkish
+ * TMDB title matches and the English one ("Verity") does not — so in English
+ * it is not in the hero at all.
+ */
+const HERO_TITLE = 'Avengers: Endgame'
+
 const STEPS: Step[] = [
-  { name: '01-home', settle: 3000 },
+  { name: '01-home', hero: HERO_TITLE, settle: 3000 },
   /* Platforms sit directly under the hero now, so the old 1520 scrolled past them. */
-  { name: '02-platforms', scroll: 600, settle: 2600 },
+  { name: '02-platforms', hero: HERO_TITLE, scroll: 600, settle: 2600 },
   { name: '03-home-rows', scroll: 1180, settle: 2600 },
-  { name: '04-live-tv', path: [['Canlı TV']], settle: 2600 },
-  { name: '05-movies', path: [['Filmler']], settle: 2600 },
-  { name: '06-series', path: [['Diziler']], settle: 2600 },
-  { name: '07-sports', path: [['Spor']], settle: 2600 },
-  { name: '08-discover', path: [['Keşfet']], settle: 2800 },
-  { name: '09-detail', path: [['Detayı aç']], settle: 7000 },
-  { name: '10-detail-cast', path: [['Detayı aç']], scroll: 1100, settle: 7000 },
-  { name: '11-favorites', path: [['Favorilerim']], settle: 2600 },
-  { name: '12-settings', path: [['Ayarlar ve sağlayıcı']], settle: 1800, mask: true },
-  { name: '13-about', path: [['Ayarlar ve sağlayıcı'], ['Hakkında']], settle: 1600, mask: true },
-  { name: '14-help', path: [['Ayarlar ve sağlayıcı'], ['Yardım']], settle: 1600 },
-  { name: '15-privacy', path: [['Ayarlar ve sağlayıcı'], ['Gizlilik politikası']], settle: 1600 },
-  { name: '16-setup', path: [['Ayarlar ve sağlayıcı'], ['Aboneliği değiştir']], settle: 1800 }
+  { name: '04-live-tv', path: [['nav.live']], settle: 2600 },
+  { name: '05-movies', path: [['nav.movies']], settle: 2600 },
+  { name: '06-series', path: [['nav.series']], settle: 2600 },
+  { name: '07-sports', path: [['nav.sports']], settle: 2600 },
+  { name: '08-discover', path: [['nav.discover']], settle: 2800 },
+  { name: '09-detail', path: [['common.openDetail']], settle: 7000 },
+  { name: '10-detail-cast', path: [['common.openDetail']], scroll: 1100, settle: 7000 },
+  { name: '11-favorites', path: [['nav.favorites']], settle: 2600 },
+  { name: '12-settings', path: [['shell.settings']], settle: 1800, mask: true },
+  { name: '13-about', path: [['shell.settings'], ['info.tab.about']], settle: 1600, mask: true },
+  { name: '14-help', path: [['shell.settings'], ['info.tab.help']], settle: 1600 },
+  { name: '15-privacy', path: [['shell.settings'], ['info.tab.privacy']], settle: 1600 },
+  { name: '16-setup', path: [['shell.settings'], ['set.editProvider']], settle: 1800 }
 ]
 
 export async function captureShots(win: BrowserWindow): Promise<void> {
   mkdirSync(OUT, { recursive: true })
+  /* Labels come from the dictionary, so the run follows the app's language. */
+  const t = makeT(uiLang())
+  const masked = [t('set.host'), t('set.user'), t('info.about.dataDir')].map((label) =>
+    label.toLowerCase()
+  )
+  process.stdout.write(`  dil: ${uiLang()}\n`)
+
   /* The provider toast clears after 4.5s and artwork lands later; wait it out. */
   await wait(12000)
 
   for (const step of STEPS) {
     /* Home first every time, so a step never inherits the last one's view. */
-    await win.webContents.executeJavaScript(`${CLICK}('Ana Sayfa')`).catch(() => null)
+    await win.webContents.executeJavaScript(`${CLICK}(${JSON.stringify(t('nav.home'))})`).catch(() => null)
     await win.webContents.executeJavaScript(`${SCROLL}(0)`).catch(() => null)
     await wait(1400)
 
-    for (const [label, nth] of step.path ?? []) {
+    if (step.hero) {
+      const said = await win.webContents
+        .executeJavaScript(`${HERO}(${JSON.stringify(step.hero)})`)
+        .catch(() => 'hata')
+      process.stdout.write(`  ${step.name}: ${said}\n`)
+    }
+
+    for (const [key, nth] of step.path ?? []) {
+      const label = t(key)
       const said = await win.webContents
         .executeJavaScript(`${CLICK}(${JSON.stringify(label)}, ${nth ?? 0})`)
         .catch(() => 'hata')
@@ -120,7 +181,9 @@ export async function captureShots(win: BrowserWindow): Promise<void> {
     }
 
     if (step.mask) {
-      const said = await win.webContents.executeJavaScript(`${MASK}()`).catch(() => 'hata')
+      const said = await win.webContents
+        .executeJavaScript(`${MASK}(${JSON.stringify(masked)})`)
+        .catch(() => 'hata')
       process.stdout.write(`  ${step.name}: ${said}\n`)
     }
 
@@ -134,9 +197,10 @@ export async function captureShots(win: BrowserWindow): Promise<void> {
     win.focus()
     await wait(600)
     const image = await win.webContents.capturePage()
-    writeFileSync(join(OUT, `${step.name}.png`), image.toPNG())
+    /* JPEG, because that is what the README links and a PNG of this is 4 MB. */
+    writeFileSync(join(OUT, `${step.name}.jpg`), image.toJPEG(84))
     const size = image.getSize()
-    process.stdout.write(`  ${step.name}.png  ${size.width}x${size.height}\n`)
+    process.stdout.write(`  ${step.name}.jpg  ${size.width}x${size.height}\n`)
   }
 
   process.stdout.write('  bitti\n')
