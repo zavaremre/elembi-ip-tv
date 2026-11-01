@@ -251,21 +251,26 @@ export function App(): React.JSX.Element {
   const needsSetup = !appConfig.loading && (!configured || setupOpen)
 
   if (needsSetup) {
+    /* Inside the provider like everything else: returned before it, this screen
+       fell back to the context default and stayed Turkish whatever the setting
+       said — and it is the first screen a new install shows. */
     return (
-      <SetupPage
-        initial={{
-          host: appConfig.data?.xtream.host ?? '',
-          user: appConfig.data?.xtream.user ?? '',
-          output: appConfig.data?.xtream.output ?? 'hls',
-          hasToken: appConfig.data?.tmdb.hasToken ?? false
-        }}
-        onSaved={() => {
-          setSetupOpen(false)
-          setSetupNonce((n) => n + 1)
-          data.reload()
-        }}
-        onCancel={configured ? () => setSetupOpen(false) : undefined}
-      />
+      <LanguageProvider lang={lang}>
+        <SetupPage
+          initial={{
+            host: appConfig.data?.xtream.host ?? '',
+            user: appConfig.data?.xtream.user ?? '',
+            output: appConfig.data?.xtream.output ?? 'hls',
+            hasToken: appConfig.data?.tmdb.hasToken ?? false
+          }}
+          onSaved={() => {
+            setSetupOpen(false)
+            setSetupNonce((n) => n + 1)
+            data.reload()
+          }}
+          onCancel={configured ? () => setSetupOpen(false) : undefined}
+        />
+      </LanguageProvider>
     )
   }
 

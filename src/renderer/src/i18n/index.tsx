@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo } from 'react'
+import { createContext, useContext, useEffect, useMemo } from 'react'
 import { makeT, type Key, type Lang, type Translate, type Vars } from '@shared/i18n'
 import type { ReactNode } from 'react'
 
@@ -11,6 +11,15 @@ export type { Key, Lang, Translate, Vars }
 const LanguageContext = createContext<Lang>('tr')
 
 export function LanguageProvider({ lang, children }: { lang: Lang; children: ReactNode }): React.JSX.Element {
+  /*
+   * The document has to say which language it is in, or CSS uppercase applies
+   * Turkish casing to everything: the capital of "i" is "İ" there, so an
+   * English label set in small caps read PROVİDER, EXPİRES, SUBSCRİPTİON.
+   */
+  useEffect(() => {
+    document.documentElement.lang = lang
+  }, [lang])
+
   return <LanguageContext.Provider value={lang}>{children}</LanguageContext.Provider>
 }
 
