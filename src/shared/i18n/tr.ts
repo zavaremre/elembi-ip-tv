@@ -62,8 +62,6 @@ export const tr = {
   'day.ago': '{n} gün önce',
 
   /* ── settings ──────────────────────────────────────────────────── */
-  'set.status': 'Durum',
-  'set.expires': 'Bitiş',
   'set.connections': 'Bağlantı',
   'set.liveChannels': 'Canlı kanal',
   'set.key': 'Anahtar',
@@ -75,7 +73,7 @@ export const tr = {
   'set.defined': 'tanımlı',
   'set.unlimited': 'süresiz',
   'set.connecting': 'bağlanıyor…',
-  'set.editProvider': 'Aboneliği değiştir',
+  'set.editProvider': 'Bağlantı adresini değiştir',
   'set.refreshList': 'Listeyi yenile',
   'info.about': 'Hakkında',
   'info.help': 'Yardım',
@@ -333,9 +331,9 @@ export const tr = {
   'browse.byNumber': 'Kanal numarası',
 
   /* ── setup ─────────────────────────────────────────────────────── */
-  'setup.title': 'Aboneliğini bağla',
+  'setup.title': 'IPTV bağlantını kur',
   'setup.lead': 'Sağlayıcının verdiği bağlantı adresini yapıştır, gerisini kendisi bulur. M3U, Xtream API ya da EPG adresi — hangisi elindeyse olur.',
-  'setup.linkLabel': 'Bağlantı adresi',
+  'setup.linkLabel': 'IPTV bağlantı adresi',
   'setup.linkHint': 'Sağlayıcının verdiği bağlantı adresini yapıştır.',
   'setup.manual': 'Sunucu ve kullanıcı bilgilerini elle gir',
   'setup.user': 'Kullanıcı adı',
@@ -380,7 +378,6 @@ export const tr = {
   'trailer.of': '{title} fragmanı',
   'toast.expires': '· bitiş {date}',
   'settings.lead': 'Kimlik bilgileri {file} dosyasından okunuyor ve hiçbir zaman arayüz paketine girmiyor. Tüm istekler ana süreçte yapılır.',
-  'settings.provider': 'Sağlayıcı',
   'time.today': 'Bugün',
   'time.yesterday': 'Dün',
   'time.tomorrow': 'Yarın',
@@ -419,9 +416,9 @@ export const tr = {
   /* Composed where the request fails and shown in the interface, so these
      belong in the same table as everything else. */
   'err.http.auth': 'Sağlayıcı kimlik bilgilerini kabul etmedi. Kullanıcı adı veya şifre değişmiş olabilir',
-  'err.http.unknownLine': 'Sağlayıcı bu aboneliği tanımıyor. Hat kapatılmış veya adres değişmiş olabilir',
+  'err.http.unknownLine': 'Sağlayıcı bu hattı tanımıyor. Hat kapatılmış veya adres değişmiş olabilir',
   'err.http.rateLimited': 'Sağlayıcı çok fazla istek geldiği için erişimi geçici olarak kıstı. Bir süre sonra kendiliğinden açılır',
-  'err.http.unpaid': 'Aboneliğin ödemesi görünmüyor',
+  'err.http.unpaid': 'Hattın ödemesi görünmüyor',
   'err.http.providerServer': 'Sağlayıcının sunucusunda sorun var, bizden kaynaklanmıyor',
   'err.http.providerRefused': 'Sağlayıcı isteği reddetti',
   'err.http.tmdbKey': 'TMDB anahtarı geçersiz. Ayarlardan yeniden girin',
@@ -477,6 +474,81 @@ export const tr = {
   'update.check': 'Yeni sürüm çıktığında haber ver',
   'update.note2':
     'Günde bir kez GitHub’a sorulur, başka hiçbir şey gönderilmez. Kapatıldığında istek hiç yapılmaz. Kurulum kendiliğinden olmaz — indirme sayfası tarayıcıda açılır.',
+  /* ── settings: two panes ────────────────────────────────────────── */
+  'set.nav.provider': 'Sağlayıcı',
+  'set.nav.language': 'Dil',
+  'set.nav.updates': 'Güncelleme',
+  'set.nav.advanced': 'Gelişmiş',
+  'set.nav.about': 'Hakkında',
+  'set.group.connection': 'BAĞLANTI',
+  'set.group.app': 'UYGULAMA',
+  'set.group.other': 'DİĞER',
+  'set.catalogFoot': 'KATALOG',
+  'set.open': 'Aç',
+  'set.daysLeft': '{n} gün',
+
+  'set.provider.lead':
+    'IPTV bağlantı adresin ve ondan gelen liste. Elembi içerik sağlamaz; ne izleyebileceğini tamamen buraya girdiğin adres belirler.',
+  'set.provider.okTitle': 'Bağlantı çalışıyor',
+  'set.provider.okNote': 'Sağlayıcına bağlanıldı. Hattın {date} tarihine kadar geçerli.',
+  'set.provider.okNoDate': 'Sağlayıcına bağlanıldı ve liste alındı.',
+  'set.provider.badTitle': 'Sağlayıcına ulaşılamıyor',
+  'set.provider.validity': 'Geçerlilik',
+  'set.provider.validityNote': 'Sağlayıcıdaki hattın bitiş tarihi',
+  'set.provider.connNote': 'Aynı anda kaç cihazda izleyebilirsin',
+  'set.provider.addressGroup': 'BAĞLANTI ADRESİ',
+  'set.provider.addressNote': 'Bu bilgisayarda kalır, arayüze hiç girmez',
+  'set.provider.change': 'Başka bir adres kullan',
+  'set.provider.changeNote': 'Sağlayıcını değiştirmek ya da bilgileri yenilemek için',
+
+  'set.lang.lead':
+    'Seçtiğin dil yalnızca düğmeleri değil, TMDB’den gelen afişleri, özetleri ve film adlarını da değiştirir.',
+  'set.lang.appLang': 'Uygulama dili',
+  'set.lang.reloadNote': 'Değiştirince uygulama yeniden yüklenir',
+  'set.lang.cost':
+    'İngilizceye geçtiğinde sağlayıcı eşleşmesi zayıflayabilir: panel filmleri Türkçe adlarıyla listelediği için İngilizce başlıklar daha az tutuyor. Ölçülen fark 180 popüler başlıkta 45’e karşı 33.',
+  'set.lang.artGroup': 'AFİŞ VE ÖZET KAYNAĞI',
+  'set.lang.tmdbNote': 'Uygulama diliyle birlikte değişir',
+  'set.lang.regionNote': 'Hangi platformlarda olduğunu belirler',
+
+  'set.upd.lead':
+    'Elembi kendini güncellemez. Yeni sürüm çıktığında sana söyler ve indirme sayfasını tarayıcında açar; kurulumu sen yaparsın.',
+  'set.upd.current': '{version} kullanıyorsun',
+  'set.upd.latest': 'Bu en son sürüm.',
+  'set.upd.found': '{version} çıkmış — indirme sayfasını açabilirsin.',
+  'set.upd.off': 'Kontrol kapalı, yeni sürüm olup olmadığına bakılmıyor.',
+  'set.upd.checkNow': 'Şimdi kontrol et',
+  'set.upd.checking': 'Bakılıyor…',
+  'set.upd.download': 'İndirme sayfası',
+  'set.upd.toggleNote': 'Günde bir kez kontrol edilir',
+  'set.upd.privacy':
+    'Açıkken günde bir kez {host} adresine yalnızca “yeni sürüm var mı” diye sorulur — kimlik bilgin, ne izlediğin ya da başka hiçbir şey gönderilmez. Kapattığında istek hiç yapılmaz.',
+
+  'set.adv.lead': 'Normalde buraya bakman gerekmez. Bir şey çalışmadığında neyin nerede olduğunu gösterir.',
+  'set.adv.playback': 'OYNATMA',
+  'set.adv.ffmpegNote': 'MKV’de ileri sarma ve AC-3 ses için gerekli',
+  'set.adv.installed': 'kurulu',
+  'set.adv.notInstalled': 'kurulu değil',
+  'set.adv.outputNote': 'Sağlayıcıdan istenen akış türü',
+  'set.adv.artwork': 'AFİŞ SERVİSİ',
+  'set.adv.keyNote': 'Afiş ve özetler bunsuz gelmez',
+  'set.adv.artLead':
+    'Afişler, arka planlar, özetler, oyuncu listeleri ve platform logoları TMDB’den (The Movie Database) geliyor; Elembi’nin kendi görsel arşivi yok. Anahtar olmadan katalog yine çalışır, ama her başlık afişsiz ve özetsiz görünür.',
+  'set.adv.keyHow':
+    'Anahtar ücretsiz. themoviedb.org’da hesap açıp Ayarlar → API bölümünden “API Read Access Token” değerini kopyalıyorsun; kurulum ekranına yapıştırman yeterli.',
+  'set.adv.getKey': 'TMDB’de anahtar al',
+  'set.adv.changeKey': 'Anahtarı gir veya değiştir',
+  'set.adv.changeKeyNote': 'Kurulum ekranında, bağlantı adresinin altında',
+  'set.adv.noKeyTitle': 'Afiş servisi bağlı değil',
+  'set.adv.noKeyNote': 'Katalog çalışıyor ama afişler, özetler ve oyuncu bilgisi gelmiyor.',
+  'set.adv.data': 'VERİ',
+  'set.adv.catalog': 'Katalog',
+  'set.adv.catalogNote': '{n} başlık',
+  'set.adv.dataDirNote': 'Klasörü silmek uygulamanın bildiği her şeyi siler',
+
+  'set.about.lead':
+    'Elembi, kendi IPTV bağlantını masaüstünde izlemek için yazılmış bir oynatıcıdır. İçinde hiçbir yayın barındırmaz ve hiçbir şey satmaz.',
+
   /* ── info pages ─────────────────────────────────────────────────── */
   'info.tab.about': 'Hakkında',
   'info.tab.help': 'Yardım',
@@ -487,7 +559,7 @@ export const tr = {
 
   'info.about.whatH': 'Elembi nedir',
   'info.about.whatP':
-    'Elembi, kendi IPTV aboneliğinizi masaüstünde izlemek için yazılmış bir oynatıcıdır. Aboneliğinizin kanal, film ve dizi listesini alır, üzerine TMDB’den afiş, özet, oyuncu ve anahtar kelime bilgisi ekler. Kendi içinde hiçbir yayın veya içerik barındırmaz; ne izleyeceğinizi tamamen sizin girdiğiniz abonelik belirler.',
+    'Elembi, kendi IPTV bağlantınızı masaüstünde izlemek için yazılmış bir oynatıcıdır. Sağlayıcınızın kanal, film ve dizi listesini alır, üzerine TMDB’den afiş, özet, oyuncu ve anahtar kelime bilgisi ekler. Kendi içinde hiçbir yayın veya içerik barındırmaz ve hiçbir şey satmaz; ne izleyeceğinizi tamamen girdiğiniz bağlantı adresi belirler.',
   'info.about.howH': 'Nasıl çalışır',
   'info.about.howP1':
     'Tüm ağ istekleri uygulamanın ana sürecinden çıkar, arayüz doğrudan internete bağlanmaz. Oynatma için dosyalar yerel bir ',
@@ -518,13 +590,13 @@ export const tr = {
   'info.help.commonH': 'Sık karşılaşılanlar',
   'info.help.q1': 'Sağlayıcıya bağlanılamıyor',
   'info.help.a1':
-    'Önce adresi ve aboneliğin süresini kontrol edin. Panel, kısa sürede çok fazla istek gelirse adresinizi geçici olarak kilitleyebilir; bu durumda bir süre bekleyip tekrar denemek gerekir.',
+    'Önce adresi ve hattın süresini kontrol edin. Panel, kısa sürede çok fazla istek gelirse adresinizi geçici olarak kilitleyebilir; bu durumda bir süre bekleyip tekrar denemek gerekir.',
   'info.help.q2': 'Katalog görünüyor ama oynatmıyor',
   'info.help.a2':
     'Sağlayıcıya ulaşılamadığında uygulama diskteki son kataloğu gösterir. Liste dolu görünür, oynatma çalışmaz; bağlantı dönünce kendiliğinden düzelir.',
   'info.help.q3': 'Başka cihazda açıkken oynatmıyor',
   'info.help.a3':
-    'Aboneliklerin çoğu aynı anda tek bağlantıya izin verir. Diğer cihazdaki oynatıcıyı kapatın.',
+    'Sağlayıcıların çoğu aynı anda tek bağlantıya izin verir. Diğer cihazdaki oynatıcıyı kapatın.',
   'info.help.q4': 'Altyazı gelmiyor',
   'info.help.a4':
     'Altyazılar dosyanın içinden okunur ve arayüz dilinde bir altyazı varsa kendiliğinden açılır. Dosyada gömülü altyazı yoksa, oynatıcıdaki “Dosyadan yükle” ile elinizdeki bir .srt dosyasını açabilirsiniz.',
@@ -548,7 +620,7 @@ export const tr = {
   'info.privacy.storedH': 'Bilgisayarınızda ne saklanıyor',
   'info.privacy.storedP1': 'Hepsi ',
   'info.privacy.storedP2': ' klasöründedir. Klasörü silmek uygulamanın bildiği her şeyi siler.',
-  'info.privacy.file.config': 'Abonelik adresiniz, kullanıcı adınız, şifreniz ve TMDB anahtarınız',
+  'info.privacy.file.config': 'Bağlantı adresiniz, kullanıcı adınız, şifreniz ve TMDB anahtarınız',
   'info.privacy.file.state': 'Kaldığınız yerler, favorileriniz ve başlık başına altyazı gecikmesi',
   'info.privacy.file.catalog': 'Sağlayıcınızın kanal, film ve dizi listesi',
   'info.privacy.file.artwork': 'Bulunan afiş adresleri ve logolardan okunan renkler',
@@ -562,7 +634,7 @@ export const tr = {
   'info.privacy.providerValue':
     'Katalog, yayın akışı ve izlediğiniz her şey oradan gelir. Xtream protokolü gereği kullanıcı adınız ve şifreniz her istekte adresin içinde gönderilir, ayrıca hangi içeriği açtığınızı sağlayıcınız görür.',
   'info.privacy.tmdbValue':
-    'Açtığınız başlıkların adları afiş ve özet bulmak için sorgulanır. Yani TMDB neye baktığınızı görür. Abonelik bilgileriniz gönderilmez.',
+    'Açtığınız başlıkların adları afiş ve özet bulmak için sorgulanır. Yani TMDB neye baktığınızı görür. Bağlantı bilgileriniz gönderilmez.',
   'info.privacy.imagesValue': 'Afiş, arka plan ve platform logosu görselleri buradan indirilir.',
   'info.privacy.sportsValue': 'Maç kartlarındaki armalar için yalnızca takım adları sorgulanır.',
   'info.privacy.githubValue':
@@ -575,10 +647,10 @@ export const tr = {
 
   'info.terms.scopeH': 'Ne sunuyor, ne sunmuyor',
   'info.terms.scopeP':
-    'Elembi bir oynatıcıdır. İçinde hiçbir yayın, film veya dizi barındırmaz; herhangi bir abonelik satmaz veya sağlamaz. Yalnızca sizin girdiğiniz aboneliğe bağlanır ve o aboneliğin verdiğini gösterir.',
+    'Elembi bir oynatıcıdır. İçinde hiçbir yayın, film veya dizi barındırmaz; herhangi bir abonelik satmaz veya sağlamaz. Yalnızca sizin girdiğiniz bağlantı adresine bağlanır ve sağlayıcınızın verdiğini gösterir.',
   'info.terms.liabilityH': 'Sorumluluk',
   'info.terms.liabilityP':
-    'Kullandığınız aboneliğin ve eriştiğiniz içeriğin bulunduğunuz yerdeki mevzuata uygun olması sizin sorumluluğunuzdadır. Uygulamayı kullanarak gösterdiğiniz içeriğin kaynağından Elembi sorumlu değildir ve bu konuda hiçbir denetim yapmaz.',
+    'Kullandığınız bağlantının ve eriştiğiniz içeriğin bulunduğunuz yerdeki mevzuata uygun olması sizin sorumluluğunuzdadır. Uygulamayı kullanarak gösterdiğiniz içeriğin kaynağından Elembi sorumlu değildir ve bu konuda hiçbir denetim yapmaz.',
   'info.terms.warrantyH': 'Garanti verilmez',
   'info.terms.warrantyP':
     'Uygulama olduğu gibi sunulur. Kesintisiz veya hatasız çalışacağına, her sağlayıcıyla uyumlu olacağına dair bir söz verilmez. Kullanımından doğabilecek veri kaybı veya başka zararlar için sorumluluk kabul edilmez.',
@@ -590,7 +662,6 @@ export const tr = {
     'Elembi açık kaynaktır. Kodu inceleyebilir, değiştirebilir ve kendiniz derleyebilirsiniz. Dağıtım koşulları depodaki lisans dosyasında belirtilir.',
 
   /* ── leftovers ──────────────────────────────────────────────────── */
-  'settings.heading': 'Ayarlar',
   'season.countSeasons': '{n} SEZON',
   'detail.notAired': 'Henüz yayına girmedi',
   'search.allFor': '“{query}” için tüm sonuçlar ve filtreler',
@@ -624,9 +695,6 @@ export const tr = {
   'search.byPerson': 'Oyuncu olarak ara',
   'set.missing': 'eksik',
   'set.version': 'Sürüm',
-  'settings.credBefore': 'Kimlik bilgileri ',
-  'settings.credAfter':
-    ' dosyasından okunuyor ve hiçbir zaman arayüz paketine girmiyor. Tüm istekler ana süreçte yapılır.',
   'update.current': 'Şu anki sürüm {version}',
   'badge.live': 'CANLI',
   'episode.watched': 'izlendi',

@@ -139,7 +139,14 @@ export interface ProviderStatus {
   message: string
   /** Set when the catalogue on screen came from disk rather than the panel. */
   offline?: boolean
-  user?: { status: string; expires: string | null; maxConnections: string; activeConnections: string }
+  user?: {
+    status: string
+    expires: string | null
+    /** The same date as a timestamp, so the interface can say how long is left. */
+    expiresAt: number | null
+    maxConnections: string
+    activeConnections: string
+  }
   counts?: { live: number; vod: number; series: number }
 }
 

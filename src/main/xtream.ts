@@ -207,6 +207,7 @@ export const xtream = {
         user: {
           status: user.status,
           expires: user.exp_date ? new Date(Number(user.exp_date) * 1000).toLocaleDateString(t('locale')) : null,
+          expiresAt: user.exp_date ? Number(user.exp_date) * 1000 : null,
           maxConnections: user.max_connections,
           activeConnections: user.active_cons
         },

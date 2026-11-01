@@ -60,8 +60,6 @@ export const en: Partial<Record<keyof typeof tr, string>> = {
   'day.ago': '{n} days ago',
 
   /* ── settings ──────────────────────────────────────────────────── */
-  'set.status': 'Status',
-  'set.expires': 'Expires',
   'set.connections': 'Connections',
   'set.liveChannels': 'Live channels',
   'set.key': 'Key',
@@ -73,7 +71,7 @@ export const en: Partial<Record<keyof typeof tr, string>> = {
   'set.defined': 'set',
   'set.unlimited': 'no expiry',
   'set.connecting': 'connecting…',
-  'set.editProvider': 'Change subscription',
+  'set.editProvider': 'Change the link',
   'set.refreshList': 'Refresh the list',
   'info.about': 'About',
   'info.help': 'Help',
@@ -331,9 +329,9 @@ export const en: Partial<Record<keyof typeof tr, string>> = {
   'browse.byNumber': 'Channel number',
 
   /* ── setup ─────────────────────────────────────────────────────── */
-  'setup.title': 'Connect your subscription',
+  'setup.title': 'Set up your IPTV link',
   'setup.lead': 'Paste the address your provider gave you and it works out the rest. M3U, Xtream API or EPG — whichever you have.',
-  'setup.linkLabel': 'Subscription address',
+  'setup.linkLabel': 'IPTV link',
   'setup.linkHint': 'Paste the address your provider gave you.',
   'setup.manual': 'Enter the server and account by hand',
   'setup.user': 'Username',
@@ -348,7 +346,7 @@ export const en: Partial<Record<keyof typeof tr, string>> = {
   'setup.newKey': 'A new key, to replace it',
   'setup.freeKey': 'Get a free key',
   'setup.defined': '· set',
-  'setup.pastePlaceholder': 'Paste the subscription address',
+  'setup.pastePlaceholder': 'Paste the link',
 
   /* ── home extras ───────────────────────────────────────────────── */
   'row.tonightGuide': 'Tonight on the Guide',
@@ -378,7 +376,6 @@ export const en: Partial<Record<keyof typeof tr, string>> = {
   'trailer.of': '{title} trailer',
   'toast.expires': '· expires {date}',
   'settings.lead': 'Credentials are read from {file} and never reach the interface bundle. Every request is made in the main process.',
-  'settings.provider': 'Provider',
   'time.today': 'Today',
   'time.yesterday': 'Yesterday',
   'time.tomorrow': 'Tomorrow',
@@ -417,9 +414,9 @@ export const en: Partial<Record<keyof typeof tr, string>> = {
   /* Composed where the request fails and shown in the interface, so these
      belong in the same table as everything else. */
   'err.http.auth': 'The provider rejected your credentials. The username or password may have changed',
-  'err.http.unknownLine': 'The provider does not recognise this subscription. The line may be closed, or the address may have changed',
+  'err.http.unknownLine': 'The provider does not recognise this line. It may be closed, or the address may have changed',
   'err.http.rateLimited': 'The provider throttled access because too many requests arrived. It clears by itself after a while',
-  'err.http.unpaid': 'The subscription does not look paid up',
+  'err.http.unpaid': 'The line does not look paid up',
   'err.http.providerServer': 'Something is wrong on the provider’s server, not on our side',
   'err.http.providerRefused': 'The provider refused the request',
   'err.http.tmdbKey': 'The TMDB key is invalid. Enter it again in Settings',
@@ -475,6 +472,81 @@ export const en: Partial<Record<keyof typeof tr, string>> = {
   'update.check': 'Tell me when a new version is out',
   'update.note2':
     'GitHub is asked once a day and nothing else is sent. Switched off, the request is never made. Nothing installs itself — the download page opens in your browser.',
+  /* ── settings: two panes ────────────────────────────────────────── */
+  'set.nav.provider': 'Provider',
+  'set.nav.language': 'Language',
+  'set.nav.updates': 'Updates',
+  'set.nav.advanced': 'Advanced',
+  'set.nav.about': 'About',
+  'set.group.connection': 'CONNECTION',
+  'set.group.app': 'APP',
+  'set.group.other': 'OTHER',
+  'set.catalogFoot': 'CATALOGUE',
+  'set.open': 'Open',
+  'set.daysLeft': '{n} days',
+
+  'set.provider.lead':
+    'Your IPTV link and the list that comes from it. Elembi supplies no content; what there is to watch is decided entirely by the address you enter here.',
+  'set.provider.okTitle': 'The connection works',
+  'set.provider.okNote': 'Connected to your provider. The line is valid until {date}.',
+  'set.provider.okNoDate': 'Connected to your provider and the list arrived.',
+  'set.provider.badTitle': 'Your provider cannot be reached',
+  'set.provider.validity': 'Valid until',
+  'set.provider.validityNote': 'When the line at your provider runs out',
+  'set.provider.connNote': 'How many devices can watch at once',
+  'set.provider.addressGroup': 'THE LINK',
+  'set.provider.addressNote': 'Kept on this computer and never enters the interface',
+  'set.provider.change': 'Use a different link',
+  'set.provider.changeNote': 'To switch provider, or to update the details',
+
+  'set.lang.lead':
+    'The language you pick changes more than the buttons: the posters, overviews and film titles from TMDB follow it too.',
+  'set.lang.appLang': 'App language',
+  'set.lang.reloadNote': 'Switching reloads the app',
+  'set.lang.cost':
+    'Matching against your provider gets weaker in English: the panel lists its films under Turkish names, so English titles hit less often. Measured across 180 popular titles: 45 against 33.',
+  'set.lang.artGroup': 'WHERE ARTWORK COMES FROM',
+  'set.lang.tmdbNote': 'Changes together with the app language',
+  'set.lang.regionNote': 'Decides which platforms a title is listed on',
+
+  'set.upd.lead':
+    'Elembi does not update itself. When a new version is out it tells you and opens the download page in your browser; you install it.',
+  'set.upd.current': 'You are on {version}',
+  'set.upd.latest': 'This is the newest version.',
+  'set.upd.found': '{version} is out — you can open the download page.',
+  'set.upd.off': 'Checking is off, so nothing looks for a newer version.',
+  'set.upd.checkNow': 'Check now',
+  'set.upd.checking': 'Checking…',
+  'set.upd.download': 'Download page',
+  'set.upd.toggleNote': 'Checked once a day',
+  'set.upd.privacy':
+    'While on, {host} is asked once a day whether a newer version exists — nothing else. No credentials, nothing about what you watch. Switched off, the request is never made.',
+
+  'set.adv.lead': 'You should not normally need this. It shows what is where when something is not working.',
+  'set.adv.playback': 'PLAYBACK',
+  'set.adv.ffmpegNote': 'Needed to seek inside MKV files and to decode AC-3 audio',
+  'set.adv.installed': 'installed',
+  'set.adv.notInstalled': 'not installed',
+  'set.adv.outputNote': 'The stream format asked of the provider',
+  'set.adv.artwork': 'ARTWORK SERVICE',
+  'set.adv.keyNote': 'No posters or overviews arrive without it',
+  'set.adv.artLead':
+    'Posters, backdrops, overviews, cast lists and platform logos all come from TMDB (The Movie Database); Elembi has no artwork of its own. The catalogue still works without a key, but every title shows up bare.',
+  'set.adv.keyHow':
+    'The key is free. Make an account at themoviedb.org, go to Settings → API and copy the “API Read Access Token”, then paste it into the setup screen.',
+  'set.adv.getKey': 'Get a key at TMDB',
+  'set.adv.changeKey': 'Enter or change the key',
+  'set.adv.changeKeyNote': 'In the setup screen, under the link field',
+  'set.adv.noKeyTitle': 'The artwork service is not connected',
+  'set.adv.noKeyNote': 'The catalogue works, but no posters, overviews or cast information arrive.',
+  'set.adv.data': 'DATA',
+  'set.adv.catalog': 'Catalogue',
+  'set.adv.catalogNote': '{n} titles',
+  'set.adv.dataDirNote': 'Deleting the folder deletes everything the app knows',
+
+  'set.about.lead':
+    'Elembi is a player written to watch your own IPTV link on the desktop. It hosts no streams and sells nothing.',
+
   /* ── info pages ─────────────────────────────────────────────────── */
   'info.tab.about': 'About',
   'info.tab.help': 'Help',
@@ -485,7 +557,7 @@ export const en: Partial<Record<keyof typeof tr, string>> = {
 
   'info.about.whatH': 'What Elembi is',
   'info.about.whatP':
-    'Elembi is a player written to watch your own IPTV subscription on the desktop. It reads the channel, film and series lists your subscription offers and adds posters, overviews, cast and keywords from TMDB on top. It hosts no streams or content of its own; what there is to watch is decided entirely by the subscription you enter.',
+    'Elembi is a player written to watch your own IPTV link on the desktop. It reads the channel, film and series lists your provider offers and adds posters, overviews, cast and keywords from TMDB on top. It hosts no streams or content of its own and sells nothing; what there is to watch is decided entirely by the link you enter.',
   'info.about.howH': 'How it works',
   'info.about.howP1':
     'Every network request leaves from the app’s main process; the interface never talks to the internet directly. For playback, files are passed through a local ',
@@ -516,12 +588,12 @@ export const en: Partial<Record<keyof typeof tr, string>> = {
   'info.help.commonH': 'Common questions',
   'info.help.q1': 'Cannot connect to the provider',
   'info.help.a1':
-    'Check the address and whether the subscription is still valid. The panel may lock your address temporarily if too many requests arrive in a short time; then it takes waiting a while and trying again.',
+    'Check the address and whether the line is still valid. The panel may lock your address temporarily if too many requests arrive in a short time; then it takes waiting a while and trying again.',
   'info.help.q2': 'The catalogue shows but nothing plays',
   'info.help.a2':
     'When the provider cannot be reached, the app shows the last catalogue from disk. The list looks full but playback will not work; it fixes itself once the connection is back.',
   'info.help.q3': 'Nothing plays while another device is watching',
-  'info.help.a3': 'Most subscriptions allow only one connection at a time. Close the player on the other device.',
+  'info.help.a3': 'Most providers allow only one connection at a time. Close the player on the other device.',
   'info.help.q4': 'No subtitles',
   'info.help.a4':
     'Subtitles are read from inside the file and turn on by themselves when one is in the interface language. If the file carries no embedded subtitles, “Load from file” in the player opens an .srt you have on disk.',
@@ -545,7 +617,7 @@ export const en: Partial<Record<keyof typeof tr, string>> = {
   'info.privacy.storedH': 'What is kept on your computer',
   'info.privacy.storedP1': 'All of it lives in ',
   'info.privacy.storedP2': '. Deleting that folder deletes everything the app knows.',
-  'info.privacy.file.config': 'Your subscription address, username, password and TMDB key',
+  'info.privacy.file.config': 'Your IPTV link, username, password and TMDB key',
   'info.privacy.file.state': 'Where you left off, your favourites and the subtitle delay per title',
   'info.privacy.file.catalog': 'Your provider’s channel, film and series lists',
   'info.privacy.file.artwork': 'The poster addresses found and the colours read from logos',
@@ -559,7 +631,7 @@ export const en: Partial<Record<keyof typeof tr, string>> = {
   'info.privacy.providerValue':
     'The catalogue, the programme guide and everything you watch come from there. The Xtream protocol puts your username and password inside the address on every request, and your provider also sees which title you opened.',
   'info.privacy.tmdbValue':
-    'The names of the titles you open are queried to find posters and overviews. So TMDB sees what you are looking at. None of your subscription details are sent.',
+    'The names of the titles you open are queried to find posters and overviews. So TMDB sees what you are looking at. None of your connection details are sent.',
   'info.privacy.imagesValue': 'Posters, backdrops and platform logos are downloaded from here.',
   'info.privacy.sportsValue': 'Only team names are queried, for the badges on match cards.',
   'info.privacy.githubValue':
@@ -572,10 +644,10 @@ export const en: Partial<Record<keyof typeof tr, string>> = {
 
   'info.terms.scopeH': 'What it offers, and what it does not',
   'info.terms.scopeP':
-    'Elembi is a player. It hosts no streams, films or series; it neither sells nor supplies any subscription. It connects only to the subscription you enter and shows what that subscription gives it.',
+    'Elembi is a player. It hosts no streams, films or series; it neither sells nor supplies any subscription. It connects only to the link you enter and shows what your provider gives it.',
   'info.terms.liabilityH': 'Responsibility',
   'info.terms.liabilityP':
-    'Making sure the subscription you use and the content you reach comply with the law where you are is your responsibility. Elembi is not responsible for the source of the content you display through it and performs no checks on it.',
+    'Making sure the link you use and the content you reach comply with the law where you are is your responsibility. Elembi is not responsible for the source of the content you display through it and performs no checks on it.',
   'info.terms.warrantyH': 'No warranty',
   'info.terms.warrantyP':
     'The app is provided as is. No promise is made that it will run without interruption or error, or that it will work with every provider. No liability is accepted for data loss or other damage arising from its use.',
@@ -587,7 +659,6 @@ export const en: Partial<Record<keyof typeof tr, string>> = {
     'Elembi is open source. You can read the code, change it and build it yourself. The distribution terms are stated in the licence file in the repository.',
 
   /* ── leftovers ──────────────────────────────────────────────────── */
-  'settings.heading': 'Settings',
   'season.countSeasons': '{n} SEASONS',
   'detail.notAired': 'Not released yet',
   'search.allFor': 'All results and filters for “{query}”',
@@ -621,9 +692,6 @@ export const en: Partial<Record<keyof typeof tr, string>> = {
   'search.byPerson': 'Search by actor',
   'set.missing': 'missing',
   'set.version': 'Version',
-  'settings.credBefore': 'Credentials are read from ',
-  'settings.credAfter':
-    ' and never enter the interface bundle. Every request is made in the main process.',
   'update.current': 'You are on {version}',
   'badge.live': 'LIVE',
   'episode.watched': 'watched',
