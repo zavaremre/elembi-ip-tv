@@ -141,12 +141,27 @@ export function usePlayerControls(
    * document — requestFullscreen there resolves to nothing visible. The player
    * already fills the window, so filling the screen is the window's job.
    */
+  /* Whether the player is what put the window on the screen, so closing it
+     only undoes what it did — the header's button can do the same, and that
+     choice should survive closing a video. */
+  const owned = useRef(false)
+
   const toggleFullscreen = useCallback((): void => {
     window.elembi.win
-      .toggleMaximize()
-      .then(setFullscreen)
+      .toggleFullscreen()
+      .then((on) => {
+        owned.current = on
+        setFullscreen(on)
+      })
       .catch(() => undefined)
   }, [])
+
+  useEffect(
+    () => () => {
+      if (owned.current) void window.elembi.win.leaveFullscreen().catch(() => undefined)
+    },
+    []
+  )
 
   const togglePip = useCallback((): void => {
     const video = videoRef.current
@@ -160,7 +175,7 @@ export function usePlayerControls(
     let alive = true
     const read = (): void => {
       window.elembi.win
-        .isMaximized()
+        .isFullscreen()
         .then((value) => alive && setFullscreen(value))
         .catch(() => undefined)
     }

@@ -191,6 +191,7 @@ export const en: Partial<Record<keyof typeof tr, string>> = {
   'player.mini': 'Shrink to mini player',
   'player.miniResize': 'Resize the mini player',
   'player.pip': 'Picture in picture',
+  'player.fullscreen': 'Fullscreen',
   'player.exitFullscreen': 'Leave full screen',
   'player.closeMenu': 'Close the menu',
   'player.volume': 'Volume',

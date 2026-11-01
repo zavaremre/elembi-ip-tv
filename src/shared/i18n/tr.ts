@@ -193,6 +193,7 @@ export const tr = {
   'player.mini': 'Mini oynatıcıya al',
   'player.miniResize': 'Mini oynatıcıyı boyutlandır',
   'player.pip': 'Küçük pencere',
+  'player.fullscreen': 'Tam ekran',
   'player.exitFullscreen': 'Tam ekrandan çık',
   'player.closeMenu': 'Menüyü kapat',
   'player.volume': 'Ses düzeyi',

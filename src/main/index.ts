@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, Menu, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, Menu, screen, shell } from 'electron'
 import { spawn } from 'node:child_process'
 import { join } from 'node:path'
 import { config, patchConfig } from './config'
@@ -155,6 +155,78 @@ function registerIpc(): void {
     else win.maximize()
     return win.isMaximized()
   })
+  /*
+   * Full screen, which maximise is not. On Windows and Linux maximize() stops
+   * at the work area: the taskbar and this window's own controls stay on
+   * screen, which is what the player's full-screen button was doing there.
+   * setFullScreen covers the screen on both. macOS keeps simple full screen —
+   * native setFullScreen does nothing on a frameless window, measured on this
+   * app's own shape.
+   */
+  /*
+   * Where the window was before it covered the screen. Set only when full
+   * screen was entered by hand, which is also how that state is recognised.
+   */
+  let restoreTo: Electron.Rectangle | null = null
+
+  const coverDisplay = (win: BrowserWindow): void => {
+    restoreTo = win.getBounds()
+    /* Above the taskbar, which an ordinary top-level window does not cover. */
+    win.setAlwaysOnTop(true, 'screen-saver')
+    win.setBounds(screen.getDisplayMatching(restoreTo).bounds)
+  }
+
+  const uncoverDisplay = (win: BrowserWindow): void => {
+    win.setAlwaysOnTop(false)
+    if (restoreTo) win.setBounds(restoreTo)
+    restoreTo = null
+  }
+
+  const isCovering = (win: BrowserWindow): boolean => {
+    const bounds = win.getBounds()
+    const display = screen.getDisplayMatching(bounds).bounds
+    return bounds.width >= display.width && bounds.height >= display.height
+  }
+
+  const enterFullscreen = async (win: BrowserWindow): Promise<boolean> => {
+    if (process.platform === 'darwin') {
+      win.setSimpleFullScreen(true)
+      return win.isSimpleFullScreen()
+    }
+    win.setFullScreen(true)
+    /* Asked for, then checked: this window is transparent, and Electron
+       excludes transparent frameless windows from system maximisation, which
+       is what left the player's full screen stopping at the taskbar. When the
+       native call does not take, covering the display by hand does — the same
+       thing setSimpleFullScreen does for us on macOS. */
+    await new Promise((resolve) => setTimeout(resolve, 120))
+    if (!isCovering(win)) {
+      win.setFullScreen(false)
+      coverDisplay(win)
+    }
+    return true
+  }
+
+  const leaveFullscreen = (win: BrowserWindow): boolean => {
+    if (process.platform === 'darwin') {
+      win.setSimpleFullScreen(false)
+      return false
+    }
+    if (restoreTo) uncoverDisplay(win)
+    else win.setFullScreen(false)
+    return false
+  }
+
+  const inFullscreen = (win: BrowserWindow): boolean =>
+    process.platform === 'darwin'
+      ? win.isSimpleFullScreen()
+      : win.isFullScreen() || restoreTo !== null
+
+  onWindow('win:toggleFullscreen', async (win) =>
+    inFullscreen(win) ? leaveFullscreen(win) : enterFullscreen(win)
+  )
+  onWindow('win:setFullscreen', (win) => leaveFullscreen(win))
+  onWindow('win:isFullscreen', (win) => inFullscreen(win))
   onWindow('win:close', (win) => {
     win.close()
     return true

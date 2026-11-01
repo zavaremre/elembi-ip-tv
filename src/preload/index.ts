@@ -116,7 +116,11 @@ const api = {
     /** Resolves to the state it ended up in. */
     toggleMaximize: () => call<boolean>('win:toggleMaximize'),
     close: () => call<boolean>('win:close'),
-    isMaximized: () => call<boolean>('win:isMaximized')
+    isMaximized: () => call<boolean>('win:isMaximized'),
+    /** Covers the whole screen, taskbar included — not the same as maximise. */
+    toggleFullscreen: () => call<boolean>('win:toggleFullscreen'),
+    leaveFullscreen: () => call<boolean>('win:setFullscreen'),
+    isFullscreen: () => call<boolean>('win:isFullscreen')
   }
 }
 
