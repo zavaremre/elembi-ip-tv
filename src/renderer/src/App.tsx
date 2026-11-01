@@ -552,7 +552,7 @@ export function App(): React.JSX.Element {
         <div className="fixed bottom-5 left-1/2 z-95 -translate-x-1/2 rounded-[12px] border border-live/50 bg-ink2/92 px-4 py-3 text-[13px] backdrop-blur-[18px]">
           {playback.error}
           <button type="button" onClick={playback.clearError} className="ml-3 font-bold text-acc">
-            kapat
+            {t('common.dismiss')}
           </button>
         </div>
       ) : null}

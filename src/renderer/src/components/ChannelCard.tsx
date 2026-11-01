@@ -27,7 +27,7 @@ export function ChannelCard({ channel, guide, layout = 'rail', onPlay }: Channel
       <Art src={channel.logo} alt={channel.name} shape="still" contain className="lift-sm">
         <span className="mono absolute top-2.5 left-2.5 z-3 flex items-center gap-1.5 rounded-md bg-live px-1.5 py-0.5 text-[10px] font-semibold tracking-[0.07em] text-white">
           <i className="pulse" />
-          CANLI
+          {t('badge.live')}
         </span>
         <span className="mono absolute top-2.5 right-2.5 z-3 rounded-[5px] border border-line bg-ink/60 px-1.5 py-0.5 text-[10.5px] text-tx2 backdrop-blur-sm">
           {channel.num}

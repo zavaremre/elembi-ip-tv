@@ -139,7 +139,7 @@ export function SeasonEpisodes({
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true">
                             <path d="m5 13 4 4L19 7" />
                           </svg>
-                          izlendi
+                          {t('episode.watched')}
                         </span>
                       ) : null}
                     </div>

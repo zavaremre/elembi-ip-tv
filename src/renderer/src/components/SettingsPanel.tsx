@@ -32,7 +32,9 @@ export function SettingsPanel({ onRefresh, onEditProvider, onOpenInfo, onLanguag
     <div className="shell px-[var(--pad)] py-8">
       <h2 className="text-[28px] font-extrabold">{t('settings.heading')}</h2>
       <p className="mt-2 max-w-[60ch] text-[14px] text-tx2">
-        Kimlik bilgileri <code className="mono rounded-[5px] bg-acc/12 px-1.5 text-acc">.env</code> {t('settings.credFile', { file: '' })}
+        {t('settings.credBefore')}
+        <code className="mono rounded-[5px] bg-acc/12 px-1.5 text-acc">.env</code>
+        {t('settings.credAfter')}
       </p>
 
       <div className="mt-6 grid gap-5 md:grid-cols-2">
@@ -60,7 +62,7 @@ export function SettingsPanel({ onRefresh, onEditProvider, onOpenInfo, onLanguag
         <section className="rounded-[18px] border border-line bg-surf p-5">
           <h3 className="mono text-[11px] tracking-[0.12em] text-tx3 uppercase">TMDB</h3>
           <div className="mt-2">
-            <Field label={t('set.key')} value={config.data?.tmdb.hasToken ? t('set.defined') : 'eksik'} />
+            <Field label={t('set.key')} value={config.data?.tmdb.hasToken ? t('set.defined') : t('set.missing')} />
             <Field label={t('set.language')} value={config.data?.tmdb.lang ?? '—'} />
             <Field label={t('set.region')} value={config.data?.tmdb.region ?? '—'} />
             <Field label={t('set.host')} value={config.data?.xtream.host ?? '—'} />

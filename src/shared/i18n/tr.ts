@@ -395,7 +395,6 @@ export const tr = {
   'season.episodeCount': '{n} bölüm',
   'audio.single2': 'Bu dosya tek ses parçası taşıyor.',
   'lang.code.other': 'Bilinmeyen',
-  'settings.credFile': '{file} dosyasından okunuyor ve hiçbir zaman arayüz paketine girmiyor. Tüm istekler ana süreçte yapılır.',
 
   'key.seek10': 'j/l 10 sn',
   'key.seek5': '←/→ 5 sn',
@@ -623,6 +622,13 @@ export const tr = {
   'set.seriesCount': 'Dizi',
   'search.byKeyword': 'Konu olarak ara',
   'search.byPerson': 'Oyuncu olarak ara',
+  'set.missing': 'eksik',
+  'settings.credBefore': 'Kimlik bilgileri ',
+  'settings.credAfter':
+    ' dosyasından okunuyor ve hiçbir zaman arayüz paketine girmiyor. Tüm istekler ana süreçte yapılır.',
+  'badge.live': 'CANLI',
+  'episode.watched': 'izlendi',
+  'common.dismiss': 'kapat',
   'track.audio': 'Ses {n}',
   'quality.auto': 'otomatik',
   'locale': 'tr-TR',

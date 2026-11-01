@@ -65,7 +65,7 @@ export function PlayerSettingsMenu({
       ) : null}
 
       {!isLive ? (
-        <Section title="{t('player.speed')}">
+        <Section title={t('player.speed')}>
           <div className="flex flex-wrap gap-1 px-3 pb-1">
             {SPEEDS.map((value) => (
               <button

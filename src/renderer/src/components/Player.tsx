@@ -226,7 +226,7 @@ export function Player({
           }`}
         >
           <i className="pulse" />
-          CANLI
+          {t('badge.live')}
         </span>
       ) : null}
 
@@ -349,7 +349,7 @@ export function Player({
             <button
               type="button"
               onClick={controls.toggle}
-              aria-label="Oynat"
+              aria-label={t('common.play')}
               className="absolute inset-0 z-10 grid place-items-center"
             >
               <span className="grid h-20 w-20 place-items-center rounded-full border border-white/50 bg-ink/45 backdrop-blur-sm">

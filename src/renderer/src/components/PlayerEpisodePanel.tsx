@@ -36,7 +36,7 @@ export function PlayerEpisodePanel({
     <div className="absolute right-0 bottom-12 z-20 flex max-h-[62vh] w-[420px] flex-col overflow-hidden rounded-[16px] border border-white/14 bg-ink2/96 shadow-[0_30px_70px_-22px_rgba(0,0,0,.95)] backdrop-blur-[22px]">
       <div className="flex items-center gap-2 border-b border-line px-3.5 py-2.5">
         <span className="mono text-[10px] tracking-[0.14em] text-tx3 uppercase">{t('season.episodes')}</span>
-        <button type="button" onClick={onClose} aria-label="Kapat" className="ml-auto grid h-7 w-7 place-items-center rounded-[8px] bg-white/10">
+        <button type="button" onClick={onClose} aria-label={t('win.close')} className="ml-auto grid h-7 w-7 place-items-center rounded-[8px] bg-white/10">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
             <path d="M6 6l12 12M18 6L6 18" />
           </svg>

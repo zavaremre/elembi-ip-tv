@@ -25,7 +25,7 @@ export function ReminderToast({ match, onPlay, onDismiss }: ReminderToastProps):
       <button type="button" onClick={onPlay} className="ml-1.5 rounded-[8px] bg-score/14 px-2.5 py-1.5 text-[12px] font-bold text-score">
         {t('match.watch')}
       </button>
-      <button type="button" onClick={onDismiss} aria-label="Kapat" className="grid h-6 w-6 place-items-center rounded-[7px] bg-white/10">
+      <button type="button" onClick={onDismiss} aria-label={t('win.close')} className="grid h-6 w-6 place-items-center rounded-[7px] bg-white/10">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
           <path d="M6 6l12 12M18 6L6 18" />
         </svg>

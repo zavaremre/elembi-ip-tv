@@ -393,7 +393,6 @@ export const en: Partial<Record<keyof typeof tr, string>> = {
   'season.episodeCount': '{n} episodes',
   'audio.single2': 'This file carries one audio track.',
   'lang.code.other': 'Unknown',
-  'settings.credFile': 'are read from {file} and never reach the interface bundle. Every request is made in the main process.',
 
   'key.seek10': 'j/l 10 s',
   'key.seek5': '←/→ 5 s',
@@ -620,6 +619,13 @@ export const en: Partial<Record<keyof typeof tr, string>> = {
   'set.seriesCount': 'Series',
   'search.byKeyword': 'Search by topic',
   'search.byPerson': 'Search by actor',
+  'set.missing': 'missing',
+  'settings.credBefore': 'Credentials are read from ',
+  'settings.credAfter':
+    ' and never enter the interface bundle. Every request is made in the main process.',
+  'badge.live': 'LIVE',
+  'episode.watched': 'watched',
+  'common.dismiss': 'dismiss',
   'track.audio': 'Audio {n}',
   'quality.auto': 'auto',
   'locale': 'en-GB',
