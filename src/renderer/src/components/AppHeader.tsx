@@ -60,7 +60,23 @@ export function AppHeader({
     place(null)
     const onResize = (): void => place(hovered.current)
     window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
+
+    /*
+     * Measured once, the pill kept whatever width the fallback font gave the
+     * labels: Manrope swaps in afterwards, every button moves, and the pill
+     * stays behind sitting off the word it belongs to. These re-measure when
+     * the real metrics exist — fonts.ready for the swap, the observer for any
+     * other reflow of the row.
+     */
+    void document.fonts?.ready.then(() => place(hovered.current))
+    const nav = navRef.current
+    const observer = new ResizeObserver(() => place(hovered.current))
+    if (nav) observer.observe(nav)
+
+    return () => {
+      window.removeEventListener('resize', onResize)
+      observer.disconnect()
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [section])
 
