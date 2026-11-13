@@ -109,7 +109,7 @@ export function DetailPage({
         <button
           type="button"
           onClick={onBack}
-          className="nodrag absolute top-[82px] left-[var(--pad)] z-5 flex items-center gap-2 rounded-[10px] border border-line bg-ink/60 px-3 py-2 text-[13px] font-bold backdrop-blur-sm hover:border-acc/40"
+          className="absolute top-[82px] left-[var(--pad)] z-5 flex items-center gap-2 rounded-[10px] border border-line bg-ink/60 px-3 py-2 text-[13px] font-bold backdrop-blur-sm hover:border-acc/40"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
             <path d="m15 6-6 6 6 6" />

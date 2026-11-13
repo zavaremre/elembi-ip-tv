@@ -7,7 +7,6 @@ import { PlayerLoading } from './PlayerLoading'
 import { PlayerSeekBar } from './PlayerSeekBar'
 import { SubtitleOverlay } from './SubtitleOverlay'
 import { PlayerSettingsMenu } from './PlayerSettingsMenu'
-import { WindowControls } from './WindowControls'
 import { useMiniWindow } from '@/hooks/useMiniWindow'
 import { usePlayerControls } from '@/hooks/usePlayerControls'
 import { useAudioDelay } from '@/hooks/useAudioDelay'
@@ -162,11 +161,9 @@ export function Player({
     onProgress(controls.time, controls.duration)
   }
 
-  /* nodrag on the whole overlay: the window drag region behind it would otherwise
-     swallow every click that lands inside the title bar band. */
   const chrome = full
-    ? 'win-clip nodrag fixed inset-0 z-80 bg-black'
-    : `group/mini nodrag fixed z-80 overflow-hidden rounded-[20px] border border-white/15 bg-ink2/70 shadow-[0_26px_60px_-20px_rgba(0,0,0,.9)] backdrop-blur-[22px] backdrop-saturate-150 ${
+    ? 'win-clip fixed inset-0 z-80 bg-black'
+    : `group/mini fixed z-80 overflow-hidden rounded-[20px] border border-white/15 bg-ink2/70 shadow-[0_26px_60px_-20px_rgba(0,0,0,.9)] backdrop-blur-[22px] backdrop-saturate-150 ${
         mini.dragging ? 'cursor-grabbing select-none' : 'cursor-grab'
       }`
 
@@ -277,48 +274,21 @@ export function Player({
       ) : null}
 
       {full && !controls.fullscreen ? (
-        /*
-         * The overlay is nodrag as a whole, which also covers the title bar band
-         * and left the window impossible to move while watching. This strip hands
-         * that band back. app-region is not inherited, so a child can opt back in.
-         * Only outside real full screen, where there is no band to grab.
-         */
-        <div className="drag absolute inset-x-0 top-0 z-30 flex h-[52px] items-center justify-end pr-2">
-          {/*
-            * The overlay covers the header, and with it the only way to close or
-            * minimise a frameless window. The player's own buttons sit lower and
-            * act on the video, not the window.
-            */}
-          <span className="relative z-10 flex items-center">
-            <WindowControls />
-          </span>
-        </div>
+        /* The overlay covers the header, and with it the band macOS leaves the
+           page to drag the window by. Handed back here, above the video but
+           below the controls. Inert on the platforms that have a real frame. */
+        <div className="drag absolute inset-x-0 top-0 z-10 h-[52px]" aria-hidden="true" />
       ) : null}
 
       {full ? (
         <>
-          {/*
-            * nodrag is required: the window drag region behind the player swallows
-            * mouse events in that rectangle, so buttons there never receive a click.
-            * The offset also clears the title bar band unless really full screen.
-            */}
           <div
-            className={`nodrag absolute right-6 z-20 flex items-center gap-2 transition-opacity duration-300 ${
-              controls.fullscreen ? 'top-6' : 'top-[76px]'
-            } ${controls.controlsVisible ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+            /* nodrag: the macOS drag strip above swallows clicks landing in its
+               rectangle, and these buttons sit inside it. */
+            className={`nodrag absolute top-6 right-6 z-20 flex items-center gap-2 transition-opacity duration-300 ${
+              controls.controlsVisible ? 'opacity-100' : 'pointer-events-none opacity-0'
+            }`}
           >
-            {controls.fullscreen ? (
-              /*
-                * Full screen hides the drag band that normally carries these, so
-                * the window would have no close or minimise at all. Here they
-                * ride the player's own controls and fade out with them.
-                */
-              <>
-                <WindowControls />
-                <span className="mx-1 h-6 w-px bg-white/20" aria-hidden="true" />
-              </>
-            ) : null}
-
             <button
               type="button"
               onClick={() => onMode('mini')}
@@ -368,7 +338,7 @@ export function Player({
           ) : null}
 
           <div
-            className={`nodrag absolute inset-x-0 bottom-0 z-10 bg-[linear-gradient(0deg,rgba(0,0,0,.92),rgba(0,0,0,.55)_58%,transparent)] px-[var(--pad)] pt-16 pb-4 transition-opacity duration-300 ${
+            className={`absolute inset-x-0 bottom-0 z-10 bg-[linear-gradient(0deg,rgba(0,0,0,.92),rgba(0,0,0,.55)_58%,transparent)] px-[var(--pad)] pt-16 pb-4 transition-opacity duration-300 ${
               controls.controlsVisible ? 'opacity-100' : 'pointer-events-none opacity-0'
             }`}
           >

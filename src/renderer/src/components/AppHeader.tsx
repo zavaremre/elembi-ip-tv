@@ -1,5 +1,4 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { WindowControls } from './WindowControls'
 import { useT, type Key } from '@/i18n'
 
 export type Section = 'home' | 'search' | 'movies' | 'series' | 'live' | 'sports' | 'favorites' | 'settings' | 'info'
@@ -25,7 +24,7 @@ const NAV: { id: Section; key: Key }[] = [
   { id: 'favorites', key: 'nav.favorites' }
 ]
 
-/** Glass header with the React Bits PillNav indicator; doubles as the window drag region. */
+/** Glass header with the React Bits PillNav indicator. */
 export function AppHeader({
   section,
   onSection,
@@ -83,10 +82,8 @@ export function AppHeader({
   return (
     <>
       {/*
-        * Outside the header, not inside it: -webkit-app-region is not inherited,
-        * so a child covering the header carves a no-drag hole across the whole
-        * band and the window stops being draggable. Fixed behind the header
-        * instead, where it blurs the page without touching the drag region.
+        * Fixed behind the header rather than inside it: it blurs the page
+        * scrolling under the band, so it has to sit between the two.
         */}
       <span className={`veil ${scrolled ? 'is-scrolled' : ''}`} aria-hidden="true">
         <span className="veil-tint" />
@@ -97,21 +94,14 @@ export function AppHeader({
       </span>
 
       <header
-      /* The system no longer zooms on a double-click, since there is no title bar
-         to double-click; the drag band has to answer for it. */
-      onDoubleClick={(e) => {
-        if ((e.target as HTMLElement).closest('button, a, input, [role="group"]')) return
-        void window.elembi.win.toggleMaximize()
-      }}
-      /* No right padding: the window controls belong against the window's own
-         edge, outside the centred container the rest of the header sits in.
-         No background or blur either — the veil below carries both, so they can
-         fade out instead of ending on a line. */
-      className="drag sticky top-0 z-60 flex h-[66px] shrink-0 items-center gap-2 pr-2 pl-[var(--pad)]"
+      /* No background or blur: the veil below carries both, so they can fade
+         out instead of ending on a line. The drag and inset classes only do
+         anything on macOS, where this band is the hidden title bar. */
+      className="drag mac-inset sticky top-0 z-60 flex h-[66px] shrink-0 items-center gap-2 px-[var(--pad)]"
     >
 
-      {/* drag must be repeated here: -webkit-app-region does not inherit, so this
-          wrapper would otherwise carve the draggable band out of the header. */}
+      {/* drag has to be repeated: -webkit-app-region is not inherited, so this
+          wrapper would otherwise carve the band out of the header. */}
       <div className="drag shell relative z-10 flex min-w-0 flex-1 items-center gap-4 lg:gap-9">
       {canGoBack ? (
         <button
@@ -205,11 +195,6 @@ export function AppHeader({
         </button>
         </div>
       </div>
-
-      {/* Outside the container on purpose: window controls track the window. */}
-      <span className="relative z-10 flex items-center">
-        <WindowControls />
-      </span>
       </header>
     </>
   )

@@ -18,10 +18,6 @@ export const en: Partial<Record<keyof typeof tr, string>> = {
   'shell.providerDown': 'Provider not connected',
 
   /* ── window ────────────────────────────────────────────────────── */
-  'win.group': 'Window',
-  'win.minimize': 'Minimise',
-  'win.maximize': 'Full screen',
-  'win.restore': 'Leave full screen',
   'win.close': 'Close',
 
   /* ── common ────────────────────────────────────────────────────── */

@@ -44,8 +44,8 @@ export function ProviderToast({
 
   return (
     <div
-      /* Below the 66px header band: inside it the window drag region eats clicks. */
-      className={`nodrag fixed top-[82px] right-5 z-70 flex max-w-[420px] items-center gap-3 rounded-[14px] border px-4 py-3 shadow-[0_22px_50px_-18px_rgba(0,0,0,.9)] backdrop-blur-[20px] ${
+      /* Below the 66px header band. */
+      className={`fixed top-[82px] right-5 z-70 flex max-w-[420px] items-center gap-3 rounded-[14px] border px-4 py-3 shadow-[0_22px_50px_-18px_rgba(0,0,0,.9)] backdrop-blur-[20px] ${
         failed ? 'border-live/45 bg-live/12' : 'border-line bg-ink2/88'
       }`}
     >

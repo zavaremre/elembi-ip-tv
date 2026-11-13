@@ -19,7 +19,7 @@ export function UpdateToast({ update, onDismiss }: UpdateToastProps): React.JSX.
     <div
       /* Bottom right, not top: the provider toast owns the top corner for the
          first seconds of a launch, which is exactly when this arrives. */
-      className="nodrag fixed right-5 bottom-5 z-70 flex max-w-[420px] items-center gap-3 rounded-[14px] border border-acc/45 bg-ink2/88 px-4 py-3 shadow-[0_22px_50px_-18px_rgba(0,0,0,.9)] backdrop-blur-[20px]"
+      className="fixed right-5 bottom-5 z-70 flex max-w-[420px] items-center gap-3 rounded-[14px] border border-acc/45 bg-ink2/88 px-4 py-3 shadow-[0_22px_50px_-18px_rgba(0,0,0,.9)] backdrop-blur-[20px]"
     >
       <span className="pulse shrink-0 text-acc" />
 

@@ -20,10 +20,6 @@ export const tr = {
   'shell.providerDown': 'Sağlayıcı bağlı değil',
 
   /* ── window ────────────────────────────────────────────────────── */
-  'win.group': 'Pencere',
-  'win.minimize': 'Küçült',
-  'win.maximize': 'Büyüt',
-  'win.restore': 'Pencereye döndür',
   'win.close': 'Kapat',
 
   /* ── common ────────────────────────────────────────────────────── */

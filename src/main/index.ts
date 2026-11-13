@@ -36,19 +36,21 @@ function createWindow(): BrowserWindow {
     minHeight: 700,
     show: false,
     /*
-     * No system window at all: the app draws its own controls in the header, so
-     * the frame, its shadow and its rounded corners would only be chrome around
-     * chrome. Frameless windows stay resizable from the edges on every platform.
+     * The system frame, with the controls and behaviours every desktop already
+     * knows. The app drew its own for a while, which cost it the parts of the
+     * window manager that only a framed window gets: a transparent frameless
+     * window is excluded from system maximisation on Windows, so the player's
+     * full screen stopped at the taskbar.
      *
-     * Transparent because the corner radius is the app's: a system window only
-     * offers its own rounding, which cannot be set to 4px. #root paints the
-     * ground and clips it instead, so the window itself must not paint one.
+     * macOS keeps its title bar hidden, which is a different thing: the traffic
+     * lights stay, the window is still a normal framed window as far as the
+     * system is concerned — full screen included — and the page runs up behind
+     * them, so the header's blur reaches the top edge the way it used to.
      */
-    frame: false,
-    hasShadow: false,
-    roundedCorners: false,
-    transparent: true,
-    backgroundColor: '#00000000',
+    ...(process.platform === 'darwin'
+      ? { titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 19, y: 23 } }
+      : {}),
+    backgroundColor: '#08080c',
     webPreferences: {
       preload: join(import.meta.dirname, '../preload/index.mjs'),
       sandbox: false,
@@ -134,34 +136,9 @@ function registerIpc(): void {
     })
   }
 
-  /* Window */
-  onWindow('win:minimize', (win) => {
-    win.minimize()
-    return true
-  })
   /*
-   * Three macOS behaviours, measured on a frameless window of this app's own
-   * shape: setFullScreen does nothing at all — native full screen needs a frame
-   * — and maximize stops at the work area, 2560x1331 at y=30, with the menu bar
-   * still showing. setSimpleFullScreen is the one that covers the screen,
-   * 2560x1440 at the origin, which is what this button is asking for.
-   */
-  onWindow('win:toggleMaximize', (win) => {
-    if (process.platform === 'darwin') {
-      win.setSimpleFullScreen(!win.isSimpleFullScreen())
-      return win.isSimpleFullScreen()
-    }
-    if (win.isMaximized()) win.unmaximize()
-    else win.maximize()
-    return win.isMaximized()
-  })
-  /*
-   * Full screen, which maximise is not. On Windows and Linux maximize() stops
-   * at the work area: the taskbar and this window's own controls stay on
-   * screen, which is what the player's full-screen button was doing there.
-   * setFullScreen covers the screen on both. macOS keeps simple full screen —
-   * native setFullScreen does nothing on a frameless window, measured on this
-   * app's own shape.
+   * Full screen for the player. Minimise, maximise and close are the system
+   * frame's now, so this is all the window surface the renderer still needs.
    */
   /*
    * Where the window was before it covered the screen. Set only when full
@@ -189,16 +166,16 @@ function registerIpc(): void {
   }
 
   const enterFullscreen = async (win: BrowserWindow): Promise<boolean> => {
-    if (process.platform === 'darwin') {
-      win.setSimpleFullScreen(true)
-      return win.isSimpleFullScreen()
-    }
     win.setFullScreen(true)
-    /* Asked for, then checked: this window is transparent, and Electron
-       excludes transparent frameless windows from system maximisation, which
-       is what left the player's full screen stopping at the taskbar. When the
-       native call does not take, covering the display by hand does — the same
-       thing setSimpleFullScreen does for us on macOS. */
+    /* macOS animates into a Space of its own, so the state it reports during
+       the transition means nothing; the call itself is reliable on a framed
+       window. */
+    if (process.platform === 'darwin') return true
+    /* Asked for, then checked. The native call not taking is what left the
+       player's full screen stopping at the taskbar on Windows, back when this
+       window was transparent and frameless — Electron excludes those from
+       system maximisation. The frame should have settled that, but covering
+       the display by hand is kept as the floor under it. */
     await new Promise((resolve) => setTimeout(resolve, 120))
     if (!isCovering(win)) {
       win.setFullScreen(false)
@@ -208,32 +185,19 @@ function registerIpc(): void {
   }
 
   const leaveFullscreen = (win: BrowserWindow): boolean => {
-    if (process.platform === 'darwin') {
-      win.setSimpleFullScreen(false)
-      return false
-    }
     if (restoreTo) uncoverDisplay(win)
     else win.setFullScreen(false)
     return false
   }
 
   const inFullscreen = (win: BrowserWindow): boolean =>
-    process.platform === 'darwin'
-      ? win.isSimpleFullScreen()
-      : win.isFullScreen() || restoreTo !== null
+    win.isFullScreen() || restoreTo !== null
 
   onWindow('win:toggleFullscreen', async (win) =>
     inFullscreen(win) ? leaveFullscreen(win) : enterFullscreen(win)
   )
   onWindow('win:setFullscreen', (win) => leaveFullscreen(win))
   onWindow('win:isFullscreen', (win) => inFullscreen(win))
-  onWindow('win:close', (win) => {
-    win.close()
-    return true
-  })
-  onWindow('win:isMaximized', (win) =>
-    process.platform === 'darwin' ? win.isSimpleFullScreen() : win.isMaximized()
-  )
 
   /* TMDB */
   on('tmdb:trending', () => tmdb.trending())

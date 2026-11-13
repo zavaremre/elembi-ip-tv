@@ -21,7 +21,6 @@
   --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 
-  --radius-window: 8px;
   --radius-card: 14px;
   --radius-panel: 20px;
 
@@ -60,9 +59,7 @@
   }
   body {
     margin: 0;
-    /* The window is transparent so #root can round its own corners; a ground
-       painted here would square them off again. */
-    background: transparent;
+    background: var(--color-ink);
     color: var(--color-tx);
     font-family: var(--font-sans);
     font-size: 15px;
@@ -75,12 +72,7 @@
     display: flex;
     flex-direction: column;
     background: var(--color-ink);
-    border-radius: var(--radius-window);
     overflow: hidden;
-  }
-  /* Against the screen's own edges a rounded corner is a notch of desktop. */
-  :root[data-window-full='true'] #root {
-    border-radius: 0;
   }
   h1,
   h2,
@@ -111,11 +103,20 @@
     outline-offset: 3px;
     border-radius: 6px;
   }
-  .drag {
+  /*
+   * Only on macOS, where the hidden title bar leaves the page to answer for
+   * dragging the window. Everywhere else the system frame does it, and a drag
+   * region would only swallow the clicks that land inside it.
+   */
+  :root[data-platform='darwin'] .drag {
     -webkit-app-region: drag;
   }
-  .nodrag {
+  :root[data-platform='darwin'] .nodrag {
     -webkit-app-region: no-drag;
+  }
+  /* Room for the traffic lights, which the system paints over the page. */
+  :root[data-platform='darwin'] .mac-inset {
+    padding-left: 92px;
   }
   .scroll-y {
     overflow-y: auto;
@@ -197,16 +198,9 @@
     margin-inline: auto;
   }
 
-  /*
-   * Anything fixed to the viewport escapes #root's clip and paints over the
-   * window's own rounded corners. Full-bleed overlays carry the same radius.
-   */
+  /* Full-bleed overlays escape #root's clip, so they carry their own. */
   .win-clip {
-    border-radius: var(--radius-window);
     overflow: hidden;
-  }
-  :root[data-window-full='true'] .win-clip {
-    border-radius: 0;
   }
 
   /* ═══ HEADER VEIL ═══ */
@@ -225,7 +219,7 @@
     /* The header's own height, plus the tail the fade needs to finish in. */
     height: calc(66px + 44px);
     pointer-events: none;
-    /* Under the header, which owns the drag region, and over the page. */
+    /* Under the header and over the page. */
     z-index: 59;
   }
   /*
@@ -234,13 +228,6 @@
    * wrapper, which is empty, and the blur vanishes. On the layer itself it only
    * shapes that layer's own backdrop.
    */
-  .veil > span {
-    border-top-left-radius: var(--radius-window);
-    border-top-right-radius: var(--radius-window);
-  }
-  :root[data-window-full='true'] .veil > span {
-    border-radius: 0;
-  }
   .veil > span {
     position: absolute;
     inset: 0;

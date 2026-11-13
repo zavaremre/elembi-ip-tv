@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useT } from '@/i18n'
-import { WindowControls } from '@/components/WindowControls'
 import { NoiseOverlay } from '@/components/fx/NoiseOverlay'
 import { isComplete, parseXtreamUrl } from '@shared/xtreamUrl'
 import type { ProviderStatus } from '@shared/types'
@@ -88,13 +87,9 @@ export function SetupPage({ initial, onSaved, onCancel }: SetupPageProps): React
 
   return (
     <main className="relative min-h-dvh">
-      {/*
-        * This screen is the whole window on a first run, and the window has no
-        * system frame — without this band it could be neither moved nor closed.
-        */}
-      <div className="drag fixed inset-x-0 top-0 z-50 flex h-[52px] items-center justify-end px-4">
-        <WindowControls />
-      </div>
+      {/* This screen has no header, so on macOS nothing would hand the hidden
+          title bar back and the window could not be moved. Inert elsewhere. */}
+      <div className="drag fixed inset-x-0 top-0 z-50 h-[52px]" aria-hidden="true" />
 
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <span

@@ -110,13 +110,9 @@ const api = {
     update: () => call<UpdateInfo | null>('app:update'),
     platform: process.platform
   },
-  /* The window has no system frame, so its controls live in the header. */
+  /* Minimise, maximise and close belong to the system frame; only the player's
+     full screen needs asking for. */
   win: {
-    minimize: () => call<boolean>('win:minimize'),
-    /** Resolves to the state it ended up in. */
-    toggleMaximize: () => call<boolean>('win:toggleMaximize'),
-    close: () => call<boolean>('win:close'),
-    isMaximized: () => call<boolean>('win:isMaximized'),
     /** Covers the whole screen, taskbar included — not the same as maximise. */
     toggleFullscreen: () => call<boolean>('win:toggleFullscreen'),
     leaveFullscreen: () => call<boolean>('win:setFullscreen'),
