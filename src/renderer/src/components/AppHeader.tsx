@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import lockup from '@/assets/brand/elembi-lockup.svg'
 import { useT, type Key } from '@/i18n'
 
 export type Section = 'home' | 'search' | 'movies' | 'series' | 'live' | 'sports' | 'favorites' | 'settings' | 'info'
@@ -116,11 +117,8 @@ export function AppHeader({
         </button>
       ) : null}
 
-      <div className="flex flex-none items-center gap-2.5">
-        <span className="relative h-[26px] w-[26px] rounded-[8px] bg-linear-to-br from-acc to-[#6B4BFF] shadow-[0_0_18px_rgba(0,216,255,.45)]">
-          <span className="absolute top-[7px] left-[9px] border-y-[6px] border-l-[8px] border-y-transparent border-l-ink" />
-        </span>
-        <b className="gtext font-disp text-[19px] font-black tracking-[-0.03em]">ELEMBİ</b>
+      <div className="flex flex-none items-center">
+        <img src={lockup} alt="Elembi IPTV" width={113} height={22} className="h-[22px] w-auto" draggable={false} />
       </div>
 
       <nav ref={navRef} className="nodrag relative hidden gap-0.5 text-[14px] font-semibold md:flex" onMouseLeave={() => { hovered.current = null; place(null) }}>

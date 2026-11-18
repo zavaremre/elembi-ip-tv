@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import wordmark from '@/assets/brand/elembi-wordmark.svg'
 import { useAsync } from '@/hooks/useAsync'
 import { LANGUAGES, useLang, useT, type Key, type Lang, type Translate } from '@/i18n'
 import type { AppConfig, ProviderStatus, UpdateInfo } from '@shared/types'
@@ -431,7 +432,7 @@ export function SettingsPanel({
         <div className="grid min-h-[520px] md:grid-cols-[232px_1fr]">
           <nav className="flex flex-col border-b border-line bg-[#0a0b10] p-3 md:border-r md:border-b-0 md:p-5 md:px-3">
             <div className="hidden items-baseline gap-2.5 px-2.5 pb-[18px] md:flex">
-              <b className="font-disp text-[16px] font-black tracking-[-0.03em]">ELEMBİ</b>
+              <img src={wordmark} alt="Elembi" width={82} height={22} className="h-[22px] w-auto" draggable={false} />
               <span className="mono text-[10.5px] text-tx3">{config.data?.version ?? ''}</span>
             </div>
 

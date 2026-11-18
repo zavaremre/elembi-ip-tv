@@ -305,14 +305,6 @@
   }
 
   /* ═══ REACT BITS LAYER ═══ */
-  /* GradientText */
-  .gtext {
-    background: linear-gradient(100deg, #f7f8fb 14%, var(--color-acc) 38%, #7b5bff 54%, #f7f8fb 78%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    background-size: 280% 100%;
-  }
   /* ShinyText */
   .shiny {
     position: relative;
@@ -456,9 +448,6 @@
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    .gtext {
-      animation: gsweep 8s linear infinite;
-    }
     .shiny::after {
       animation: shine 5s ease-in-out infinite;
     }
@@ -538,7 +527,6 @@
   }
 }
 
-@keyframes gsweep { to { background-position: -280% 0; } }
 @keyframes shine { 0%, 58% { transform: translateX(-130%); } 84%, 100% { transform: translateX(130%); } }
 @keyframes sb1 { to { transform: translateX(-300%); } }
 @keyframes sb2 { to { transform: translateX(300%); } }
