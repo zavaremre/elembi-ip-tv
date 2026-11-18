@@ -114,9 +114,20 @@
   :root[data-platform='darwin'] .nodrag {
     -webkit-app-region: no-drag;
   }
-  /* Room for the traffic lights, which the system paints over the page. */
-  :root[data-platform='darwin'] .mac-inset {
-    padding-left: 92px;
+  /*
+   * Room for the traffic lights, which the system paints over the page: three
+   * dots running from 18px to 73px, measured off a screenshot. The header is
+   * the title bar, so its first item has to start clear of them.
+   *
+   * The whole gutter widens rather than the header's alone. Padding only the
+   * header leaves the logo out of line with every heading under it, and the
+   * eye reads that as a mistake long before it reads it as a system inset.
+   * One number keeps the column true from the logo down to the last row, and
+   * it is the one to turn if the logo ever sits too near the lights: 96 leaves
+   * 23px, 80 left 7px and read as crowded.
+   */
+  :root[data-platform='darwin'] {
+    --pad: 96px;
   }
   .scroll-y {
     overflow-y: auto;

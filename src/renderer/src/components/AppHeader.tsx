@@ -96,9 +96,10 @@ export function AppHeader({
 
       <header
       /* No background or blur: the veil below carries both, so they can fade
-         out instead of ending on a line. The drag and inset classes only do
-         anything on macOS, where this band is the hidden title bar. */
-      className="drag mac-inset sticky top-0 z-60 flex h-[66px] shrink-0 items-center gap-2 px-[var(--pad)]"
+         out instead of ending on a line. drag only does anything on macOS,
+         where this band is the hidden title bar; the room its traffic lights
+         need is in --pad, so the logo starts on the page's own column. */
+      className="drag sticky top-0 z-60 flex h-[66px] shrink-0 items-center gap-2 px-[var(--pad)]"
     >
 
       {/* drag has to be repeated: -webkit-app-region is not inherited, so this
