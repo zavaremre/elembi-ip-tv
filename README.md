@@ -36,7 +36,8 @@ account and a Windows certificate. Your system will say so, in its own words:
 - **Windows** shows a SmartScreen warning. **More info** → **Run anyway**.
 - **Linux**: mark the AppImage executable first — `chmod +x elembi-*.AppImage`.
 
-**ffmpeg is required** and is not bundled; see below.
+ffmpeg comes with the macOS and Windows builds. On Linux it comes from your
+distribution; see below.
 
 ## What you need
 
@@ -44,17 +45,25 @@ account and a Windows certificate. Your system will say so, in its own words:
 | --- | --- |
 | An Xtream Codes subscription | Any link the provider hands out: `get.php`, `player_api.php`, `xmltv.php`, or a stream address |
 | A TMDB read token | Free. Without it the catalogue still works, but posters and summaries stay empty |
-| **ffmpeg on your PATH** | Not optional — see below |
+| **ffmpeg** | Bundled on macOS and Windows. On Linux the `.deb` depends on it; AppImage users install it themselves |
 
 ffmpeg does the work Chromium cannot. Most providers ship films as Matroska, and
-Chromium can neither seek accurately inside those nor decode AC-3 / E-AC-3 at
-all — about 37% of this catalogue. Without ffmpeg you lose seeking, sound on
-those titles, and the subtitles carried inside the file.
+Chromium can neither seek accurately inside those, nor decode AC-3 / E-AC-3 at
+all — about 37% of this catalogue — nor even list the audio tracks a file
+carries, so a dubbed episode offers no choice of language. Seeking, that audio,
+the subtitles inside the file and the track picker all come from ffmpeg.
+
+The macOS and Windows builds carry their own: ffmpeg 8.1, compiled or taken
+LGPL-only, with no library the player never calls. macOS is built from source
+here (`scripts/build-ffmpeg-macos.sh`) because every prebuilt worth downloading
+is configured `--enable-nonfree`, which FFmpeg's own terms forbid redistributing.
+
+Linux is left alone on purpose: bundling shared libraries is the wrong move on
+a platform built around them, and the distribution's build is the one matched to
+its codecs.
 
 ```bash
-brew install ffmpeg      # macOS
-winget install ffmpeg    # Windows
-apt install ffmpeg       # Debian/Ubuntu
+apt install ffmpeg       # Debian/Ubuntu, if you run the AppImage
 ```
 
 ## Getting started

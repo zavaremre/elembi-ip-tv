@@ -567,7 +567,7 @@ export const tr = {
   'info.about.version': 'Sürüm',
   'info.about.runtime': 'Çalışma ortamı',
   'info.about.needs': 'Gereken araç',
-  'info.about.needsValue': 'ffmpeg (sistemde kurulu olmalı)',
+  'info.about.needsValue': 'ffmpeg 8.1 (macOS ve Windows’ta uygulamayla gelir, Linux’ta sistemden)',
   'info.about.platforms': 'Platformlar',
   'info.about.platformsValue': 'macOS, Windows ve Linux — şu ana kadar yalnızca macOS üzerinde denendi',
   'info.about.current': 'Şu anki platform',
@@ -582,7 +582,10 @@ export const tr = {
     'Afişlerin, özetlerin ve platform logolarının gelmesi için bir TMDB okuma anahtarı gerekir; ücretsizdir. Anahtar olmadan katalog çalışır ama görseller boş kalır.',
   'info.help.ffmpegH': 'ffmpeg neden gerekli',
   'info.help.ffmpegP1':
-    'Sağlayıcıların çoğu filmleri MKV olarak verir. Chromium bu dosyalarda konumlu ileri sarma yapamaz ve yaygın olan AC-3 / E-AC-3 sesi hiç çözemez. ffmpeg kurulu değilse ileri sarma, bu seslerin duyulması ve dosya içindeki altyazılar çalışmaz. Bu sistemde ',
+    'Sağlayıcıların çoğu filmleri MKV olarak verir. Chromium bu dosyalarda konumlu ileri sarma yapamaz, yaygın olan AC-3 / E-AC-3 sesi hiç çözemez ve dosyadaki ses parçalarını listeleyemez. İleri sarma, bu seslerin duyulması, dosya içindeki altyazılar ve ses parçası seçimi ffmpeg ile gelir. ',
+  'info.help.ffmpegBundled':
+    'Uygulamayla birlikte geliyor, ayrıca kurman gereken bir şey yok.',
+  'info.help.ffmpegLinux': 'Linux’ta dağıtımın kendi sürümü kullanılır; ',
   'info.help.ffmpegP2': ' ile kurulur.',
   'info.help.commonH': 'Sık karşılaşılanlar',
   'info.help.q1': 'Sağlayıcıya bağlanılamıyor',

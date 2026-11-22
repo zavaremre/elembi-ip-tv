@@ -59,12 +59,8 @@ function Keys({ items }: { items: [string, string][] }): React.JSX.Element {
   )
 }
 
-/* Named per platform: the install command is the one thing that differs. */
-const FFMPEG_HINT: Record<string, string> = {
-  darwin: 'brew install ffmpeg',
-  win32: 'winget install ffmpeg',
-  linux: 'apt install ffmpeg'
-}
+/* macOS and Windows carry their own ffmpeg, so only Linux needs a command. */
+const FFMPEG_HINT = 'apt install ffmpeg'
 
 /*
  * Paragraphs that wrap a literal — a path, a port, a shell command — are kept
@@ -109,8 +105,16 @@ function Help({ platform, t }: { platform: string; t: Translate }): React.JSX.El
       <H>{t('info.help.ffmpegH')}</H>
       <P>
         {t('info.help.ffmpegP1')}
-        <Code>{FFMPEG_HINT[platform] ?? 'ffmpeg'}</Code>
-        {t('info.help.ffmpegP2')}
+        {/* Only Linux has something for the reader to do about it. */}
+        {platform === 'linux' ? (
+          <>
+            {t('info.help.ffmpegLinux')}
+            <Code>{FFMPEG_HINT}</Code>
+            {t('info.help.ffmpegP2')}
+          </>
+        ) : (
+          t('info.help.ffmpegBundled')
+        )}
       </P>
       <H>{t('info.help.commonH')}</H>
       <Rows

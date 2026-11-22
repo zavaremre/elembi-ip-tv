@@ -35,6 +35,10 @@ mac:
   identity: "-"
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
+  # Built per architecture by scripts/prepare-ffmpeg.mjs before packaging.
+  extraResources:
+    - from: resources/ffmpeg/darwin-${arch}
+      to: ffmpeg
 
 win:
   target:
@@ -42,6 +46,12 @@ win:
       arch: [x64]
     - target: zip
       arch: [x64]
+  # BtbN's LGPL build, fetched by scripts/prepare-ffmpeg.mjs. Windows is the
+  # platform whose viewers are least likely to have ffmpeg or a way to install
+  # it, so it is the one that most needs carrying its own.
+  extraResources:
+    - from: resources/ffmpeg/win32-${arch}
+      to: ffmpeg
 
 nsis:
   oneClick: false
@@ -55,11 +65,27 @@ linux:
     - target: deb
       arch: [x64]
   category: AudioVideo
-  # ffmpeg is required at runtime and deliberately not bundled: the app uses the
-  # system one, and a distribution's own build is the one its codecs match.
+  # macOS and Windows carry their own ffmpeg; Linux does not. Bundling shared
+  # libraries is the wrong move on a platform built around them, and every
+  # distribution is one command from a build matched to its own codecs. The
+  # package says so rather than leaving it to be discovered.
   desktop:
     entry:
       StartupWMClass: elembi
+
+deb:
+  depends:
+    - ffmpeg
+    # electron-builder's own defaults, which naming any dependency replaces.
+    - libgtk-3-0
+    - libnotify4
+    - libnss3
+    - libxss1
+    - libxtst6
+    - xdg-utils
+    - libatspi2.0-0
+    - libuuid1
+    - libsecret-1-0
 
 publish:
   provider: github

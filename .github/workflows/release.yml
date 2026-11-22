@@ -32,6 +32,19 @@ jobs:
 
       - run: npm run typecheck
 
+      # macOS compiles its own ffmpeg, which is a minute of work repeated on
+      # every tag for a result that only changes when the script does. The key
+      # covers both scripts, and the pinned version lives inside them.
+      - name: Cache ffmpeg
+        uses: actions/cache@v4
+        with:
+          path: resources/ffmpeg
+          key: ffmpeg-${{ runner.os }}-${{ hashFiles('scripts/prepare-ffmpeg.mjs', 'scripts/build-ffmpeg-macos.sh') }}
+
+      # Puts ffmpeg and ffprobe under resources/ffmpeg, which electron-builder
+      # copies into the app. A no-op on Linux, which takes the distribution's.
+      - run: npm run ffmpeg
+
       # electron-builder packages out/, which only exists after this runs. A
       # local build had it lying around from development; a clean checkout does
       # not, and the asar came out without an entry point.

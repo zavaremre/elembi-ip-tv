@@ -1,6 +1,8 @@
 node_modules
 out
 dist
+# Built or downloaded by scripts/prepare-ffmpeg.mjs, per target.
+resources/ffmpeg
 .env
 .env.local
 .DS_Store

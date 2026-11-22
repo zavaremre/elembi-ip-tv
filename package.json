@@ -15,8 +15,9 @@
     "start": "electron-vite preview",
     "build": "electron-vite build",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
-    "pack": "npm run build && electron-builder --dir",
-    "dist": "npm run build && electron-builder"
+    "pack": "npm run ffmpeg && npm run build && electron-builder --dir",
+    "dist": "npm run ffmpeg && npm run build && electron-builder",
+    "ffmpeg": "node scripts/prepare-ffmpeg.mjs"
   },
   "dependencies": {
     "hls.js": "^1.6.2"
