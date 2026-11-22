@@ -8,8 +8,59 @@ import type { AudioTrackInfo, MediaProbe, SubtitleTrackInfo } from '../shared/ty
 import { t } from './i18n'
 import { languageKey } from '../shared/i18n/languages'
 
-const FFMPEG = 'ffmpeg'
-const FFPROBE = 'ffprobe'
+/*
+ * Where the installers put it, for the builds that carry no ffmpeg of their
+ * own, because PATH is not the same question.
+ *
+ * A window opened from Finder or the Dock inherits launchd's environment, not
+ * a shell's: on this machine `launchctl getenv PATH` is empty, so the app sees
+ * /usr/bin:/bin:/usr/sbin:/sbin and Homebrew's /opt/homebrew/bin is nowhere in
+ * it. ffmpeg was installed and the app still reported it missing — which it
+ * then told the viewer as "this file carries one audio track", about a file
+ * nothing had read. Running from a terminal hid it, since that PATH is a
+ * shell's.
+ *
+ * PATH stays the last resort rather than the first, so a build someone put
+ * ahead of these on purpose still wins.
+ */
+const SEARCH_DIRS: Record<string, string[]> = {
+  darwin: ['/opt/homebrew/bin', '/usr/local/bin', '/opt/local/bin'],
+  linux: ['/usr/bin', '/usr/local/bin', '/snap/bin', '/var/lib/flatpak/exports/bin'],
+  win32: [
+    join(process.env.LOCALAPPDATA ?? '', 'Microsoft', 'WinGet', 'Links'),
+    join(process.env.ProgramData ?? '', 'chocolatey', 'bin'),
+    'C:\\ffmpeg\\bin'
+  ]
+}
+
+/*
+ * macOS and Windows carry their own, put here by scripts/prepare-ffmpeg.mjs and
+ * copied in by electron-builder. It comes first so a packaged app runs the
+ * build it was tested against, and so nothing depends on what the viewer has.
+ *
+ * Linux ships none — the .deb depends on the distribution's ffmpeg — and in
+ * development there is no extraResources, so both fall through to the search
+ * below. That is also what keeps this honest: the lookup still has to work.
+ */
+function bundled(exe: string): string | null {
+  const full = join(process.resourcesPath, 'ffmpeg', exe)
+  return existsSync(full) ? full : null
+}
+
+function locate(name: string): string {
+  const exe = process.platform === 'win32' ? `${name}.exe` : name
+  const ours = bundled(exe)
+  if (ours) return ours
+  for (const dir of SEARCH_DIRS[process.platform] ?? []) {
+    if (!dir) continue
+    const full = join(dir, exe)
+    if (existsSync(full)) return full
+  }
+  return name
+}
+
+const FFMPEG = locate('ffmpeg')
+const FFPROBE = locate('ffprobe')
 const PROBE_TIMEOUT_MS = 20_000
 
 /** Chromium decodes none of AC-3, E-AC-3, DTS or TrueHD. */
